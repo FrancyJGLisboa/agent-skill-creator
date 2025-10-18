@@ -48,7 +48,7 @@ compare current year vs previous, takes 2 hours."
 **In the Claude Code terminal**, run:
 
 ```bash
-/plugin marketplace add FrancyJGLisboa/agent-creator-skill
+/plugin marketplace add FrancyJGLisboa/agent-skill-creator
 ```
 
 ### Step 2: Verify Installation
@@ -675,7 +675,7 @@ This repository includes detailed guides in Portuguese:
 ### Install Agent-Creator
 ```bash
 # In Claude Code
-/plugin marketplace add FrancyJGLisboa/agent-creator-skill
+/plugin marketplace add FrancyJGLisboa/agent-skill-creator
 ```
 
 ### Create an Agent
@@ -844,8 +844,8 @@ Free to use, modify, and distribute.
 
 ## 📞 Support
 
-**Issues:** https://github.com/FrancyJGLisboa/agent-creator-skill/issues
-**Discussions:** https://github.com/FrancyJGLisboa/agent-creator-skill/discussions
+**Issues:** https://github.com/FrancyJGLisboa/agent-skill-creator/issues
+**Discussions:** https://github.com/FrancyJGLisboa/agent-skill-creator/discussions
 
 ---
 
@@ -853,7 +853,7 @@ Free to use, modify, and distribute.
 
 ```bash
 # 1. Install agent-creator
-/plugin marketplace add FrancyJGLisboa/agent-creator-skill
+/plugin marketplace add FrancyJGLisboa/agent-skill-creator
 
 # 2. Create an agent (in Claude Code)
 "Automate workflow for analyzing [your domain]"
@@ -876,4 +876,4 @@ Free to use, modify, and distribute.
 **Version:** 1.0.0
 **Updated:** October 2025
 **Author:** Created with Claude Code
-**Repository:** https://github.com/FrancyJGLisboa/agent-creator-skill
+**Repository:** https://github.com/FrancyJGLisboa/agent-skill-creator
