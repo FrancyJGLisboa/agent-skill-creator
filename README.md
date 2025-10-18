@@ -68,6 +68,28 @@ The meta-skill is installed and ready to use.
 
 ---
 
+## 🔧 Troubleshooting
+
+### Installation Error: "Repository not found"
+
+If you see this error:
+```
+Error: Failed to clone marketplace repository: Cloning into
+'/Users/xxx/.claude/plugins/marketplaces/FrancyJGLisboa-agent-creator-skill'...
+remote: Repository not found.
+fatal: repository 'https://github.com/FrancyJGLisboa/agent-creator-skill.git/' not found
+```
+
+**Solution:** Make sure you're using the correct repository name:
+
+```bash
+/plugin marketplace add FrancyJGLisboa/agent-skill-creator
+```
+
+Note: The repository name is `agent-skill-creator` (not `agent-creator-skill`).
+
+---
+
 ## 💡 How to Use (Tutorial Guide)
 
 ### Basic Usage - Describe Your Workflow
