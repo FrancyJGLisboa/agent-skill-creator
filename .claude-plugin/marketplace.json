@@ -1,0 +1,22 @@
+{
+  "name": "agent-creator-en",
+  "owner": {
+    "name": "Agent Creator",
+    "email": "noreply@example.com"
+  },
+  "metadata": {
+    "description": "Agent Creator - Meta-skill for autonomous agent generation in English",
+    "version": "1.0.0",
+    "created": "2025-10-18",
+    "language": "en-US"
+  },
+  "plugins": [
+    {
+      "name": "agent-creator-en-plugin",
+      "description": "This skill should be used when the user asks to create an agent, automate a repetitive workflow, or create a custom skill. Activates with phrases like every day, daily I have to, I need to repeat, create agent for, automate workflow, create skill for, need to automate, turn process into agent. Claude will use the 5-phase protocol to research APIs, define analyses, structure everything, implement functional code, and create a complete skill autonomously in a subdirectory.",
+      "source": "./",
+      "strict": false,
+      "skills": ["./"]
+    }
+  ]
+}
