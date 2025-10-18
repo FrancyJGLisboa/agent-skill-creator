@@ -321,92 +321,125 @@ Phase 3-5: Implement everything
 
 ---
 
-### Example 3: Climate (Real Case from Today!)
+### Example 3: Climate Anomalies - Dominic Royé Style (Real Case from Today!)
 
 **👤 Input:**
 ```
-"Create agent for climate analysis of Sorriso, Mato Grosso.
-Need to analyze temperature and precipitation, historical trends."
+"Create automated workflow for climate anomaly analysis following Dominic Royé methodology.
+Same procedure, always, for anywhere in the world, finding updated raw data,
+processing exactly as in the tutorial, and generating the same chart (same colors,
+same quadrants, same logic)."
 ```
 
 **🤖 Claude executed (5 autonomous phases):**
 
 ```
 🔍 PHASE 1: Climate API Research
-   Researched: INMET, Open-Meteo, OpenWeather, Visual Crossing
-   Compared: Coverage, cost, historical data
-   ✓ DECIDED: Open-Meteo Historical Weather API
-     • Free (no API key!)
-     • Data since 1940 (84+ years)
-     • ERA5 reanalysis (high quality)
-     • REST API (easy integration)
+   Researched: Meteostat, Open-Meteo, ERA5, NOAA, Weather.gov
+   Compared: Coverage, cost, historical data, quality
+   ✓ DECIDED: Multi-API Strategy
+     • Primary: Meteostat (observational data)
+     • Fallback: Open-Meteo (ERA5 reanalysis, global coverage)
+     • Automatic failover for maximum reliability
 
 🎨 PHASE 2: Analysis Design
-   Brainstorm: 15 typical questions
-   ✓ DEFINED: 6 main analyses
-     1. Basic time series
-     2. Temporal comparison (YoY)
-     3. Trend analysis (CAGR, regression)
-     4. Anomaly detection (Z-score)
-     5. Seasonal analysis (monthly climatology)
-     6. Descriptive statistics
+   Based on Dominic Royé methodology:
+   ✓ DEFINED: Climate Anomaly Scatter Plot
+     • Axis X: Precipitation anomaly (%)
+     • Axis Y: Temperature anomaly (°C)
+     • 4 colored quadrants (wet-warm, dry-warm, wet-cold, dry-cold)
+     • Seasonal analysis (DJF, MAM, JJA, SON)
+     • Climate normal baseline (1991-2020 or 1981-2010)
+     • Labeled extreme years with auto-repulsion
 
 🏗️ PHASE 3: Architecture
-   ✓ STRUCTURED:
+   ✓ STRUCTURED (modular design):
      scripts/
-       - fetch_climate.py (320 lines)
-       - parse_climate.py (180 lines)
-       - analyze_climate.py (420 lines)
+       - climate_anomalies.py (580 lines) - Integrated pipeline
+       - fetch_climate.py (480 lines) - Multi-API client
+       - parse_climate.py (370 lines) - Seasonal aggregation
+       - plot_anomalies.py (350 lines) - Dominic Royé visualization
      utils/
-       - cache_manager.py (350 lines)
-       - validators.py (450 lines)
-       - statistics.py (350 lines)
-   ✓ Cache: Historical permanent, current year 24h
-   ✓ Validations: Ranges, physical consistency, continuity
+       - api_factory.py (210 lines) - Factory pattern
+       - cache_manager.py (260 lines) - Smart cache (TTL by year)
+       - validators.py (200 lines) - Blocking validations
+       - context_validators.py (311 lines) - Context warnings
+   ✓ Cache: Historical permanent, previous year 30d, current 24h
+   ✓ Validations: 16 types (8 blocking + 8 contextual)
 
 🎯 PHASE 4: Automatic Detection
-   ✓ KEYWORDS: Sorriso, temperature, precipitation, rain, climate,
-               trend, historical, anomaly, compare
-   ✓ DESCRIPTION: 200 words optimized
+   ✓ KEYWORDS: Dominic Royé, climate anomalies, quadrants,
+               DJF MAM JJA SON, temperature precipitation,
+               wet-warm dry-warm wet-cold dry-cold
+   ✓ DESCRIPTION: Optimized for multi-language detection
 
 ⚙️ PHASE 5: Complete Implementation
-   ✓ .claude-plugin/marketplace.json
-   ✓ SKILL.md (6,800 words)
-   ✓ Python scripts (2,070 lines)
-   ✓ References (1,500 words)
-   ✓ Configs (config.json, metadata.json)
-   ✓ README.md + DECISIONS.md
+   ✓ .claude-plugin/marketplace.json (validated)
+   ✓ SKILL.md (7,000 words)
+   ✓ Python scripts (2,761 lines)
+   ✓ References (8,000 words)
+     - roye-methodology.md
+     - meteostat-guide.md
+     - open-meteo-guide.md
+     - troubleshooting.md
+   ✓ Exact colors: #F7A699, #C23B33, #2C6CB0, #D4E3F3
+   ✓ Labeled points = HOLLOW circles (confirmed by reference image)
+   ✓ README.md + CORRECTIONS.md + EXAMPLES.md
 
-✅ AGENT CREATED: ./climate-analysis-sorriso-mt/
+✅ AGENT CREATED: ./climate-anomalies-roye/
 ```
 
 **📊 Statistics:**
-- **Code:** 2,070 lines of Python
-- **Documentation:** 13,600 words
-- **Files:** 16 main files
+- **Code:** 2,761 lines of Python (10 scripts)
+- **Documentation:** 20,000+ words (12 files)
+- **Files:** 24 main files
 - **Time:** ~90 minutes of autonomous creation
+- **Corrections:** 3 critical fixes applied (v1.0.1)
+
+**🎨 Visual Output:**
+Generates scatter plots identical to Dominic Royé's methodology:
+- Temperature anomaly vs Precipitation anomaly
+- 4 colored quadrants (exact hex colors)
+- Labeled extreme years (hollow circles)
+- High quality: 11×8 inches, 130 DPI
 
 **💻 Installation of created agent:**
 ```bash
 # In terminal
-cd climate-analysis-sorriso-mt
+cd climate-anomalies-roye
 pip install -r requirements.txt
 
 # In Claude Code
-/plugin marketplace add ./climate-analysis-sorriso-mt
+/plugin marketplace add ./climate-anomalies-roye
 ```
 
 **🎯 Using the created agent:**
 ```
-👤 "What's the average temperature in Sorriso over the last 10 years?"
+👤 "Climate anomalies for Buenos Aires, summer season DJF"
 🤖 [Skill activates automatically]
-   [Fetches data from API]
-   [Analyzes and responds]
+   [Fetches data: Meteostat or Open-Meteo]
+   [Processes: seasonal aggregation, anomaly calculation]
+   [Validates: PHASE 2.5 - comprehensive context report]
+   [Generates: PNG chart in Dominic Royé style]
+   [Returns: Chart + interpretation with context]
 
-👤 "Rain trend in Sorriso since 1990"
-🤖 [34-year trend analysis]
-   [Returns rate of change, significance, projection]
+👤 "Anomalies for Paris, winter DJF, baseline 1981-2010"
+🤖 [Complete analysis with custom normal period]
+   [Chart shows extreme years labeled]
+
+Output files generated:
+   • data/raw/location_daily.csv (raw data, for audit)
+   • data/processed/location_season_normal.csv (climatology + anomalies)
+   • data/out/location_season_normal.png (Dominic Royé chart) ✨
 ```
+
+**🛡️ Quality Guarantees:**
+- ✅ Multi-API with automatic fallback
+- ✅ 16 validation layers (blocking + contextual)
+- ✅ Users NEVER receive data without adequate context
+- ✅ Automatic detection of climate change trends
+- ✅ 100% reproducible (same inputs → same outputs)
+- ✅ Auditable (raw data saved for verification)
 
 ---
 
