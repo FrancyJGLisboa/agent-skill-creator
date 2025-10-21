@@ -1,0 +1,4 @@
+# Browser Tab Checker Requirements
+
+# For Firefox sessionstore decompression
+lz4>=4.3.0

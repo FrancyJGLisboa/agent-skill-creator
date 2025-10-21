@@ -1,0 +1,22 @@
+{
+  "name": "browser-tab-checker",
+  "owner": {
+    "name": "Browser Tab Checker",
+    "email": "noreply@example.com"
+  },
+  "metadata": {
+    "description": "Check and count open browser tabs across Chrome, Firefox, and other browsers",
+    "version": "1.0.0",
+    "created": "2025-10-21",
+    "language": "en-US"
+  },
+  "plugins": [
+    {
+      "name": "browser-tab-checker-plugin",
+      "description": "Checks and counts the number of open browser tabs. Activates when user asks about browser tabs, tab count, or how many tabs are open. Supports Chrome, Chromium, and Firefox browsers on Linux systems.",
+      "source": "./",
+      "strict": false,
+      "skills": ["./"]
+    }
+  ]
+}
