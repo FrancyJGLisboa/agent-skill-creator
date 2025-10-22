@@ -1,0 +1,93 @@
+{
+  "template_info": {
+    "name": "financial-analysis",
+    "version": "1.0.0",
+    "description": "Complete financial analysis agent with fundamental and technical indicators",
+    "estimated_creation_time": "15-20 minutes",
+    "complexity": "medium"
+  },
+  "domain": {
+    "primary": "finance",
+    "secondary": ["investments", "trading", "portfolio-management"]
+  },
+  "apis": [
+    {
+      "name": "Alpha Vantage",
+      "url": "https://www.alphavantage.co/",
+      "type": "free_premium",
+      "auth_method": "api_key",
+      "rate_limit": "5 calls/minute (free), unlimited (premium)",
+      "data_coverage": "Global stocks, forex, crypto",
+      "priority": 1
+    },
+    {
+      "name": "Yahoo Finance",
+      "url": "https://finance.yahoo.com/",
+      "type": "free",
+      "auth_method": "none",
+      "rate_limit": "Unlimited",
+      "data_coverage": "Major stocks, ETFs, indices",
+      "priority": 2
+    }
+  ],
+  "analyses": [
+    {
+      "name": "fundamental_analysis",
+      "description": "Company fundamentals and valuation metrics",
+      "metrics": ["P/E Ratio", "ROE", "Debt/Equity", "EPS", "Market Cap", "Revenue"],
+      "functions": ["get_company_fundamentals", "calculate_valuation_metrics", "compare_peers"]
+    },
+    {
+      "name": "technical_analysis",
+      "description": "Technical indicators and momentum analysis",
+      "metrics": ["RSI", "MACD", "Bollinger Bands", "Moving Averages", "Volume"],
+      "functions": ["calculate_rsi", "calculate_macd", "generate_signals"]
+    },
+    {
+      "name": "portfolio_analysis",
+      "description": "Portfolio performance and risk metrics",
+      "metrics": ["Portfolio Return", "Sharpe Ratio", "Beta", "Correlation", "Volatility"],
+      "functions": ["calculate_portfolio_metrics", "risk_analysis", "rebalancing_suggestions"]
+    }
+  ],
+  "structure": {
+    "type": "modular",
+    "directories": [
+      "scripts/",
+      "scripts/utils/",
+      "tests/",
+      "references/",
+      "assets/"
+    ],
+    "main_files": [
+      "fetch_market_data.py",
+      "analyze_fundamentals.py",
+      "analyze_technicals.py",
+      "portfolio_management.py",
+      "utils/cache_manager.py",
+      "utils/validators.py"
+    ]
+  },
+  "cache_strategy": {
+    "market_data": "1 minute",
+    "fundamentals": "1 day",
+    "technical_indicators": "5 minutes"
+  },
+  "validation_layers": [
+    "parameter_validation",
+    "data_quality_validation",
+    "financial_calculation_validation",
+    "risk_validation"
+  ],
+  "output_formats": ["json", "csv", "dashboard", "alerts"],
+  "example_usage": [
+    "Analyze Apple stock fundamentals",
+    "Calculate RSI for S&P 500 stocks",
+    "Portfolio risk analysis",
+    "Compare valuation multiples across sector"
+  ],
+  "installation_requirements": [
+    "pip install pandas numpy yfinance alpha_vantage",
+    "export ALPHA_VANTAGE_API_KEY='your_key_here'"
+  ]
+}

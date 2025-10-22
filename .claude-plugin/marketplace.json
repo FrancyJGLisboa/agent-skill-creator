@@ -1,22 +1,54 @@
 {
-  "name": "agent-creator-en",
+  "name": "agent-creator-enhanced",
   "owner": {
-    "name": "Agent Creator",
+    "name": "Agent Creator Enhanced",
     "email": "noreply@example.com"
   },
   "metadata": {
-    "description": "Agent Creator - Meta-skill for autonomous agent generation in English",
-    "version": "1.0.0",
+    "description": "Enhanced Agent Creator - Meta-skill for autonomous agent generation with multi-agent support, templates, and interactive configuration. Supports single agents, multi-agent suites, transcript processing, template-based creation, and batch agent creation.",
+    "version": "2.0.0",
     "created": "2025-10-18",
-    "language": "en-US"
+    "updated": "2025-10-22",
+    "language": "en-US",
+    "features": [
+      "multi-agent-support",
+      "template-system",
+      "transcript-processing",
+      "interactive-configuration",
+      "batch-creation",
+      "enhanced-validation"
+    ]
   },
   "plugins": [
     {
-      "name": "agent-creator-en-plugin",
-      "description": "This skill should be used when the user asks to create an agent, automate a repetitive workflow, or create a custom skill. Activates with phrases like every day, daily I have to, I need to repeat, create agent for, automate workflow, create skill for, need to automate, turn process into agent. Claude will use the 5-phase protocol to research APIs, define analyses, structure everything, implement functional code, and create a complete skill autonomously in a subdirectory.",
+      "name": "agent-creator-enhanced-plugin",
+      "description": "This enhanced skill should be used when the user asks to create an agent, automate a repetitive workflow, create a custom skill, or needs advanced agent creation capabilities. Activates with phrases like every day, daily I have to, I need to repeat, create agent for, automate workflow, create skill for, need to automate, turn process into agent. Supports single agents, multi-agent suites, transcript processing, template-based creation, and interactive configuration. Claude will use the enhanced protocol to research APIs, define analyses, structure everything, implement functional code, and create complete skills autonomously with optional user guidance.",
       "source": "./",
       "strict": false,
       "skills": ["./"]
     }
-  ]
+  ],
+  "compatibility": {
+    "minimum_claude_version": "1.0.0",
+    "backward_compatible": true,
+    "deprecated_versions": []
+  },
+  "templates": {
+    "enabled": true,
+    "directory": "./templates/",
+    "available": [
+      "financial-analysis",
+      "climate-analysis",
+      "e-commerce-analytics"
+    ]
+  },
+  "capabilities": {
+    "single_agent_creation": true,
+    "multi_agent_suite": true,
+    "batch_creation": true,
+    "template_based": true,
+    "transcript_processing": true,
+    "interactive_mode": true,
+    "preview_system": true
+  }
 }

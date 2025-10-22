@@ -1,0 +1,53 @@
+{
+  "registry_info": {
+    "version": "1.0.0",
+    "last_updated": "2025-10-22",
+    "total_templates": 3
+  },
+  "templates": {
+    "financial-analysis": {
+      "file": "financial-analysis.json",
+      "category": "finance",
+      "complexity": "medium",
+      "keywords": ["stocks", "investments", "portfolio", "trading", "finance"],
+      "estimated_time": "15-20 min",
+      "popularity": "high"
+    },
+    "climate-analysis": {
+      "file": "climate-analysis.json",
+      "category": "environmental",
+      "complexity": "high",
+      "keywords": ["climate", "weather", "temperature", "precipitation", "environmental"],
+      "estimated_time": "20-25 min",
+      "popularity": "medium"
+    },
+    "e-commerce-analytics": {
+      "file": "e-commerce-analytics.json",
+      "category": "business",
+      "complexity": "high",
+      "keywords": ["e-commerce", "analytics", "revenue", "conversion", "shopify", "stripe"],
+      "estimated_time": "25-30 min",
+      "popularity": "high"
+    }
+  },
+  "matching_algorithm": {
+    "keyword_matching": {
+      "weights": {
+        "exact_match": 1.0,
+        "partial_match": 0.7,
+        "semantic_match": 0.5
+      }
+    },
+    "complexity_preference": {
+      "beginner": ["financial-analysis"],
+      "intermediate": ["financial-analysis", "climate-analysis"],
+      "advanced": ["e-commerce-analytics", "climate-analysis"]
+    }
+  },
+  "usage_stats": {
+    "total_creations": 0,
+    "templates_used": {},
+    "success_rate": {},
+    "user_satisfaction": {}
+  }
+}
