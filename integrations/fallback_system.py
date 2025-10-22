@@ -56,7 +56,7 @@ class GracefulFallbackSystem:
         # Initialize appropriate mode
         self._initialize_fallback_mode()
 
-    def _check_agentdb availability(self) -> bool:
+    def _check_agentdb_availability(self) -> bool:
         """Check if AgentDB is available"""
         try:
             import subprocess
@@ -76,7 +76,7 @@ class GracefulFallbackSystem:
             self.current_mode = FallbackMode.DEGRADED
             self._setup_degraded_mode()
         else:
-            self.current_mode = self.fallback_mode.OFFLINE
+            self.current_mode = FallbackMode.OFFLINE
             self._setup_offline_mode()
 
     def enhance_agent_creation(self, user_input: str, domain: str = None) -> Dict[str, Any]:
@@ -427,7 +427,7 @@ class GracefulFallbackSystem:
             self._sync_cached_experiences()
 
             # Re-initialize AgentDB
-            from integrations agentdb_bridge import get_agentdb_bridge
+            from .agentdb_bridge import get_agentdb_bridge
             bridge = get_agentdb_bridge()
 
             # Test connection

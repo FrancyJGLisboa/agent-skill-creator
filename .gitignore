@@ -27,3 +27,10 @@ venv/
 .venv/
 ENV/
 env/
+
+# AgentDB databases
+*.db
+agentdb.db
+
+# Test files (keep only in tests/ directory)
+test_*.py

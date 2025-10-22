@@ -16,7 +16,7 @@ from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
 from datetime import datetime
 
-from .agentdb_bridge import get_agentdb_bridge
+from agentdb_bridge import get_agentdb_bridge
 
 logger = logging.getLogger(__name__)
 

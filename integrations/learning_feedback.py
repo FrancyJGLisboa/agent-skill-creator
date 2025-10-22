@@ -16,8 +16,8 @@ from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-from .agentdb_bridge import get_agentdb_bridge
-from .validation_system import get_validation_system
+from agentdb_bridge import get_agentdb_bridge
+from validation_system import get_validation_system
 
 logger = logging.getLogger(__name__)
 
