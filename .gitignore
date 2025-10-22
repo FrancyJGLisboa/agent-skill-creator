@@ -28,9 +28,14 @@ venv/
 ENV/
 env/
 
+# Runtime directories
+cache/
+data/
+
 # AgentDB databases
 *.db
 agentdb.db
 
-# Test files (keep only in tests/ directory)
+# Test files
 test_*.py
+tests/
