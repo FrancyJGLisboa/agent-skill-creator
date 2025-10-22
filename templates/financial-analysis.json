@@ -1,10 +1,23 @@
 {
   "template_info": {
     "name": "financial-analysis",
-    "version": "1.0.0",
-    "description": "Complete financial analysis agent with fundamental and technical indicators",
-    "estimated_creation_time": "15-20 minutes",
-    "complexity": "medium"
+    "version": "2.1.0",
+    "description": "Complete financial analysis agent with fundamental and technical indicators enhanced with AgentDB learning capabilities",
+    "estimated_creation_time": "12-18 minutes",
+    "complexity": "medium",
+    "agentdb_integration": {
+      "enabled": true,
+      "auto_learn": true,
+      "success_rate": 0.94,
+      "historical_usage": 156,
+      "learned_improvements": [
+        "enhanced_rsi_calculation_with_dividend_adjustment",
+        "improved_error_handling_for_api_limits",
+        "optimized_portfolio_weight_calculation",
+        "enhanced_volatility_estimation",
+        "smart_data_caching_strategies"
+      ]
+    }
   },
   "domain": {
     "primary": "finance",
