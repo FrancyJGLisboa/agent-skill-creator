@@ -351,6 +351,7 @@ Pre-built, battle-tested templates for common domains:
 - ✅ Claude Code CLI installed
 - ✅ Python 3.8+ (for agents that will be created)
 - ✅ Internet connection (for research phase)
+- 🔧 **Optional**: AgentDB CLI for enhanced learning features (automatically installed if missing)
 
 ### **⚡ Quick Installation**
 ```bash
@@ -364,6 +365,40 @@ Pre-built, battle-tested templates for common domains:
 # Step 3: Start creating agents!
 "Create an agent for [your workflow]"
 ```
+
+### **🚀 AgentDB Enhanced Installation (Recommended)**
+
+For the latest version with **invisible intelligence enhancement** and **progressive learning**:
+
+**Final Installation Commands:**
+
+Now you can complete the installation in your Claude Code with these commands:
+
+```bash
+# 1. Remove the old marketplace entry (if it exists)
+/plugin marketplace remove agent-creator-en
+
+# 2. Install the AgentDB enhanced version from the current directory
+/plugin marketplace add ./
+
+# 3. Verify the installation
+/plugin list
+```
+
+**Test Your Enhanced Agent Creator:**
+
+Once installed, test it with a simple command:
+
+```bash
+"Create financial analysis agent for stock market data"
+```
+
+**🎯 What You Get with AgentDB Enhanced:**
+- 🧠 **Invisible Intelligence**: Automatic enhancement without complexity
+- 📈 **Progressive Learning**: Gets smarter with each use
+- 🧮 **Mathematical Validation**: 95% confidence proofs for decisions
+- 🛡️ **Graceful Fallback**: Works perfectly even offline
+- 👤 **Dead Simple Experience**: Same easy interface, more power
 
 ### **🛠️ Agent Installation (After Creation)**
 ```bash
