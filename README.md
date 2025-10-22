@@ -67,6 +67,70 @@ and create reports. This takes 2 hours."
 
 ---
 
+## 🏗️ **Claude Skills Architecture: Understanding What We Create**
+
+### **🎯 Important Clarification: Skills vs Plugins**
+
+The Agent Creator creates **Claude Skills** - which come in different architectural patterns. This eliminates the common confusion between skills and plugins.
+
+#### **📋 Two Types of Skills We Create**
+
+**1. Simple Skills** (Single focused capability)
+```
+task-automator-cskill/
+├── SKILL.md              ← One comprehensive skill file
+├── scripts/              ← Supporting code
+└── references/           ← Documentation
+```
+*Perfect for: Single workflow, focused automation, quick development*
+
+**2. Complex Skill Suites** (Multiple specialized capabilities)
+```
+business-platform-cskill/
+├── .claude-plugin/
+│   └── marketplace.json  ← Organizes component skills
+├── data-processor-cskill/SKILL.md    ← Component 1
+├── analysis-engine-cskill/SKILL.md   ← Component 2
+└── reporting-cskill/SKILL.md         ← Component 3
+```
+*Perfect for: Complex workflows, team projects, enterprise solutions*
+
+#### **🏷️ Naming Convention: "-cskill" Suffix**
+
+**All created skills use the "-cskill" suffix:**
+- **Purpose**: Identifies immediately as Claude Skill created by Agent-Skill-Creator
+- **Format**: `{descrição-descritiva}-cskill/`
+- **Examples**: `pdf-text-extractor-cskill/`, `financial-analysis-suite-cskill/`
+
+**Benefits:**
+- ✅ Clear identification of origin and type
+- ✅ Professional naming standard
+- ✅ Easy organization and discovery
+- ✅ Eliminates confusion with manual skills
+
+**Learn more**: [Complete Naming Guide](NAMING_CONVENTIONS.md)
+
+#### **🎯 How We Choose the Right Architecture**
+
+The Agent Creator automatically decides based on:
+- **Number of objectives** (single vs multiple)
+- **Workflow complexity** (linear vs branching)
+- **Domain expertise** (single vs specialized)
+- **Code complexity** (simple vs extensive)
+- **Maintenance needs** (individual vs team)
+
+#### **📚 Learn More**
+
+- **[Complete Architecture Guide](CLAUDE_SKILLS_ARCHITECTURE.md)** - Comprehensive understanding
+- **[Decision Logic Framework](DECISION_LOGIC.md)** - How we choose architectures
+- **[Naming Conventions Guide](NAMING_CONVENTIONS.md)** - Complete -cskill naming rules
+- **[Examples](examples/)** - See simple vs complex skill examples
+- **[Internal Flow Analysis](INTERNAL_FLOW_ANALYSIS.md)** - How creation works behind the scenes
+
+**✅ Key Takeaway:** We ALWAYS create valid Claude Skills with "-cskill" suffix - just with the right architecture for your specific needs!
+
+---
+
 ## 🚀 **Get Started in 2 Minutes**
 
 ### **Step 1: Install**

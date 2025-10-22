@@ -1,0 +1,96 @@
+{
+  "pipeline_settings": {
+    "cache_duration": 3600,
+    "parallel_processing": true,
+    "quality_threshold": 0.95,
+    "error_handling": "graceful_degradation",
+    "max_concurrent_requests": 5,
+    "timeout_seconds": 30
+  },
+  "data_sources": {
+    "yahoo_finance": {
+      "enabled": true,
+      "rate_limit": 2000,
+      "timeout": 30,
+      "priority": 1
+    },
+    "alpha_vantage": {
+      "enabled": false,
+      "rate_limit": 5,
+      "timeout": 60,
+      "priority": 2,
+      "api_key_required": true
+    }
+  },
+  "analysis_config": {
+    "indicators": {
+      "rsi": {
+        "enabled": true,
+        "period": 14,
+        "oversold_threshold": 30,
+        "overbought_threshold": 70
+      },
+      "macd": {
+        "enabled": true,
+        "fast_period": 12,
+        "slow_period": 26,
+        "signal_period": 9
+      },
+      "bollinger_bands": {
+        "enabled": true,
+        "period": 20,
+        "std_dev": 2
+      },
+      "moving_averages": {
+        "enabled": true,
+        "periods": [5, 20, 50]
+      }
+    },
+    "signals": {
+      "buy": ["RSI_OVERSOLD", "MACD_BULLISH_CROSS", "PRICE_ABOVE_MA20"],
+      "sell": ["RSI_OVERBOUGHT", "MACD_BEARISH_CROSS", "PRICE_BELOW_MA20"],
+      "hold": ["NEUTRAL_RSI", "SIDEWAYS_TREND"]
+    },
+    "risk_metrics": {
+      "volatility_periods": [20],
+      "drawdown_periods": [252],
+      "var_confidence_levels": [0.05, 0.01],
+      "sharpe_ratio_risk_free_rate": 0.02
+    }
+  },
+  "reporting_config": {
+    "include_charts": false,
+    "confidence_threshold": 0.7,
+    "max_recommendations": 10,
+    "portfolio_analysis": {
+      "enabled": true,
+      "correlation_analysis": true,
+      "risk_contribution": true
+    }
+  },
+  "notification_settings": {
+    "email_alerts": {
+      "enabled": false,
+      "threshold_types": ["STRONG_BUY", "STRONG_SELL", "HIGH_RISK"]
+    },
+    "webhook_notifications": {
+      "enabled": false,
+      "url": null
+    }
+  },
+  "advanced_settings": {
+    "machine_learning": {
+      "enabled": false,
+      "models": ["price_prediction", "trend_classification"]
+    },
+    "sentiment_analysis": {
+      "enabled": false,
+      "sources": ["news", "social_media"]
+    },
+    "backtesting": {
+      "enabled": false,
+      "period": "1y",
+      "benchmark": "SPY"
+    }
+  }
+}

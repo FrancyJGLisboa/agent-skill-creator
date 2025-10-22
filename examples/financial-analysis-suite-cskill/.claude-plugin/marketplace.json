@@ -1,0 +1,74 @@
+{
+  "name": "financial-analysis-suite-cskill",
+  "owner": {
+    "name": "Agent Creator Examples",
+    "email": "examples@agent-creator.com"
+  },
+  "metadata": {
+    "description": "Complete financial analysis suite with data acquisition, technical analysis, portfolio optimization, and reporting capabilities for comprehensive investment research.",
+    "version": "1.0.0",
+    "created": "2025-10-22",
+    "updated": "2025-10-22",
+    "language": "en-US",
+    "features": [
+      "real-time-data-acquisition",
+      "technical-analysis",
+      "portfolio-optimization",
+      "risk-assessment",
+      "automated-reporting",
+      "multi-asset-support"
+    ]
+  },
+  "plugins": [
+    {
+      "name": "financial-data-acquisition-cskill",
+      "description": "Component skill for acquiring financial market data from multiple sources including APIs, CSV files, and real-time feeds.",
+      "source": "./data-acquisition-cskill/",
+      "skills": ["./SKILL.md"]
+    },
+    {
+      "name": "technical-analysis-cskill",
+      "description": "Component skill for comprehensive technical analysis including indicators, patterns, signals, and trend analysis.",
+      "source": "./technical-analysis-cskill/",
+      "skills": ["./SKILL.md"]
+    },
+    {
+      "name": "portfolio-optimization-cskill",
+      "description": "Component skill for portfolio optimization using modern portfolio theory, risk metrics, and allocation strategies.",
+      "source": "./portfolio-optimization-cskill/",
+      "skills": ["./SKILL.md"]
+    },
+    {
+      "name": "financial-reporting-cskill",
+      "description": "Component skill for generating professional financial reports with charts, analysis summaries, and investment recommendations.",
+      "source": "./reporting-cskill/",
+      "skills": ["./SKILL.md"]
+    }
+  ],
+  "integrations": {
+    "data_sharing": true,
+    "cross_agent_communication": true,
+    "shared_utils": "./shared/",
+    "supported_assets": ["stocks", "etfs", "bonds", "cryptocurrencies", "commodities"],
+    "analysis_frequency": "daily",
+    "data_sources": ["Alpha Vantage", "Yahoo Finance", "FRED"]
+  },
+  "compatibility": {
+    "minimum_claude_version": "1.0.0",
+    "backward_compatible": true,
+    "deprecated_versions": []
+  },
+  "requirements": {
+    "python_version": ">=3.8",
+    "dependencies": [
+      "pandas>=1.5.0",
+      "numpy>=1.21.0",
+      "yfinance>=0.1.87",
+      "alpha-vantage>=2.3.1",
+      "matplotlib>=3.5.0",
+      "seaborn>=0.11.0",
+      "scipy>=1.9.0",
+      "scikit-learn>=1.1.0"
+    ]
+  }
+}

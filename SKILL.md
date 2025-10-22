@@ -71,6 +71,109 @@ PHASE 5: IMPLEMENTATION
 
 ---
 
+## 🏗️ **Claude Skills Architecture: Understanding What We Create**
+
+### **Important Terminology Clarification**
+
+This meta-skill creates **Claude Skills**, which come in different architectural patterns:
+
+#### **📋 Skill Types We Can Create**
+
+**1. Simple Skill** (Single focused capability)
+```
+skill-name/
+├── SKILL.md              ← Single comprehensive skill file
+├── scripts/              ← Optional supporting code
+├── references/           ← Optional documentation
+└── assets/               ← Optional templates
+```
+*Use when: Single objective, simple workflow, <1000 lines code*
+
+**2. Complex Skill Suite** (Multiple specialized capabilities)
+```
+skill-suite/
+├── .claude-plugin/
+│   └── marketplace.json  ← Organizes multiple component skills
+├── component-1/
+│   └── SKILL.md          ← Specialized sub-skill
+├── component-2/
+│   └── SKILL.md          ← Another specialized sub-skill
+└── shared/               ← Shared resources
+```
+*Use when: Multiple related workflows, >2000 lines code, team maintenance*
+
+#### **🎯 Architecture Decision Process**
+
+During **PHASE 3: ARCHITECTURE**, this skill will:
+
+1. **Analyze Complexity Requirements**
+   - Number of distinct workflows
+   - Code complexity estimation
+   - Maintenance considerations
+
+2. **Choose Appropriate Architecture**
+   - Simple task → Simple Skill
+   - Complex multi-domain task → Skill Suite
+   - Hybrid requirements → Simple skill with components
+
+3. **Apply Naming Convention**
+   - Generate descriptive base name from requirements
+   - Add "-cskill" suffix to identify as Claude Skill created by Agent-Skill-Creator
+   - Ensure consistent, professional naming across all created skills
+
+4. **Document the Decision**
+   - Create `DECISIONS.md` explaining architecture choice
+   - Provide rationale for selected pattern
+   - Include migration path if needed
+   - Document naming convention applied
+
+#### **🏷️ Naming Convention: "-cskill" Suffix**
+
+**All skills created by this Agent-Skill-Creator use the "-cskill" suffix:**
+
+**Simple Skills:**
+- `pdf-text-extractor-cskill/`
+- `csv-data-cleaner-cskill/`
+- `weekly-report-generator-cskill/`
+
+**Complex Skill Suites:**
+- `financial-analysis-suite-cskill/`
+- `e-commerce-automation-cskill/`
+- `research-workflow-cskill/`
+
+**Component Skills (within suites):**
+- `data-acquisition-cskill/`
+- `technical-analysis-cskill/`
+- `reporting-generator-cskill/`
+
+**Purpose of "-cskill" suffix:**
+- ✅ **Clear Identification**: Immediately recognizable as a Claude Skill
+- ✅ **Origin Attribution**: Created by Agent-Skill-Creator
+- ✅ **Consistent Convention**: Professional naming standard
+- ✅ **Avoids Confusion**: Distinguishes from manually created skills
+- ✅ **Easy Organization**: Simple to identify and group created skills
+
+#### **📚 Reference Documentation**
+
+For complete understanding of Claude Skills architecture, see:
+- `CLAUDE_SKILLS_ARCHITECTURE.md` (comprehensive guide)
+- `DECISION_LOGIC.md` (architecture decision framework)
+- `examples/` (simple vs complex examples)
+- `examples/simple-skill/` (minimal example)
+- `examples/complex-skill-suite/` (comprehensive example)
+
+#### **✅ What We Create**
+
+**ALWAYS creates a valid Claude Skill** - either:
+- **Simple Skill** (single SKILL.md)
+- **Complex Skill Suite** (multiple component skills with marketplace.json)
+
+**NEVER creates "plugins" in the traditional sense** - we create Skills, which may be organized using marketplace.json for complex suites.
+
+This terminology consistency eliminates confusion between Skills and Plugins.
+
+---
+
 ## 🧠 Invisible Intelligence: AgentDB Integration
 
 ### Enhanced Intelligence (v2.1)
