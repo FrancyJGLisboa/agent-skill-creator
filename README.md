@@ -108,7 +108,7 @@ business-platform-cskill/
 - ✅ Easy organization and discovery
 - ✅ Eliminates confusion with manual skills
 
-**Learn more**: [Complete Naming Guide](NAMING_CONVENTIONS.md)
+**Learn more**: [Complete Naming Guide](docs/NAMING_CONVENTIONS.md)
 
 #### **🎯 How We Choose the Right Architecture**
 
@@ -121,11 +121,11 @@ The Agent Creator automatically decides based on:
 
 #### **📚 Learn More**
 
-- **[Complete Architecture Guide](CLAUDE_SKILLS_ARCHITECTURE.md)** - Comprehensive understanding
-- **[Decision Logic Framework](DECISION_LOGIC.md)** - How we choose architectures
-- **[Naming Conventions Guide](NAMING_CONVENTIONS.md)** - Complete -cskill naming rules
+- **[Complete Architecture Guide](docs/CLAUDE_SKILLS_ARCHITECTURE.md)** - Comprehensive understanding
+- **[Decision Logic Framework](docs/DECISION_LOGIC.md)** - How we choose architectures
+- **[Naming Conventions Guide](docs/NAMING_CONVENTIONS.md)** - Complete -cskill naming rules
 - **[Examples](examples/)** - See simple vs complex skill examples
-- **[Internal Flow Analysis](INTERNAL_FLOW_ANALYSIS.md)** - How creation works behind the scenes
+- **[Internal Flow Analysis](docs/INTERNAL_FLOW_ANALYSIS.md)** - How creation works behind the scenes
 
 **✅ Key Takeaway:** We ALWAYS create valid Claude Skills with "-cskill" suffix - just with the right architecture for your specific needs!
 
@@ -1046,7 +1046,7 @@ agent-name/
 
 ### **📖 Complete Documentation**
 - **[SKILL.md](./SKILL.md)** - Technical implementation guide (10,000+ words)
-- **[CHANGELOG.md](./CHANGELOG.md)** - Version history and updates
+- **[CHANGELOG.md](docs/CHANGELOG.md)** - Version history and updates
 - **[AGENTDB_ANALYSIS.md](./AGENTDB_ANALYSIS.md)** - Deep dive into AgentDB integration
 - **[templates/](./templates/)** - Template-specific guides
 

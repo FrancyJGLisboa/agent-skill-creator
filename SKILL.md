@@ -156,8 +156,8 @@ During **PHASE 3: ARCHITECTURE**, this skill will:
 #### **📚 Reference Documentation**
 
 For complete understanding of Claude Skills architecture, see:
-- `CLAUDE_SKILLS_ARCHITECTURE.md` (comprehensive guide)
-- `DECISION_LOGIC.md` (architecture decision framework)
+- `docs/CLAUDE_SKILLS_ARCHITECTURE.md` (comprehensive guide)
+- `docs/DECISION_LOGIC.md` (architecture decision framework)
 - `examples/` (simple vs complex examples)
 - `examples/simple-skill/` (minimal example)
 - `examples/complex-skill-suite/` (comprehensive example)
