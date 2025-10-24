@@ -5,6 +5,199 @@ All notable changes to Agent Creator will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.2.0] - October 2025
+
+### 🎯 **MAJOR: Cross-Platform Export System**
+**Make Claude Code skills work everywhere - Desktop, Web, and API**
+
+### ✅ **Added**
+
+#### 📦 **Cross-Platform Export**
+- **Export Utility Module**: Complete Python module (`scripts/export_utils.py`) for packaging skills
+- **Desktop/Web Packages**: Optimized .zip packages for Claude Desktop and claude.ai manual upload
+- **API Packages**: Size-optimized packages (< 8MB) for programmatic Claude API integration
+- **Versioned Exports**: Automatic version detection from git tags or SKILL.md frontmatter
+- **Installation Guides**: Auto-generated platform-specific installation instructions
+- **Validation System**: Comprehensive pre-export validation (structure, size, security)
+- **Opt-In Workflow**: Post-creation export prompt with multiple variants
+
+#### 🗂️ **Export Directory Structure**
+- **exports/ Directory**: Organized output location for all export packages
+- **Naming Convention**: `{skill-name}-{variant}-v{version}.zip` format
+- **gitignore Configuration**: Exclude generated artifacts from version control
+- **Export README**: Comprehensive documentation in exports directory
+
+#### 📚 **Documentation**
+- **Export Guide**: Complete guide (`references/export-guide.md`) for exporting skills
+- **Cross-Platform Guide**: Platform compatibility matrix (`references/cross-platform-guide.md`)
+- **SKILL.md Enhancement**: Export capability integrated into agent-creator skill
+- **README Updates**: Cross-platform export section in main documentation
+
+### 🚀 **Enhanced**
+
+#### 🎯 **User Experience**
+- **Post-Creation Workflow**: Automatic export prompt after successful skill creation
+- **Multiple Variants**: Choose Desktop, API, or both packages
+- **Version Override**: Manual version specification for releases
+- **On-Demand Export**: Export existing skills anytime with natural language commands
+- **Clear Feedback**: Detailed status reporting during export process
+
+#### 🔧 **Technical Capabilities**
+- **Two Package Types**: Desktop (full, 2-5 MB) and API (optimized, < 8MB)
+- **Smart Exclusions**: Automatic filtering of .git/, __pycache__/, .env, credentials
+- **Size Optimization**: API packages compressed to meet 8MB limit
+- **Security Checks**: Prevent inclusion of sensitive files
+- **Integrity Validation**: ZIP file integrity verification
+
+#### 📊 **Platform Coverage**
+- **Claude Code**: Native support (no export needed)
+- **Claude Desktop**: Full support via .zip upload
+- **claude.ai (Web)**: Full support via .zip upload
+- **Claude API**: Programmatic integration with size constraints
+
+### 🗺️ **Integration**
+
+#### Export Activation Patterns
+New SKILL.md activation patterns for export:
+- "Export [skill-name] for Desktop"
+- "Package [skill-name] for API"
+- "Create cross-platform package"
+- "Export with version [x.x.x]"
+
+#### Export Workflow
+```
+1. User creates skill → 2. Export prompt (opt-in)
+   → 3. Select variants → 4. Auto-validate
+   → 5. Generate packages → 6. Create install guide
+   → 7. Save to exports/ → 8. Report success
+```
+
+#### Version Detection Priority
+1. User override (`--version 2.0.1`)
+2. Git tags (`git describe --tags`)
+3. SKILL.md frontmatter (`version: 1.2.3`)
+4. Default fallback (`v1.0.0`)
+
+### 📁 **New Files**
+
+**Core Files:**
+- `scripts/export_utils.py` (~400 lines) - Export utility module
+- `exports/README.md` - Export directory documentation
+- `exports/.gitignore` - Exclude generated artifacts
+
+**Documentation:**
+- `references/export-guide.md` (~500 lines) - Complete export guide
+- `references/cross-platform-guide.md` (~600 lines) - Platform compatibility guide
+
+**Enhanced Files:**
+- `SKILL.md` - Added cross-platform export capability (~220 lines)
+- `README.md` - Added export feature documentation (~45 lines)
+
+### 🎯 **User Impact**
+
+#### Immediate Benefits
+- ✅ Skills work across all Claude platforms
+- ✅ Easy sharing with Desktop/Web users
+- ✅ Production-ready API integration
+- ✅ Versioned releases with proper packaging
+- ✅ Validated exports with clear documentation
+
+#### Use Cases Enabled
+- **Team Distribution**: Share skills with non-Code users
+- **Production Deployment**: Deploy skills via Claude API
+- **Multi-Platform Access**: Use same skill on Desktop and Web
+- **Versioned Releases**: Maintain multiple skill versions
+- **Open Source Sharing**: Distribute skills to community
+
+### 🔄 **Workflow Changes**
+
+**Before v3.2:**
+```
+Create skill → Use in Claude Code only
+```
+
+**After v3.2:**
+```
+Create skill → Optional export → Use everywhere
+                 ↓
+          - Desktop users upload .zip
+          - Web users upload .zip
+          - API users integrate programmatically
+```
+
+### ✅ **Validation & Quality**
+
+#### Export Validation
+- SKILL.md structure and frontmatter
+- Name length ≤ 64 characters
+- Description length ≤ 1024 characters
+- Package size (API: < 8MB hard limit)
+- No sensitive files (.env, credentials)
+- ZIP file integrity
+
+#### Package Variants
+**Desktop Package:**
+- Complete documentation
+- All scripts and assets
+- Full references
+- Examples and tutorials
+- Optimized for usability
+
+**API Package:**
+- Size-optimized (< 8MB)
+- Essential scripts only
+- Minimal documentation
+- Execution-focused
+- No examples (size savings)
+
+### 🔒 **Security**
+
+**Automatically Excluded:**
+- Environment files (`.env`)
+- Credentials (`credentials.json`, `secrets.json`)
+- Version control (`.git/`)
+- Compiled files (`__pycache__/`, `*.pyc`)
+- System metadata (`.DS_Store`)
+
+### 📊 **Performance**
+
+- **Export Speed**: ~2-5 seconds for typical skill
+- **Package Sizes**: Desktop 2-5 MB, API 0.5-2 MB
+- **Compression**: ZIP_DEFLATED with level 9
+- **Validation**: < 1 second overhead
+
+### 🔄 **Backward Compatibility**
+
+**100% Compatible** - All existing workflows unchanged:
+- Existing skills continue to work in Claude Code
+- No migration required
+- Export is opt-in only
+- Non-disruptive addition
+
+### 📚 **Documentation References**
+
+**New Guides:**
+- `references/export-guide.md` - How to export skills
+- `references/cross-platform-guide.md` - Platform compatibility
+- `exports/README.md` - Using exported packages
+
+**Updated Guides:**
+- `README.md` - Added cross-platform export section
+- `SKILL.md` - Added export capability
+- `docs/CHANGELOG.md` - This file
+
+### 🎉 **Summary**
+
+v3.2 makes agent-skill-creator skills **truly universal**. Create once in Claude Code, export for everywhere:
+- ✅ Desktop users get full-featured .zip packages
+- ✅ Web users get browser-accessible skills
+- ✅ API users get optimized programmatic integration
+- ✅ All with versioning, validation, and documentation
+
+**Breaking Changes:** NONE - Export is a pure addition, completely opt-in.
+
+---
+
 ## [2.1.0] - October 2025
 
 ### 🎯 **MAJOR: Invisible Intelligence Layer**

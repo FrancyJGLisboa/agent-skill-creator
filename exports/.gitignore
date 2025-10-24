@@ -1,0 +1,8 @@
+# Ignore all exported .zip packages
+*.zip
+
+# Ignore installation guides (generated)
+*_INSTALL.md
+
+# Allow README
+!README.md

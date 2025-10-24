@@ -1040,6 +1040,228 @@ No interruption, no errors, just no learning enhancements.
 
 ---
 
+## 📦 Cross-Platform Export (NEW v3.2)
+
+### What This Feature Does
+
+**Automatically package skills for use across all Claude platforms:**
+
+Skills created in Claude Code can be exported for:
+- ✅ **Claude Desktop** - Manual .zip upload
+- ✅ **claude.ai** (Web) - Browser-based upload
+- ✅ **Claude API** - Programmatic integration
+
+This makes your skills portable and shareable across all Claude ecosystems.
+
+### When to Activate Export
+
+Claude should activate export capabilities when user says:
+
+✅ **Export requests:**
+- "Export [skill-name] for Desktop"
+- "Package [skill-name] for claude.ai"
+- "Create API package for [skill-name]"
+- "Export [skill-name] for all platforms"
+
+✅ **Cross-platform requests:**
+- "Make [skill-name] compatible with Claude Desktop"
+- "I need to share [skill-name] with Desktop users"
+- "Package [skill-name] as .zip"
+- "Create cross-platform version of [skill-name]"
+
+✅ **Version-specific exports:**
+- "Export [skill-name] with version 2.0.1"
+- "Package [skill-name] v1.5.0 for API"
+
+### Export Process
+
+When user requests export:
+
+**Step 1: Locate Skill**
+```python
+# Search common locations
+locations = [
+    f"./{skill_name}-cskill/",  # Current directory
+    f"references/examples/{skill_name}-cskill/",  # Examples
+    user_specified_path  # If provided
+]
+
+skill_path = find_skill(locations)
+```
+
+**Step 2: Validate Structure**
+```python
+# Ensure skill is export-ready
+valid, issues = validate_skill_structure(skill_path)
+
+if not valid:
+    report_issues_to_user(issues)
+    return
+```
+
+**Step 3: Execute Export**
+```bash
+# Run export utility
+python scripts/export_utils.py {skill_path} \
+    --variant {desktop|api|both} \
+    --version {version} \
+    --output-dir exports/
+```
+
+**Step 4: Report Results**
+```
+✅ Export completed!
+
+📦 Packages created:
+   - Desktop: exports/{skill}-desktop-v1.0.0.zip (2.3 MB)
+   - API: exports/{skill}-api-v1.0.0.zip (1.2 MB)
+
+📄 Installation guide: exports/{skill}-v1.0.0_INSTALL.md
+
+🎯 Ready for:
+   ✅ Claude Desktop upload
+   ✅ claude.ai upload
+   ✅ Claude API integration
+```
+
+### Post-Creation Export (Opt-In)
+
+After successfully creating a skill in PHASE 5, offer export:
+
+```
+✅ Skill created successfully: {skill-name-cskill}/
+
+📦 Cross-Platform Export Options:
+
+Would you like to create export packages for other Claude platforms?
+
+   1. Desktop/Web (.zip for manual upload)
+   2. API (.zip for programmatic use)
+   3. Both (comprehensive package)
+   4. Skip (Claude Code only)
+
+Choice: _
+```
+
+**If user chooses 1, 2, or 3:**
+- Execute export_utils.py with selected variants
+- Report package locations
+- Provide next steps for each platform
+
+**If user chooses 4 or skips:**
+- Continue with normal completion
+- Skill remains Claude Code only
+
+### Export Variants
+
+**Desktop/Web Package** (`*-desktop-*.zip`):
+- Complete documentation
+- All scripts and assets
+- Full references
+- Optimized for user experience
+- Typical size: 2-5 MB
+
+**API Package** (`*-api-*.zip`):
+- Execution-focused
+- Size-optimized (< 8MB)
+- Minimal documentation
+- Essential scripts only
+- Typical size: 0.5-2 MB
+
+### Version Detection
+
+Automatically detect version from:
+
+1. **Git tags** (priority):
+   ```bash
+   git describe --tags --abbrev=0
+   ```
+
+2. **SKILL.md frontmatter**:
+   ```yaml
+   ---
+   name: skill-name
+   version: 1.2.3
+   ---
+   ```
+
+3. **Default**: `v1.0.0`
+
+**User can override**:
+- "Export with version 2.1.0"
+- `--version 2.1.0` flag
+
+### Export Validation
+
+Before creating packages, validate:
+
+✅ **Required:**
+- SKILL.md exists
+- Valid frontmatter (---...---)
+- `name:` field present (≤ 64 chars)
+- `description:` field present (≤ 1024 chars)
+
+✅ **Size Checks:**
+- Desktop: Reasonable size
+- API: < 8MB (hard limit)
+
+✅ **Security:**
+- No .env files
+- No credentials.json
+- No sensitive data
+
+If validation fails, report specific issues to user.
+
+### Installation Guides
+
+Auto-generate platform-specific guides:
+
+**File**: `exports/{skill}-v{version}_INSTALL.md`
+
+**Contents:**
+- Package information
+- Installation steps for Desktop
+- Installation steps for claude.ai
+- API integration code examples
+- Platform comparison table
+- Troubleshooting tips
+
+### Export Commands Reference
+
+```bash
+# Export both variants (default)
+python scripts/export_utils.py ./skill-name-cskill
+
+# Export only Desktop
+python scripts/export_utils.py ./skill-name-cskill --variant desktop
+
+# Export only API
+python scripts/export_utils.py ./skill-name-cskill --variant api
+
+# With custom version
+python scripts/export_utils.py ./skill-name-cskill --version 2.0.1
+
+# To custom directory
+python scripts/export_utils.py ./skill-name-cskill --output-dir ./releases
+```
+
+### Documentation References
+
+Point users to comprehensive guides:
+- **Export Guide**: `references/export-guide.md`
+- **Cross-Platform Guide**: `references/cross-platform-guide.md`
+- **Exports README**: `exports/README.md`
+
+### Integration with AgentDB
+
+Export process can leverage AgentDB learning:
+- Remember successful export configurations
+- Suggest optimal variant based on use case
+- Track which exports are most commonly used
+- Learn from export failures to improve validation
+
+---
+
 ## PHASE 1: Discovery and Research
 
 **Objective**: DECIDE which API/data source to use with AgentDB intelligence
