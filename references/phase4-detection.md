@@ -463,3 +463,524 @@ For each example question from use cases (Phase 2), verify:
 - [ ] Complete keywords documented in SKILL.md
 - [ ] Activation examples (positive and negative)
 - [ ] Mental detection simulation (all use cases covered)
+
+---
+
+# 🎯 **Phase 4 Enhanced v3.0: 3-Layer Activation System**
+
+## Overview: Why 3 Layers?
+
+**Problem:** Skills with only description-based activation can:
+- Miss valid user queries (false negatives)
+- Activate for wrong queries (false positives)
+- Be unpredictable across phrasings
+
+**Solution:** Implement activation in **3 complementary layers**:
+
+```
+Layer 1: Keywords     → High precision, moderate coverage
+Layer 2: Patterns     → High coverage, good precision
+Layer 3: Description  → Full coverage, Claude NLU fallback
+```
+
+**Result:** 95%+ activation reliability!
+
+---
+
+## 🔑 Layer 1: Structured Keywords (marketplace.json)
+
+### Purpose
+Provide **exact phrase matching** for common, specific queries.
+
+### Structure in marketplace.json
+
+```json
+{
+  "activation": {
+    "keywords": [
+      "complete phrase 1",
+      "complete phrase 2",
+      "complete phrase 3",
+      // ... 10-15 total
+    ]
+  }
+}
+```
+
+### Keyword Design Rules
+
+#### ✅ DO: Use Complete Phrases
+```json
+✅ "create an agent for"
+✅ "analyze stock data"
+✅ "compare year over year"
+```
+
+#### ❌ DON'T: Use Single Words
+```json
+❌ "create"      // Too generic
+❌ "agent"       // Too broad
+❌ "data"        // Meaningless alone
+```
+
+### Keyword Categories (10-15 keywords minimum)
+
+**Category 1: Action + Entity (5-7 keywords)**
+```json
+[
+  "create an agent for",
+  "create a skill for",
+  "build an agent for",
+  "develop a skill for",
+  "make an agent that"
+]
+```
+
+**Category 2: Workflow Patterns (3-5 keywords)**
+```json
+[
+  "automate this workflow",
+  "automate this process",
+  "every day I have to",
+  "daily I need to"
+]
+```
+
+**Category 3: Domain-Specific (2-3 keywords)**
+```json
+[
+  "stock market analysis",  // For finance skill
+  "crop monitoring data",   // For agriculture skill
+  "pdf text extraction"     // For document skill
+]
+```
+
+### Keyword Generation Process
+
+**Step 1:** List all primary capabilities
+```
+Skill: us-crop-monitor
+Capabilities:
+1. Crop condition monitoring
+2. Harvest progress tracking
+3. Yield data analysis
+```
+
+**Step 2:** Create 3-4 keywords per capability
+```
+Capability 1 → Keywords:
+- "crop condition data"
+- "crop health monitoring"
+- "condition ratings for crops"
+
+Capability 2 → Keywords:
+- "harvest progress report"
+- "planting progress data"
+- "percent harvested"
+
+Capability 3 → Keywords:
+- "crop yield analysis"
+- "productivity data"
+- "bushels per acre"
+```
+
+**Step 3:** Add action variations
+```
+- "analyze crop conditions"
+- "monitor harvest progress"
+- "track planting status"
+```
+
+**Result:** 10-15 keywords covering main use cases
+
+---
+
+## 🔍 Layer 2: Regex Patterns (marketplace.json)
+
+### Purpose
+Capture **flexible variations** while maintaining specificity.
+
+### Structure in marketplace.json
+
+```json
+{
+  "activation": {
+    "patterns": [
+      "(?i)(verb1|verb2)\\s+.*\\s+(entity|object)",
+      "(?i)(action)\\s+(context)\\s+(target)",
+      // ... 5-7 total
+    ]
+  }
+}
+```
+
+### Pattern Design Rules
+
+#### Pattern Anatomy
+```regex
+(?i)                    → Case insensitive
+(verb1|verb2|verb3)     → Action verbs (create, build, make)
+\s+                     → Whitespace (required)
+(an?\s+)?               → Optional article (a, an)
+(entity)                → Target entity
+\s+(for|to|that)        → Context connector
+```
+
+### Pattern Categories (5-7 patterns minimum)
+
+**Pattern 1: Action + Object**
+```regex
+(?i)(create|build|develop|make)\s+(an?\s+)?(agent|skill)\s+(for|to|that)
+```
+Matches:
+- "create an agent for"
+- "build a skill to"
+- "develop agent that"
+
+**Pattern 2: Automation Request**
+```regex
+(?i)(automate|automation)\s+(this\s+)?(workflow|process|task|repetitive)
+```
+Matches:
+- "automate this workflow"
+- "automation process"
+- "automate task"
+
+**Pattern 3: Repetitive Workflow**
+```regex
+(?i)(every day|daily|repeatedly)\s+(I|we)\s+(have to|need to|do|must)
+```
+Matches:
+- "every day I have to"
+- "daily we need to"
+- "repeatedly I must"
+
+**Pattern 4: Transformation**
+```regex
+(?i)(turn|convert|transform)\s+(this\s+)?(process|workflow|task)\s+into\s+(an?\s+)?agent
+```
+Matches:
+- "turn this process into an agent"
+- "convert workflow to agent"
+- "transform task into agent"
+
+**Pattern 5: Domain-Specific**
+```regex
+(?i)(analyze|analysis|monitor|track)\s+.*\s+(crop|stock|customer|data)
+```
+Matches:
+- "analyze crop conditions"
+- "monitor stock performance"
+- "track customer behavior"
+
+**Pattern 6-7:** Add more based on specific skill needs
+
+### Pattern Testing
+
+**Test each pattern independently:**
+
+```markdown
+Pattern: (?i)(create|build)\s+(an?\s+)?agent\s+for
+
+Test queries:
+✅ "create an agent for processing PDFs"
+✅ "build agent for data analysis"
+✅ "Create a Agent For automation"
+❌ "I want to create something"  // No "agent"
+❌ "agent creation guide"        // No action verb
+```
+
+### Common Regex Components
+
+**Verbs - Action:**
+```regex
+(create|build|develop|make|generate|design)
+(analyze|analysis|monitor|track|measure)
+(compare|rank|sort|list|show)
+(automate|automation|streamline)
+```
+
+**Entities:**
+```regex
+(agent|skill|workflow|process|task)
+(crop|stock|customer|product|invoice)
+(data|report|dashboard|analysis)
+```
+
+**Connectors:**
+```regex
+(for|to|that|with|using|from)
+(about|on|regarding|concerning)
+```
+
+---
+
+## 📝 Layer 3: Description + NLU (Existing, Enhanced)
+
+### Purpose
+Provide **Claude-interpretable** context for cases not covered by keywords/patterns.
+
+### Enhanced Description Template
+
+```yaml
+description: |
+  This skill should be used when the user {primary use case}.
+
+  Activates for queries about:
+  - {capability 1} ({synonyms, keywords})
+  - {capability 2} ({synonyms, keywords})
+  - {capability 3} ({synonyms, keywords})
+
+  Supports {actions list}: {action synonyms}.
+
+  Uses {technology/API} to {what it does}.
+
+  Examples: {example queries}.
+
+  Does NOT activate for: {counter-examples}.
+```
+
+### Enhanced Requirements
+
+**Must Include:**
+- ✅ All 60+ keywords from Step 2.5
+- ✅ Each capability explicitly mentioned
+- ✅ Synonyms in parentheses
+- ✅ Technology/API names
+- ✅ 3-5 example queries
+- ✅ 2-3 counter-examples
+
+**Length:** 300-500 characters (yes, longer than typical!)
+
+---
+
+## ✅ Step 8: Validation & Testing (NEW)
+
+### Testing Requirements
+
+**Minimum Test Coverage:**
+- 10+ query variations per major capability
+- All test queries documented in marketplace.json
+- Manual testing of each variation
+- No false positives in counter-examples
+
+### Test Query Structure in marketplace.json
+
+```json
+{
+  "test_queries": [
+    "Query variation 1 (tests keyword X)",
+    "Query variation 2 (tests pattern Y)",
+    "Query variation 3 (tests description)",
+    "Query variation 4 (natural phrasing)",
+    "Query variation 5 (shortened form)",
+    "Query variation 6 (verbose form)",
+    "Query variation 7 (domain synonym)",
+    "Query variation 8 (action synonym)",
+    "Query variation 9 (multilingual variant)",
+    "Query variation 10 (edge case)"
+  ]
+}
+```
+
+### Validation Checklist
+
+```markdown
+## Layer 1: Keywords Validation
+- [ ] 10-15 keywords defined?
+- [ ] Keywords are complete phrases (not single words)?
+- [ ] Keywords cover main use cases?
+- [ ] No overly generic keywords?
+
+## Layer 2: Patterns Validation
+- [ ] 5-7 patterns defined?
+- [ ] Patterns require action verbs?
+- [ ] Patterns tested independently?
+- [ ] No overly broad patterns?
+
+## Layer 3: Description Validation
+- [ ] 60+ unique keywords included?
+- [ ] All capabilities mentioned?
+- [ ] Synonyms provided?
+- [ ] Counter-examples listed?
+
+## Integration Testing
+- [ ] 10+ test queries per capability?
+- [ ] All test queries activate skill?
+- [ ] Counter-examples don't activate?
+- [ ] No conflicts with other skills?
+```
+
+### Test Report Template
+
+```markdown
+## Activation Test Report
+
+**Skill:** {skill-name}
+**Date:** {date}
+**Tester:** {name}
+
+### Test Results
+
+**Keywords (Layer 1):**
+- Total keywords: {count}
+- Tested: {count}
+- Pass rate: {X/Y}%
+
+**Patterns (Layer 2):**
+- Total patterns: {count}
+- Tested: {count}
+- Pass rate: {X/Y}%
+
+**Test Queries:**
+- Total test queries: {count}
+- Activated correctly: {count}
+- False negatives: {count}
+- False positives: {count}
+
+### Issues Found
+1. {Issue description}
+2. {Issue description}
+
+### Recommendations
+1. {Recommendation}
+2. {Recommendation}
+```
+
+---
+
+## 🎯 Complete Example: Robust Detection Implementation
+
+### Example Skill: stock-analyzer-cskill
+
+**marketplace.json:**
+
+```json
+{
+  "name": "stock-analyzer-cskill",
+  "description": "Technical stock analysis using indicators",
+
+  "activation": {
+    "keywords": [
+      "analyze stock",
+      "stock technical analysis",
+      "RSI for stocks",
+      "MACD analysis",
+      "moving average crossover",
+      "Bollinger Bands",
+      "buy sell signals",
+      "technical indicators",
+      "chart patterns",
+      "stock momentum"
+    ],
+
+    "patterns": [
+      "(?i)(analyze|analysis)\\s+.*\\s+(stock|stocks|ticker|equity)",
+      "(?i)(technical|chart)\\s+(analysis|indicators?)\\s+(for|of)",
+      "(?i)(RSI|MACD|moving average|Bollinger|momentum)\\s+(for|of|analysis)",
+      "(?i)(buy|sell)\\s+(signal|signals|recommendation)\\s+(for|using)",
+      "(?i)(compare|rank)\\s+.*\\s+stocks?\\s+(using|with|by)"
+    ]
+  },
+
+  "usage": {
+    "example": "Analyze AAPL using RSI and MACD indicators",
+    "when_to_use": [
+      "User asks for technical stock analysis",
+      "User wants to analyze indicators (RSI, MACD, etc.)",
+      "User needs buy/sell signals based on technicals",
+      "User wants to compare stocks using technical metrics"
+    ],
+    "when_not_to_use": [
+      "Fundamental analysis (P/E ratios, earnings)",
+      "News-based analysis",
+      "Portfolio optimization",
+      "Options pricing"
+    ]
+  },
+
+  "test_queries": [
+    "Analyze AAPL stock using RSI",
+    "What's the MACD for Tesla?",
+    "Show me technical indicators for MSFT",
+    "Buy or sell signals for Google stock?",
+    "Moving average crossover for SPY",
+    "Bollinger Bands analysis for Bitcoin",
+    "Compare technical strength of AAPL vs MSFT",
+    "Is TSLA overbought based on RSI?",
+    "Chart patterns for NVDA",
+    "Momentum indicators for tech stocks"
+  ]
+}
+```
+
+---
+
+## 📋 Final Phase 4 Checklist (Enhanced v3.0)
+
+### Traditional Detection (Steps 1-7)
+- [ ] Entities listed
+- [ ] Actions/verbs listed
+- [ ] Question variations mapped
+- [ ] Negative scope defined
+- [ ] Description created
+- [ ] Keywords documented
+
+### Layer 1: Keywords
+- [ ] 10-15 keywords defined
+- [ ] Keywords are complete phrases
+- [ ] Keywords categorized (action, workflow, domain)
+- [ ] Keywords added to marketplace.json
+
+### Layer 2: Patterns
+- [ ] 5-7 regex patterns defined
+- [ ] Patterns require action verbs + context
+- [ ] Each pattern tested individually
+- [ ] Patterns added to marketplace.json
+
+### Layer 3: Description
+- [ ] 60+ unique keywords included
+- [ ] All capabilities mentioned with synonyms
+- [ ] Example queries provided
+- [ ] Counter-examples documented
+
+### Testing & Validation
+- [ ] 10+ test queries per capability
+- [ ] All queries added to test_queries array
+- [ ] Manual testing completed
+- [ ] No false positives/negatives found
+- [ ] Test report documented
+
+### Integration
+- [ ] when_to_use / when_not_to_use defined
+- [ ] No conflicts with other skills identified
+- [ ] Activation priority appropriate
+- [ ] Documentation complete
+
+---
+
+## 💡 Quick Reference: 3-Layer Activation Checklist
+
+```markdown
+✅ **Layer 1: Keywords** (10-15 keywords)
+   - Complete phrases (not single words)
+   - Cover main use cases
+   - Categorized by type
+
+✅ **Layer 2: Patterns** (5-7 regex)
+   - Require action verbs
+   - Flexible but specific
+   - Tested independently
+
+✅ **Layer 3: Description** (300-500 chars)
+   - 60+ unique keywords
+   - All capabilities mentioned
+   - Examples + counter-examples
+
+✅ **Testing** (10+ variations)
+   - All test queries activate
+   - No false positives
+   - Documented results
+```
+
+**Remember:** More layers = More reliability = Happier users!

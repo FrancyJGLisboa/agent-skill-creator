@@ -1,0 +1,26 @@
+# Stock Analyzer Skill - Dependencies
+
+# Data fetching
+yfinance>=0.2.0
+
+# Data processing
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Technical indicators
+# Note: TA-Lib requires separate installation of C library
+# See: https://github.com/mrjbq7/ta-lib#installation
+ta-lib>=0.4.0
+
+# Alternative pure-Python technical analysis library (if TA-Lib installation is problematic)
+# pandas-ta>=0.3.14
+
+# Optional: Charting and visualization
+matplotlib>=3.7.0
+plotly>=5.14.0
+
+# Development dependencies
+pytest>=7.3.0
+pytest-cov>=4.1.0
+black>=23.3.0
+mypy>=1.3.0

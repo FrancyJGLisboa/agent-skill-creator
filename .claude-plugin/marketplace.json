@@ -1,14 +1,14 @@
 {
-  "name": "agent-creator-enhanced",
+  "name": "agent-sill-creator",
   "owner": {
-    "name": "Agent Creator Enhanced",
-    "email": "noreply@example.com"
+    "name": "Agent Skill Creator",
+    "email": "agrolisboa@gmail.com"
   },
   "metadata": {
-    "description": "Enhanced Agent Creator - Meta-skill for autonomous agent generation with multi-agent support, templates, and interactive configuration. Supports single agents, multi-agent suites, transcript processing, template-based creation, and batch agent creation.",
-    "version": "2.0.0",
+    "description": " Agent Skill Creator - Meta-skill for autonomous agent generation with multi-agent support, templates, and interactive configuration. Supports single agents, multi-agent suites, transcript processing, template-based creation, and batch agent creation.",
+    "version": "3.0.0",
     "created": "2025-10-18",
-    "updated": "2025-10-22",
+    "updated": "2025-10-23",
     "language": "en-US",
     "features": [
       "multi-agent-support",
@@ -21,8 +21,8 @@
   },
   "plugins": [
     {
-      "name": "agent-creator-enhanced-plugin",
-      "description": "This enhanced skill should be used when the user asks to create an agent, automate a repetitive workflow, create a custom skill, or needs advanced agent creation capabilities. Activates with phrases like every day, daily I have to, I need to repeat, create agent for, automate workflow, create skill for, need to automate, turn process into agent. Supports single agents, multi-agent suites, transcript processing, template-based creation, and interactive configuration. Claude will use the enhanced protocol to research APIs, define analyses, structure everything, implement functional code, and create complete skills autonomously with optional user guidance.",
+      "name": "agent-skill-creator-plugin",
+      "description": "This enhanced meta skill should be used when the user asks to create an CLAUDE CODE agent SKILL(S), automate a repetitive workflow, create a custom skill, or needs advanced agent creation capabilities. Activates with phrases like every day, daily I have to, I need to repeat, create agent for, automate workflow, create skill for, need to automate, turn process into agent. Supports single agents, multi-agent suites, transcript processing, template-based creation, and interactive configuration. Claude will use the enhanced protocol to research APIs, define analyses, structure everything, implement functional code, and create complete skills autonomously with optional user guidance.",
       "source": "./",
       "strict": false,
       "skills": ["./"]
@@ -50,5 +50,75 @@
     "transcript_processing": true,
     "interactive_mode": true,
     "preview_system": true
-  }
+  },
+  "activation": {
+    "keywords": [
+      "create an agent for",
+      "create a skill for",
+      "create agent for",
+      "create skill for",
+      "automate workflow",
+      "automate this process",
+      "automate a repetitive workflow",
+      "every day I have to",
+      "daily I have to",
+      "I need to repeat",
+      "need to automate",
+      "turn process into agent",
+      "turn workflow into agent",
+      "turn this into agent",
+      "develop an agent for",
+      "develop a skill for",
+      "convert this transcript into agent",
+      "convert this codebase into SKILL"
+    ],
+    "patterns": [
+      "(?i)(create|build|develop|make)\\s+(an?\\s+)?(agent|skill)\\s+(for|to|that)",
+      "(?i)(automate|automation)\\s+(this\\s+)?(workflow|process|task|repetitive)",
+      "(?i)(every day|daily|repeatedly)\\s+(I|we)\\s+(have to|need to|do|must)",
+      "(?i)(turn|convert|transform)\\s+(this\\s+)?(process|workflow|task)\\s+into\\s+(an?\\s+)?agent",
+      "(?i)need\\s+to\\s+automate",
+      "(?i)(create|need)\\s+a\\s+custom\\s+skill",
+      "(?i)I\\s+(repeatedly|constantly|always)\\s+(need to|have to|do)"
+    ]
+  },
+  "usage": {
+    "example": "Create an agent for processing daily invoice PDFs and updating the database",
+    "input_types": [
+      "workflow_description",
+      "repetitive_task_description",
+      "automation_request"
+    ],
+    "output_types": [
+      "complete_skill",
+      "multi_agent_suite",
+      "functional_code"
+    ],
+    "when_to_use": [
+      "User explicitly asks to create an agent or skill",
+      "User describes a repetitive workflow that takes significant time",
+      "User wants to automate a manual process",
+      "User says phrases like 'every day I have to' or 'daily I need to'",
+      "User wants to turn a described process into an automated agent"
+    ],
+    "when_not_to_use": [
+      "User is asking general programming questions",
+      "User wants to use an existing skill (not create a new one)",
+      "User is asking for code snippets without automation context",
+      "User is asking about how skills work (documentation questions)",
+      "User wants to modify or debug existing code without creating new agent"
+    ]
+  },
+  "test_queries": [
+    "Create an agent for processing CSV files daily",
+    "Create a skill for analyzing stock market data",
+    "Automate this workflow: download PDFs, extract data, update spreadsheet",
+    "Every day I have to manually check emails and categorize them. Automate this.",
+    "I need to repeat this task: fetch API data, transform it, store in database",
+    "Turn this process into an agent: scrape websites, analyze content, generate reports",
+    "Develop an agent to monitor GitHub repos and send notifications",
+    "Need to automate invoice processing that I do daily",
+    "Create a skill that extracts data from PDFs and generates reports",
+    "Daily I have to download files from FTP and process them. Create an agent for this."
+  ]
 }

@@ -1,0 +1,130 @@
+{
+  "_comment": "Robust Activation Template - Replace all {{placeholders}} with actual values",
+
+  "name": "{{skill-name-cskill}}",
+  "owner": {
+    "name": "Agent Creator",
+    "email": "noreply@example.com"
+  },
+
+  "metadata": {
+    "description": "{{Brief 1-2 sentence description of what the skill does}}",
+    "version": "1.0.0",
+    "created": "{{YYYY-MM-DD}}",
+    "updated": "{{YYYY-MM-DD}}",
+    "language": "en-US",
+    "features": [
+      "{{feature-1}}",
+      "{{feature-2}}",
+      "{{feature-3}}"
+    ]
+  },
+
+  "plugins": [
+    {
+      "name": "{{skill-name}}-plugin",
+      "description": "{{Comprehensive description with all capabilities, keywords, and use cases - 300-500 characters}}",
+      "source": "./",
+      "strict": false,
+      "skills": ["./"]
+    }
+  ],
+
+  "activation": {
+    "_comment": "Layer 1: Exact phrase matching (10-15 keywords)",
+    "keywords": [
+      "_comment": "Category 1: Action + Entity (5-7 keywords)",
+      "{{action-1}} {{entity}}",
+      "{{action-2}} {{entity}}",
+      "{{action-3}} {{entity}}",
+
+      "_comment": "Category 2: Workflow Patterns (3-5 keywords)",
+      "{{workflow-phrase-1}}",
+      "{{workflow-phrase-2}}",
+
+      "_comment": "Category 3: Domain-Specific (2-3 keywords)",
+      "{{domain-specific-phrase-1}}",
+      "{{domain-specific-phrase-2}}"
+    ],
+
+    "_comment": "Layer 2: Flexible pattern matching (5-7 patterns)",
+    "patterns": [
+      "_comment": "Pattern 1: Action + Object",
+      "(?i)({{verb1}}|{{verb2}}|{{verb3}})\\s+(an?\\s+)?({{entity1}}|{{entity2}})\\s+(for|to|that)",
+
+      "_comment": "Pattern 2: Domain-specific action",
+      "(?i)({{domain-verb1}}|{{domain-verb2}})\\s+.*\\s+({{domain-entity}})",
+
+      "_comment": "Pattern 3: Workflow pattern",
+      "(?i)(every day|daily|repeatedly)\\s+(I|we)\\s+(have to|need to|do)",
+
+      "_comment": "Pattern 4: Transformation",
+      "(?i)(turn|convert|transform)\\s+(this\\s+)?({{source}})\\s+into\\s+({{target}})",
+
+      "_comment": "Pattern 5-7: Add more based on capabilities",
+      "(?i)({{custom-pattern-5}})",
+      "(?i)({{custom-pattern-6}})",
+      "(?i)({{custom-pattern-7}})"
+    ]
+  },
+
+  "capabilities": {
+    "{{capability-1}}": true,
+    "{{capability-2}}": true,
+    "{{capability-3}}": true
+  },
+
+  "usage": {
+    "example": "{{Concrete example query that should activate this skill}}",
+
+    "input_types": [
+      "{{input-type-1}}",
+      "{{input-type-2}}",
+      "{{input-type-3}}"
+    ],
+
+    "output_types": [
+      "{{output-type-1}}",
+      "{{output-type-2}}"
+    ],
+
+    "_comment": "When to use this skill",
+    "when_to_use": [
+      "{{use-case-1}}",
+      "{{use-case-2}}",
+      "{{use-case-3}}",
+      "{{use-case-4}}",
+      "{{use-case-5}}"
+    ],
+
+    "_comment": "When NOT to use this skill (prevent false positives)",
+    "when_not_to_use": [
+      "{{counter-case-1}}",
+      "{{counter-case-2}}",
+      "{{counter-case-3}}"
+    ]
+  },
+
+  "test_queries": [
+    "_comment": "10+ variations to test activation",
+    "{{test-query-1 - tests keyword X}}",
+    "{{test-query-2 - tests pattern Y}}",
+    "{{test-query-3 - tests description}}",
+    "{{test-query-4 - natural phrasing}}",
+    "{{test-query-5 - shortened form}}",
+    "{{test-query-6 - verbose form}}",
+    "{{test-query-7 - domain synonym}}",
+    "{{test-query-8 - action synonym}}",
+    "{{test-query-9 - edge case}}",
+    "{{test-query-10 - real-world example}}"
+  ],
+
+  "_instructions": {
+    "step_1": "Replace ALL {{placeholders}} with actual values",
+    "step_2": "Remove all _comment fields before deploying",
+    "step_3": "Test all keywords and patterns independently",
+    "step_4": "Run full test suite with test_queries",
+    "step_5": "Verify 95%+ activation success rate",
+    "step_6": "Document any issues and iterate"
+  }
+}

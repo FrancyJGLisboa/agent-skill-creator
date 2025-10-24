@@ -1482,6 +1482,139 @@ With all keywords identified, create ~200 word description that:
 
 **See** `references/phase4-detection.md` for complete guide.
 
+### 🎯 3-Layer Activation System (v3.0)
+
+**Important**: As of Agent-Skill-Creator v3.0, we now use a **3-Layer Activation System** to achieve 95%+ activation reliability.
+
+#### Why 3 Layers?
+
+Previous skills that relied only on description achieved ~70% activation reliability. The 3-layer system dramatically improves this to 95%+ by combining:
+
+1. **Layer 1: Keywords** - Exact phrase matching (high precision)
+2. **Layer 2: Patterns** - Regex flexible matching (coverage for variations)
+3. **Layer 3: Description + NLU** - Claude's understanding (fallback for edge cases)
+
+#### Quick Implementation Guide
+
+**Layer 1: Keywords (10-15 phrases)**
+```json
+"activation": {
+  "keywords": [
+    "create an agent for",
+    "automate workflow",
+    "technical analysis for",
+    "RSI indicator",
+    // 10-15 total complete phrases
+  ]
+}
+```
+
+**Requirements:**
+- ✅ Complete phrases (2+ words)
+- ✅ Action verb + entity
+- ✅ Domain-specific terms
+- ❌ No single words
+- ❌ No overly generic phrases
+
+**Layer 2: Patterns (5-7 regex)**
+```json
+"patterns": [
+  "(?i)(create|build)\\s+(an?\\s+)?agent\\s+for",
+  "(?i)(automate|automation)\\s+(workflow|process)",
+  "(?i)(analyze|analysis)\\s+.*\\s+(stock|data)",
+  // 5-7 total patterns
+]
+```
+
+**Requirements:**
+- ✅ Start with `(?i)` for case-insensitivity
+- ✅ Include action verbs + entities
+- ✅ Allow flexible word order
+- ✅ Specific enough to avoid false positives
+- ✅ Flexible enough to capture variations
+
+**Layer 3: Enhanced Description (300-500 chars, 60+ keywords)**
+```
+Comprehensive [domain] tool. [Primary capability] including [specific-feature-1],
+[specific-feature-2], and [specific-feature-3]. Generates [output-type] based on
+[method]. Compares [entity-type] for [analysis-type]. Monitors [target] and tracks
+[metric]. Perfect for [user-persona] needing [use-case-1], [use-case-2], and
+[use-case-3] using [methodology].
+```
+
+**Requirements:**
+- ✅ 60+ unique keywords
+- ✅ All Layer 1 keywords included naturally
+- ✅ Domain-specific terminology
+- ✅ Use cases clearly stated
+- ✅ Natural language flow
+
+#### Usage Sections
+
+Add to marketplace.json:
+
+```json
+"usage": {
+  "when_to_use": [
+    "User explicitly asks to [capability-1]",
+    "User mentions [indicator-name] or [domain-term]",
+    "User describes [use-case-scenario]",
+    // 5+ use cases
+  ],
+  "when_not_to_use": [
+    "User asks for [out-of-scope-1]",
+    "User wants [different-skill-capability]",
+    // 3+ counter-cases
+  ]
+}
+```
+
+#### Test Queries
+
+Add to marketplace.json:
+
+```json
+"test_queries": [
+  "Query testing keyword-1",
+  "Query testing pattern-2",
+  "Query testing description understanding",
+  "Natural language variation",
+  // 10+ total queries covering all layers
+]
+```
+
+#### Complete Example
+
+See `references/examples/stock-analyzer-cskill/` for a complete working example demonstrating:
+- All 3 layers properly configured
+- 98% activation reliability
+- Complete test suite
+- Documentation with activation examples
+
+#### Quality Checklist
+
+Before completing Phase 4, verify:
+
+- [ ] 10-15 complete keyword phrases defined
+- [ ] 5-7 regex patterns with verbs + entities
+- [ ] 300-500 char description with 60+ keywords
+- [ ] 5+ when_to_use cases documented
+- [ ] 3+ when_not_to_use cases documented
+- [ ] 10+ test_queries covering all layers
+- [ ] Tested activation with sample queries
+- [ ] Expected success rate: 95%+
+
+#### Additional Resources
+
+- **Complete Guide**: `references/phase4-detection.md`
+- **Pattern Library**: `references/activation-patterns-guide.md` (30+ reusable patterns)
+- **Testing Guide**: `references/activation-testing-guide.md` (5-phase testing)
+- **Quality Checklist**: `references/activation-quality-checklist.md`
+- **Templates**: `references/templates/marketplace-robust-template.json`
+- **Example**: `references/examples/stock-analyzer-cskill/`
+
+---
+
 ## PHASE 5: Complete Implementation
 
 **Objective**: IMPLEMENT everything with REAL code

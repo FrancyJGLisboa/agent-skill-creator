@@ -1,0 +1,121 @@
+{
+  "name": "stock-analyzer-cskill",
+  "owner": {
+    "name": "Agent Creator",
+    "email": "noreply@example.com"
+  },
+
+  "metadata": {
+    "description": "Technical stock analysis using RSI, MACD, Bollinger Bands and other indicators",
+    "version": "1.0.0",
+    "created": "2025-10-23",
+    "updated": "2025-10-23",
+    "language": "en-US",
+    "features": [
+      "Technical indicator calculation",
+      "Buy/sell signal generation",
+      "Multi-stock comparison",
+      "Chart pattern recognition"
+    ]
+  },
+
+  "plugins": [
+    {
+      "name": "stock-analyzer-plugin",
+      "description": "Comprehensive technical analysis tool for stocks and ETFs. Analyzes price movements, volume patterns, and momentum indicators including RSI (Relative Strength Index), MACD (Moving Average Convergence Divergence), Bollinger Bands, moving averages, and chart patterns. Generates buy and sell signals based on technical indicators. Compares multiple stocks for relative strength analysis. Monitors stock performance and tracks price alerts. Perfect for traders needing technical analysis, chart interpretation, momentum tracking, volatility assessment, and comparative stock evaluation using proven technical analysis methods and trading indicators.",
+      "source": "./",
+      "strict": false,
+      "skills": ["./"]
+    }
+  ],
+
+  "activation": {
+    "keywords": [
+      "analyze stock",
+      "stock analysis",
+      "technical analysis for",
+      "RSI indicator",
+      "MACD indicator",
+      "Bollinger Bands",
+      "buy signal for",
+      "sell signal for",
+      "compare stocks",
+      "stock comparison",
+      "monitor stock",
+      "track stock price",
+      "chart pattern",
+      "moving average for",
+      "stock momentum"
+    ],
+
+    "patterns": [
+      "(?i)(analyze|analysis)\\s+.*\\s+(stock|stocks?|ticker|equity|equities)s?",
+      "(?i)(technical|chart)\\s+(analysis|indicators?)\\s+(for|of|on)",
+      "(?i)(RSI|MACD|Bollinger)\\s+(for|of|indicator|analysis)",
+      "(?i)(buy|sell)\\s+(signal|recommendation|suggestion)\\s+(for|using)",
+      "(?i)(compare|comparison|rank)\\s+.*\\s+stocks?\\s+(using|by|with)",
+      "(?i)(monitor|track|watch)\\s+.*\\s+(stock|ticker|price)s?",
+      "(?i)(moving average|momentum|volatility)\\s+(for|of|analysis)"
+    ]
+  },
+
+  "capabilities": {
+    "technical_analysis": true,
+    "signal_generation": true,
+    "stock_comparison": true,
+    "monitoring": true
+  },
+
+  "usage": {
+    "example": "Analyze AAPL stock using RSI and MACD indicators",
+
+    "input_types": [
+      "Stock ticker symbols",
+      "Technical indicator names",
+      "Time periods and ranges",
+      "Comparison requests"
+    ],
+
+    "output_types": [
+      "Technical analysis reports",
+      "Buy/sell signals with reasoning",
+      "Comparative stock rankings",
+      "Chart pattern interpretations"
+    ],
+
+    "when_to_use": [
+      "User asks for technical analysis of specific stocks",
+      "User mentions technical indicators like RSI, MACD, Bollinger Bands",
+      "User wants buy or sell signals based on technical analysis",
+      "User wants to compare multiple stocks using technical metrics",
+      "User mentions chart patterns or momentum analysis",
+      "User asks to monitor or track stock prices with alerts",
+      "User requests moving average analysis or volatility assessment"
+    ],
+
+    "when_not_to_use": [
+      "User asks for fundamental analysis (P/E ratios, earnings, financials)",
+      "User wants news or sentiment analysis about stocks",
+      "User asks for stock recommendations without technical context",
+      "User wants to execute trades or access brokerage accounts",
+      "User asks general questions about how stock markets work",
+      "User wants portfolio management or allocation advice",
+      "User asks about options, futures, or derivatives analysis"
+    ]
+  },
+
+  "test_queries": [
+    "Analyze AAPL stock using RSI indicator",
+    "What's the technical analysis for MSFT?",
+    "Show me MACD and Bollinger Bands for TSLA",
+    "Is there a buy signal for NVDA based on technical indicators?",
+    "Compare AAPL vs MSFT using RSI and momentum",
+    "Track GOOGL stock price and alert me on RSI oversold",
+    "What's the moving average analysis for SPY?",
+    "Analyze chart patterns for AMD stock",
+    "Technical analysis of QQQ with buy/sell signals",
+    "Monitor stock AMZN for MACD crossover signals",
+    "Show me volatility and Bollinger Bands for NFLX",
+    "Rank these stocks by RSI: AAPL, MSFT, GOOGL, AMZN"
+  ]
+}
