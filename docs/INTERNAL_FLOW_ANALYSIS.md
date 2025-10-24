@@ -1,49 +1,49 @@
-# Fluxo Interno do Agent-Skill-Creator: O Que Acontece "Por Baixo dos Panos"
+# Agent-Skill-Creator Internal Flow: What Happens "Under the Hood"
 
-## 🎯 **Cenário Exemplo**
+## 🎯 **Example Scenario**
 
-**Comando do Usuário:**
+**User Command:**
 ```
-"gostaria de automatizar o que esta sendo explicado e descrito nesse artigo [conteúdo do artigo sobre análise de dados financeiros]"
-```
-
-## 🚀 **Fluxo Completo Detalhado**
-
-### **FASE 0: Detecção e Ativação Automática**
-
-#### **0.1 Análise da Intenção do Usuário**
-O Claude Code analisa o comando e detecta padrões de ativação:
-
-```
-PADRÕES DETECTADOS:
-✅ "automatizar" → Ativação de workflow automation
-✅ "o que esta sendo explicado" → Processamento de conteúdo externo
-✅ "nesse artigo" → Transcrito/intent processing
-✅ Comando completo → Ativa Agent-Skill-Creator
+"I'd like to automate what is being explained and described in this article [financial data analysis article content]"
 ```
 
-#### **0.2 Carregamento da Meta-Skill**
+## 🚀 **Complete Detailed Flow**
+
+### **PHASE 0: Detection and Automatic Activation**
+
+#### **0.1 User Intent Analysis**
+Claude Code analyzes the command and detects activation patterns:
+
+```
+DETECTED PATTERNS:
+✅ "automate" → Workflow automation activation
+✅ "what is being explained" → External content processing
+✅ "in this article" → Transcribed/intent processing
+✅ Complete command → Activates Agent-Skill-Creator
+```
+
+#### **0.2 Meta-Skill Loading**
 ```python
-# Sistema interno Claude Code
+# Claude Code internal system
 if matches_pattern(user_input, SKILL_ACTIVATION_PATTERNS):
     load_skill("agent-creator-en-v2")
     activate_5_phase_process(user_input)
 ```
 
-**O que acontece:**
-- O `SKILL.md` do agent-creator é carregado na memória
-- O contexto da skill é preparado
-- As 5 fases são inicializadas
+**What happens:**
+- The agent-creator's `SKILL.md` is loaded into memory
+- The skill context is prepared
+- The 5 phases are initialized
 
 ---
 
-### **FASE 1: DISCOVERY - Pesquisa e Análise**
+### **PHASE 1: DISCOVERY - Research and Analysis**
 
-#### **1.1 Processamento do Conteúdo do Artigo**
+#### **1.1 Article Content Processing**
 ```python
-# Simulação do processamento interno
+# Internal processing simulation
 def analyze_article_content(article_text):
-    # Extração de informações estruturadas
+    # Structured information extraction
     workflows = extract_workflows(article_text)
     tools_mentioned = identify_tools(article_text)
     data_sources = find_data_sources(article_text)
@@ -57,56 +57,56 @@ def analyze_article_content(article_text):
     }
 ```
 
-**Exemplo Prático - Artigo sobre Análise Financeira:**
+**Practical Example - Financial Analysis Article:**
 ```
-ARTIGO CONTEÚDO ANALISADO:
-├─ Workflows Identificados:
-│  ├─ "Baixar dados da bolsa"
-│  ├─ "Calcular indicadores técnicos"
-│  ├─ "Gerar gráficos de análise"
-│  └─ "Criar relatório semanal"
-├─ Ferramentas Mencionadas:
-│  ├─ "Biblioteca pandas"
+ANALYZED ARTICLE CONTENT:
+├─ Identified Workflows:
+│  ├─ "Download stock market data"
+│  ├─ "Calculate technical indicators"
+│  ├─ "Generate analysis charts"
+│  └─ "Create weekly report"
+├─ Mentioned Tools:
+│  ├─ "pandas library"
 │  ├─ "Alpha Vantage API"
-│  ├─ "Matplotlib para gráficos"
-│  └─ "Excel para relatórios"
-└─ Fontes de Dados:
+│  ├─ "Matplotlib for charts"
+│  └─ "Excel for reports"
+└─ Data Sources:
    ├─ "Yahoo Finance API"
-   ├─ "Arquivos CSV locais"
-   └─ "Banco de dados SQL"
+   ├─ "Local CSV files"
+   └─ "SQL database"
 ```
 
-#### **1.2 Pesquisa de APIs e Ferramentas**
+#### **1.2 API and Tools Research**
 ```bash
-# WebSearch automático realizado pelo Claude
+# Automatic WebSearch performed by Claude
 WebSearch: "Best Python libraries for financial data analysis 2025"
 WebSearch: "Alpha Vantage API documentation Python integration"
 WebSearch: "Financial reporting automation tools Python"
 ```
 
-#### **1.3 Complementação com AgentDB (se disponível)**
+#### **1.3 AgentDB Enhancement (if available)**
 ```python
-# AgentDB integration transparente
+# Transparent AgentDB integration
 agentdb_insights = query_agentdb_for_patterns("financial_analysis")
 if agentdb_insights.success_rate > 0.8:
     apply_learned_patterns(agentdb_insights.patterns)
 ```
 
-#### **1.4 Decisão de Stack Tecnológico**
+#### **1.4 Technology Stack Decision**
 ```
-DECISÃO TÉCNICA:
-✅ Python como linguagem principal
-✅ pandas para manipulação de dados
-✅ Alpha Vantage para dados de mercado
-✅ Matplotlib/Seaborn para visualizações
-✅ ReportLab para geração de PDFs
+TECHNICAL DECISION:
+✅ Python as primary language
+✅ pandas for data manipulation
+✅ Alpha Vantage for market data
+✅ Matplotlib/Seaborn for visualizations
+✅ ReportLab for PDF generation
 ```
 
 ---
 
-### **FASE 2: DESIGN - Especificação de Funcionalidades**
+### **PHASE 2: DESIGN - Functionality Specification**
 
-#### **2.1 Análise de Casos de Uso**
+#### **2.1 Use Case Analysis**
 ```python
 def define_use_cases(workflows_identified):
     use_cases = []
@@ -123,47 +123,47 @@ def define_use_cases(workflows_identified):
     return use_cases
 ```
 
-**Casos de Uso Definidos:**
+**Defined Use Cases:**
 ```
 USE CASE 1: Data Acquisition
-- Description: Baixar dados históricos de ações
-- Input: Lista de tickers, período
-- Output: DataFrame com dados OHLCV
-- Frequency: Diário
+- Description: Download historical stock data
+- Input: List of tickers, period
+- Output: DataFrame with OHLCV data
+- Frequency: Daily
 
 USE CASE 2: Technical Analysis
-- Description: Calcular indicadores técnicos
-- Input: DataFrame de preços
-- Output: DataFrame com indicadores
-- Frequency: Sob demanda
+- Description: Calculate technical indicators
+- Input: Price DataFrame
+- Output: DataFrame with indicators
+- Frequency: On demand
 
 USE CASE 3: Report Generation
-- Description: Criar relatório PDF
-- Input: Resultados da análise
-- Output: Relatório formatado
-- Frequency: Semanal
+- Description: Create PDF report
+- Input: Analysis results
+- Output: Formatted report
+- Frequency: Weekly
 ```
 
-#### **2.2 Definição de Metodologias**
+#### **2.2 Methodology Definition**
 ```python
 def specify_methodologies(use_cases):
     methodologies = {
-        'data_validation': 'Validação de qualidade de dados',
-        'error_handling': 'Tratamento de erros robusto',
-        'caching_strategy': 'Cache de dados para performance',
-        'logging': 'Log detalhado para debugging',
-        'configuration': 'Configuração flexível via JSON'
+        'data_validation': 'Data quality validation',
+        'error_handling': 'Robust error handling',
+        'caching_strategy': 'Data caching for performance',
+        'logging': 'Detailed logging for debugging',
+        'configuration': 'Flexible configuration via JSON'
     }
     return methodologies
 ```
 
 ---
 
-### **FASE 3: ARCHITECTURE - Decisão Estrutural**
+### **PHASE 3: ARCHITECTURE - Structural Decision**
 
-#### **3.1 Análise de Complexidade (DECISION_LOGIC.md aplicado)**
+#### **3.1 Complexity Analysis (DECISION_LOGIC.md applied)**
 ```python
-# Avaliação automática baseada no conteúdo do artigo
+# Automatic evaluation based on article content
 complexity_score = calculate_complexity({
     'number_of_workflows': 4,           # Data + Analysis + Reports + Alerts
     'workflow_complexity': 'medium',    # API calls + calculations + formatting
@@ -172,27 +172,27 @@ complexity_score = calculate_complexity({
     'domain_expertise': ['finance', 'data_science', 'reporting']
 })
 
-# Decisão de arquitetura
+# Architecture decision
 if complexity_score > SIMPLE_SKILL_THRESHOLD:
     architecture = "complex_skill_suite"
 else:
     architecture = "simple_skill"
 ```
 
-**Neste exemplo:**
+**In this example:**
 ```
-RESULTADO DA ANÁLISE:
-✅ Múltiplos workflows distintos (4)
-✅ Complexidade média-alta
-✅ Múltiplas fontes de dados
-✅ Estimativa > 2000 linhas de código
-✅ Múltiplos domínios de expertise
+ANALYSIS RESULT:
+✅ Multiple distinct workflows (4)
+✅ Medium-high complexity
+✅ Multiple data sources
+✅ Estimate > 2000 lines of code
+✅ Multiple domains of expertise
 
-DECISÃO: Complex Skill Suite
-NOME GERADO: financial-analysis-suite-cskill
+DECISION: Complex Skill Suite
+GENERATED NAME: financial-analysis-suite-cskill
 ```
 
-#### **3.2 Definição da Estrutura de Componentes**
+#### **3.2 Component Structure Definition**
 ```python
 def design_component_skills(complexity_analysis):
     if complexity_analysis.architecture == "complex_skill_suite":
@@ -205,7 +205,7 @@ def design_component_skills(complexity_analysis):
     return components
 ```
 
-#### **3.3 Planejamento de Performance e Cache**
+#### **3.3 Performance and Cache Planning**
 ```python
 performance_plan = {
     'data_cache': 'Cache market data for 1 day',
@@ -217,35 +217,35 @@ performance_plan = {
 
 ---
 
-### **FASE 4: DETECTION - Palavras-Chave e Ativação**
+### **PHASE 4: DETECTION - Keywords and Activation**
 
-#### **4.1 Análise de Palavras-Chave**
+#### **4.1 Keyword Analysis**
 ```python
 def determine_activation_keywords(workflows, tools):
     keywords = {
         'primary': [
-            'análise financeira',
-            'dados de mercado',
-            'indicadores técnicos',
-            'relatórios de investimento'
+            'financial analysis',
+            'market data',
+            'technical indicators',
+            'investment reports'
         ],
         'secondary': [
-            'automatizar análise',
-            'gerar gráficos',
-            'calcular retornos',
-            'extração de dados'
+            'automate analysis',
+            'generate charts',
+            'calculate returns',
+            'data extraction'
         ],
         'domains': [
-            'finanças',
-            'investimentos',
-            'análise quantitativa',
-            'mercado de ações'
+            'finance',
+            'investments',
+            'quantitative analysis',
+            'stock market'
         ]
     }
     return keywords
 ```
 
-#### **4.2 Criação de Descrições Precisas**
+#### **4.2 Precise Description Creation**
 ```python
 def create_skill_descriptions(components):
     descriptions = {}
@@ -263,11 +263,11 @@ def create_skill_descriptions(components):
 
 ---
 
-### **FASE 5: IMPLEMENTATION - Criação do Código**
+### **PHASE 5: IMPLEMENTATION - Code Creation**
 
-#### **5.1 Criação da Estrutura de Diretórios**
+#### **5.1 Directory Structure Creation**
 ```bash
-# Criado automaticamente pelo sistema
+# Automatically created by the system
 mkdir -p financial-analysis-suite/.claude-plugin
 mkdir -p financial-analysis-suite/data-acquisition/{scripts,references,assets}
 mkdir -p financial-analysis-suite/technical-analysis/{scripts,references,assets}
@@ -276,7 +276,7 @@ mkdir -p financial-analysis-suite/reporting/{scripts,references,assets}
 mkdir -p financial-analysis-suite/shared/{utils,config,templates}
 ```
 
-#### **5.2 Geração do marketplace.json**
+#### **5.2 marketplace.json Generation**
 ```json
 {
   "name": "financial-analysis-suite",
@@ -295,8 +295,8 @@ mkdir -p financial-analysis-suite/shared/{utils,config,templates}
 }
 ```
 
-#### **5.3 Criação dos SKILL.md Files**
-Para cada componente, o sistema gera:
+#### **5.3 SKILL.md Files Creation**
+For each component, the system generates:
 
 ```markdown
 ---
@@ -316,7 +316,7 @@ Use this skill when you need to:
 - Store data in standardized format
 ```
 
-#### **5.4 Geração dos Scripts Python**
+#### **5.4 Python Scripts Generation**
 ```python
 # data-acquisition/scripts/fetch_data.py
 import pandas as pd
@@ -352,7 +352,7 @@ class FinancialDataFetcher:
         return validation_results
 ```
 
-#### **5.5 Criação de Arquivos de Configuração**
+#### **5.5 Configuration Files Creation**
 ```json
 // shared/config/data_sources.json
 {
@@ -379,7 +379,7 @@ class FinancialDataFetcher:
 }
 ```
 
-#### **5.6 Geração de Documentação e Referências**
+#### **5.6 Documentation and References Generation**
 ```markdown
 # data-acquisition/references/api_documentation.md
 
@@ -396,7 +396,7 @@ class FinancialDataFetcher:
 - **Authentication**: None required
 ```
 
-#### **5.7 Criação do README Principal**
+#### **5.7 Main README Creation**
 ```markdown
 # Financial Analysis Suite
 
@@ -415,7 +415,7 @@ Complete automated financial analysis system that processes market data, perform
 - **Reporting**: Professional PDF report generation
 ```
 
-#### **5.8 Teste de Instalação Automático**
+#### **5.8 Automatic Installation Test**
 ```python
 # scripts/test_installation.py
 def test_suite_installation():
@@ -462,29 +462,29 @@ if __name__ == "__main__":
 
 ---
 
-## 🎯 **Resultado Final - O que o Usuário Recebe**
+## 🎯 **Final Result - What the User Receives**
 
-Após aproximadamente **45-90 minutos** de processamento autônomo, o usuário terá:
+After approximately **45-90 minutes** of autonomous processing, the user will have:
 
 ```
 financial-analysis-suite-cskill/
 ├── .claude-plugin/
-│   └── marketplace.json          ← Manifesto da suite
+│   └── marketplace.json          ← Suite manifest
 ├── data-acquisition-cskill/
 │   ├── SKILL.md                  ← Component skill 1
 │   ├── scripts/
-│   │   ├── fetch_data.py         ← Código funcional
-│   │   ├── validate_data.py      ← Validação
+│   │   ├── fetch_data.py         ← Functional code
+│   │   ├── validate_data.py      ← Validation
 │   │   └── cache_manager.py      ← Cache
 │   ├── references/
-│   │   └── api_documentation.md  ← Documentação
+│   │   └── api_documentation.md  ← Documentation
 │   └── assets/
 ├── technical-analysis-cskill/
 │   ├── SKILL.md                  ← Component skill 2
 │   ├── scripts/
-│   │   ├── indicators.py         ← Cálculos técnicos
-│   │   ├── signals.py            ← Geração de sinais
-│   │   └── backtester.py         ← Testes históricos
+│   │   ├── indicators.py         ← Technical calculations
+│   │   ├── signals.py            ← Signal generation
+│   │   └── backtester.py         ← Historical tests
 │   └── references/
 ├── visualization-cskill/
 │   ├── SKILL.md                  ← Component skill 3
@@ -496,23 +496,23 @@ financial-analysis-suite-cskill/
 │   ├── utils/
 │   ├── config/
 │   └── templates/
-├── requirements.txt              ← Dependências Python
-├── README.md                     ← Guia do usuário
-├── DECISIONS.md                  ← Explicação das decisões
-└── test_installation.py          ← Teste automático
+├── requirements.txt              ← Python dependencies
+├── README.md                     ← User guide
+├── DECISIONS.md                  ← Decision explanations
+└── test_installation.py          ← Automatic test
 ```
 
-**Nota:** Todos os componentes usam a convenção "-cskill" para identificar que foram criados pelo Agent-Skill-Creator.
+**Note:** All components use the "-cskill" convention to identify that they were created by Agent-Skill-Creator.
 
-## 🚀 **Como Usar a Skill Criada**
+## 🚀 **How to Use the Created Skill**
 
-**Imediatamente após a criação:**
+**Immediately after creation:**
 ```bash
-# Instalar a suite
+# Install the suite
 cd financial-analysis-suite
 /plugin marketplace add ./
 
-# Usar a das componentes
+# Use the components
 "Analyze technical indicators for AAPL using the data acquisition and technical analysis components"
 
 "Generate a comprehensive financial report for portfolio [MSFT, GOOGL, TSLA]"
@@ -522,24 +522,24 @@ cd financial-analysis-suite
 
 ---
 
-## 🧠 **Inteligência por Trás do Processo**
+## 🧠 **Intelligence Behind the Process**
 
-### **O que Torna Isso Possível:**
+### **What Makes This Possible:**
 
-1. **Compreensão Semântica**: O Claude entende o conteúdo do artigo, não apenas palavras-chave
-2. **Extração Estruturada**: Identifica workflows, ferramentas, e padrões
-3. **Decisão Autônoma**: Escolhe a arquitetura adequada sem intervenção humana
-4. **Geração Funcional**: Cria código que realmente funciona, não templates
-5. **Aprendizado Contínuo**: Com AgentDB, melhora com cada criação
+1. **Semantic Understanding**: Claude understands the article's content, not just keywords
+2. **Structured Extraction**: Identifies workflows, tools, and patterns
+3. **Autonomous Decision-Making**: Chooses the appropriate architecture without human intervention
+4. **Functional Generation**: Creates code that actually works, not templates
+5. **Continuous Learning**: With AgentDB, improves with each creation
 
-### **Diferencial em Relação a Abordagens Simples:**
+### **Differential Compared to Simple Approaches:**
 
-| Abordagem Simples | Agent-Skill-Creator |
+| Simple Approach | Agent-Skill-Creator |
 |------------------|---------------------|
-| Gera templates | Cria código funcional |
-| Requer programação | Totalmente autônomo |
-| Sem decisão de arquitetura | Inteligência de arquitetura |
-| Documentação básica | Documentação completa |
-| Teste manual | Teste automático |
+| Generates templates | Creates functional code |
+| Requires programming | Fully autonomous |
+| No architecture decision | Architecture intelligence |
+| Basic documentation | Complete documentation |
+| Manual testing | Automatic testing |
 
-**O Agent-Skill-Creator transforma artigos e descrições em skills Claude Code totalmente funcionais e production-ready!** 🎉
+**Agent-Skill-Creator transforms articles and descriptions into fully functional, production-ready Claude Code skills!** 🎉

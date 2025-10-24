@@ -1,119 +1,119 @@
-# Convenções de Nomenclatura: Sufixo "-cskill"
+# Naming Conventions: The "-cskill" Suffix
 
-## 🎯 **Propósito e Visão Geral**
+## 🎯 **Purpose and Overview**
 
-Este documento estabelece a convenção de nomenclatura obrigatória para todas as Claude Skills criadas pelo Agent-Skill-Creator, utilizando o sufixo "-cskill" para garantir identificação clara e consistência profissional.
+This document establishes the mandatory naming convention for all Claude Skills created by Agent-Skill-Creator, using the "-cskill" suffix to ensure clear identification and professional consistency.
 
-## 🏷️ **O Sufixo "-cskill"**
+## 🏷️ **The "-cskill" Suffix**
 
-### **Significado**
-- **CSKILL** = **C**laude **SKILL** (Habilidade Claude)
-- Indica que a skill foi criada automaticamente pelo Agent-Skill-Creator
-- Diferencia de skills criadas manualmente ou por outras ferramentas
+### **Meaning**
+- **CSKILL** = **C**laude **SKILL**
+- Indicates the skill was automatically created by Agent-Skill-Creator
+- Differentiates from manually created skills or other tools
 
-### **Benefícios**
+### **Benefits**
 
-✅ **Identificação Imediata**
-- Qualquer pessoa vê "-cskill" e sabe imediatamente que é uma Claude Skill
-- Reconhecimento instantâneo da origem (Agent-Skill-Creator)
+✅ **Immediate Identification**
+- Anyone sees "-cskill" and immediately knows it's a Claude Skill
+- Instant recognition of origin (Agent-Skill-Creator)
 
-✅ **Organização Facilitada**
-- Fácil filtrar e encontrar skills criadas pelo creator
-- Agrupamento lógico em sistemas de arquivos
-- Busca eficiente com padrão consistente
+✅ **Easy Organization**
+- Easy to filter and find skills created by the creator
+- Logical grouping in file systems
+- Efficient search with consistent pattern
 
-✅ **Profissionalismo**
-- Convenção de nomenclatura profissional e padronizada
-- Clareza na comunicação sobre origem e tipo
-- Aparência organizada e intencional
+✅ **Professionalism**
+- Professional and standardized naming convention
+- Clarity in communication about origin and type
+- Organized and intentional appearance
 
-✅ **Evita Confusão**
-- Sem ambiguidade sobre o que é uma skill vs plugin
-- Distinção clara de skills manuais vs automatizadas
-- Prevenção de conflitos de nomes
+✅ **Avoids Confusion**
+- No ambiguity about what's a skill vs plugin
+- Clear distinction between manual vs automated skills
+- Prevention of name conflicts
 
-## 📋 **Regras de Nomenclatura**
+## 📋 **Naming Rules**
 
-### **1. Formato Obrigatório**
+### **1. Mandatory Format**
 ```
-{descrição-descritiva}-cskill/
-```
-
-### **2. Estrutura do Nome Base**
-
-#### **Simple Skills (Objetivo Único)**
-```
-{ação}-{objeto}-csskill/
+{descriptive-description}-cskill/
 ```
 
-**Exemplos:**
+### **2. Base Name Structure**
+
+#### **Simple Skills (Single Objective)**
+```
+{action}-{object}-csskill/
+```
+
+**Examples:**
 - `pdf-text-extractor-cskill/`
 - `csv-data-cleaner-cskill/`
 - `image-converter-cskill/`
 - `email-automation-cskill/`
 - `report-generator-cskill/`
 
-#### **Complex Skill Suites (Múltiplos Componentes)**
+#### **Complex Skill Suites (Multiple Components)**
 ```
-{domínio}-analysis-suite-cskill/
-{domínio}-automation-cskill/
-{domínio}-workflow-cskill/
+{domain}-analysis-suite-cskill/
+{domain}-automation-cskill/
+{domain}-workflow-cskill/
 ```
 
-**Exemplos:**
+**Examples:**
 - `financial-analysis-suite-cskill/`
 - `e-commerce-automation-cskill/`
 - `research-workflow-cskill/`
 - `business-intelligence-cskill/`
 
-#### **Component Skills (Dentro de Suites)**
+#### **Component Skills (Within Suites)**
 ```
-{funcionalidade}-{domínio}-cskill/
+{functionality}-{domain}-cskill/
 ```
 
-**Exemplos:**
+**Examples:**
 - `data-acquisition-cskill/`
 - `technical-analysis-cskill/`
 - `reporting-generator-cskill/`
 - `user-interface-cskill/`
 
-### **3. Regras de Formatação**
+### **3. Formatting Rules**
 
-✅ **OBRIGATÓRIO:**
-- Sempre minúsculas
-- Usar hífens (-) para separar palavras
-- Terminar com "-cskill"
-- Ser descritivo e claro
-- Usar apenas caracteres alfanuméricos e hífens
+✅ **REQUIRED:**
+- Always lowercase
+- Use hyphens (-) to separate words
+- End with "-cskill"
+- Be descriptive and clear
+- Use only alphanumeric characters and hyphens
 
-❌ **PROIBIDO:**
-- Letras maiúsculas
+❌ **PROHIBITED:**
+- Uppercase letters
 - Underscores (_)
-- Espaços em branco
-- Caracteres especiais (!@#$%&*)
-- Números no início
-- Abreviações não-padrão
+- Whitespace
+- Special characters (!@#$%&*)
+- Numbers at the beginning
+- Non-standard abbreviations
 
-### **4. Comprimento Recomendado**
+### **4. Recommended Length**
 
-- **Mínimo:** 10 caracteres (ex: `pdf-tool-cskill`)
-- **Ideal:** 20-40 caracteres (ex: `financial-analysis-suite-cskill`)
-- **Máximo:** 60 caracteres (exceções justificadas)
+- **Minimum:** 10 characters (ex: `pdf-tool-cskill`)
+- **Ideal:** 20-40 characters (ex: `financial-analysis-suite-cskill`)
+- **Maximum:** 60 characters (justified exceptions)
 
-## 🔧 **Processo de Geração de Nomes**
+## 🔧 **Name Generation Process**
 
-### **Lógica Automática do Agent-Skill-Creator**
+### **Agent-Skill-Creator Automatic Logic**
 
 ```python
 def generate_skill_name(user_requirements, complexity):
     """
-    Gera nome da skill seguindo convenção -cskill
+    Generates skill name following -cskill convention
     """
 
-    # 1. Extrair conceitos-chave do input do usuário
+    # 1. Extract key concepts from user input
     concepts = extract_key_concepts(user_requirements)
 
-    # 2. Criar nome base baseado na complexidade
+    # 2. Create base name based on complexity
     if complexity == "simple":
         base_name = create_simple_name(concepts)
     elif complexity == "complex_suite":
@@ -121,16 +121,16 @@ def generate_skill_name(user_requirements, complexity):
     else:  # hybrid
         base_name = create_hybrid_name(concepts)
 
-    # 3. Sanitizar e formatar
+    # 3. Sanitize and format
     base_name = sanitize_name(base_name)
 
-    # 4. Aplicar convenção -cskill
+    # 4. Apply -cskill convention
     skill_name = f"{base_name}-cskill"
 
     return skill_name
 
 def create_simple_name(concepts):
-    """Cria nome para skills simples"""
+    """Creates name for simple skills"""
     if len(concepts) == 1:
         return f"{concepts[0]}-tool"
     elif len(concepts) == 2:
@@ -139,30 +139,30 @@ def create_simple_name(concepts):
         return "-".join(concepts[:2])
 
 def create_suite_name(concepts):
-    """Cria nome para suites complexas"""
+    """Creates name for complex suites"""
     if len(concepts) <= 2:
         return f"{concepts[0]}-automation"
     else:
         return f"{concepts[0]}-{'-'.join(concepts[1:3])}-suite"
 
 def sanitize_name(name):
-    """Sanitiza nome para formato válido"""
-    # Converter para minúsculas
+    """Sanitizes name to valid format"""
+    # Convert to lowercase
     name = name.lower()
-    # Substituir espaços e underscores por hífens
+    # Replace spaces and underscores with hyphens
     name = re.sub(r'[\s_]+', '-', name)
-    # Remover caracteres especiais
+    # Remove special characters
     name = re.sub(r'[^a-z0-9-]', '', name)
-    # Remover hífens múltiplos
+    # Remove multiple hyphens
     name = re.sub(r'-+', '-', name)
-    # Remover hífens no início/fim
+    # Remove hyphens at start/end
     name = name.strip('-')
     return name
 ```
 
-### **Exemplos de Transformação**
+### **Transformation Examples**
 
-| Input do Usuário | Tipo | Conceitos Extraídos | Nome Gerado |
+| User Input | Type | Extracted Concepts | Generated Name |
 |------------------|------|-------------------|-------------|
 | "Extract text from PDF" | Simple | ["extract", "text", "pdf"] | `pdf-text-extractor-cskill/` |
 | "Clean CSV data automatically" | Simple | ["clean", "csv", "data"] | `csv-data-cleaner-cskill/` |
@@ -170,9 +170,9 @@ def sanitize_name(name):
 | "Automate e-commerce workflows" | Suite | ["automate", "ecommerce", "workflows"] | `ecommerce-automation-cskill/` |
 | "Generate weekly status reports" | Simple | ["generate", "weekly", "reports"] | `weekly-report-generator-cskill/` |
 
-## 📚 **Exemplos Práticos por Domínio**
+## 📚 **Practical Examples by Domain**
 
-### **Finanças e Investimentos**
+### **Finance and Investments**
 ```
 financial-analysis-suite-cskill/
 portfolio-optimizer-cskill/
@@ -181,7 +181,7 @@ risk-calculator-cskill/
 trading-signal-generator-cskill/
 ```
 
-### **Análise de Dados**
+### **Data Analysis**
 ```
 data-visualization-cskill/
 statistical-analysis-cskill/
@@ -190,7 +190,7 @@ data-cleaner-cskill/
 dashboard-generator-cskill/
 ```
 
-### **Automação de Documentos**
+### **Document Automation**
 ```
 pdf-processor-cskill/
 word-automation-cskill/
@@ -199,7 +199,7 @@ presentation-creator-cskill/
 document-converter-cskill/
 ```
 
-### **E-commerce e Vendas**
+### **E-commerce and Sales**
 ```
 inventory-tracker-cskill/
 sales-analytics-cskill/
@@ -208,7 +208,7 @@ order-automation-cskill/
 price-monitor-cskill/
 ```
 
-### **Pesquisa e Academia**
+### **Research and Academia**
 ```
 literature-review-cskill/
 citation-manager-cskill/
@@ -217,7 +217,7 @@ academic-paper-generator-cskill/
 survey-analyzer-cskill/
 ```
 
-### **Produtividade e Escritório**
+### **Productivity and Office**
 ```
 email-automation-cskill/
 calendar-manager-cskill/
@@ -226,105 +226,105 @@ note-organizer-cskill/
 meeting-scheduler-cskill/
 ```
 
-## 🔍 **Validação e Qualidade**
+## 🔍 **Validation and Quality**
 
-### **Verificação Automática**
+### **Automatic Verification**
 ```python
 def validate_skill_name(skill_name):
     """
-    Valida se o nome segue a convenção -cskill
+    Validates if name follows -cskill convention
     """
 
-    # 1. Verificar sufixo -cskill
+    # 1. Check -cskill suffix
     if not skill_name.endswith("-cskill"):
         return False, "Missing -cskill suffix"
 
-    # 2. Verificar formato minúsculas
+    # 2. Check lowercase format
     if skill_name != skill_name.lower():
         return False, "Must be lowercase"
 
-    # 3. Verificar caracteres válidos
+    # 3. Check valid characters
     if not re.match(r'^[a-z0-9-]+-cskill$', skill_name):
         return False, "Contains invalid characters"
 
-    # 4. Verificar comprimento
+    # 4. Check length
     if len(skill_name) < 10 or len(skill_name) > 60:
         return False, "Invalid length"
 
-    # 5. Verificar hífens consecutivos
+    # 5. Check consecutive hyphens
     if '--' in skill_name:
         return False, "Contains consecutive hyphens"
 
     return True, "Valid naming convention"
 ```
 
-### **Checklist de Qualidade**
+### **Quality Checklist**
 
-Para cada nome gerado, verificar:
+For each generated name, verify:
 
-- [ ] **Termina com "-cskill"** ✓
-- [ ] **Está em minúsculas** ✓
-- [ ] **Usa apenas hífens como separadores** ✓
-- [ ] **É descritivo e claro** ✓
-- [ ] **Não tem caracteres especiais** ✓
-- [ ] **Comprimento adequado (10-60 caracteres)** ✓
-- [ ] **Fácil de pronunciar e lembrar** ✓
-- [ ] **Reflete a funcionalidade principal** ✓
-- [ ] **É único no ecossistema** ✓
+- [ ] **Ends with "-cskill"** ✓
+- [ ] **Is in lowercase** ✓
+- [ ] **Uses only hyphens as separators** ✓
+- [ ] **Is descriptive and clear** ✓
+- [ ] **Has no special characters** ✓
+- [ ] **Appropriate length (10-60 characters)** ✓
+- [ ] **Easy to pronounce and remember** ✓
+- [ ] **Reflects main functionality** ✓
+- [ ] **Is unique in ecosystem** ✓
 
-## 🚀 **Boas Práticas**
+## 🚀 **Best Practices**
 
-### **1. Seja Descritivo**
+### **1. Be Descriptive**
 ```
-✅ bom: pdf-text-extractor-cskill
-❌ ruim: tool-cskill
+✅ good: pdf-text-extractor-cskill
+❌ bad: tool-cskill
 
-✅ bom: financial-analysis-suite-cskill
-❌ ruim: finance-cskill
-```
-
-### **2. Mantenha Simplicidade**
-```
-✅ bom: csv-data-cleaner-cskill
-❌ ruim: automated-csv-data-validation-and-cleaning-tool-cskill
-
-✅ bom: email-automation-cskill
-❌ ruim: professional-email-marketing-automation-workflow-cskill
+✅ good: financial-analysis-suite-cskill
+❌ bad: finance-cskill
 ```
 
-### **3. Seja Consistente**
+### **2. Keep It Simple**
 ```
-✅ bom: data-acquisition-cskill, data-processing-cskill, data-visualization-cskill
-❌ ruim: get-data-cskill, process-cskill, visualize-cskill
-```
+✅ good: csv-data-cleaner-cskill
+❌ bad: automated-csv-data-validation-and-cleaning-tool-cskill
 
-### **4. Pense no Usuário**
-```
-✅ bom: weekly-report-generator-cskill (claro o que faz)
-❌ ruim: wrk-gen-cskill (abreviado, confuso)
+✅ good: email-automation-cskill
+❌ bad: professional-email-marketing-automation-workflow-cskill
 ```
 
-## 🔄 **Migração e Legado**
+### **3. Be Consistent**
+```
+✅ good: data-acquisition-cskill, data-processing-cskill, data-visualization-cskill
+❌ bad: get-data-cskill, process-cskill, visualize-cskill
+```
 
-### **Skills Existentes Sem "-cskill"**
-Se você tem skills existentes sem o sufixo:
+### **4. Think About the User**
+```
+✅ good: weekly-report-generator-cskill (clear what it does)
+❌ bad: wrk-gen-cskill (abbreviated, confusing)
+```
 
-1. **Adicione o sufixo imediatamente**
+## 🔄 **Migration and Legacy**
+
+### **Existing Skills Without "-cskill"**
+If you have existing skills without the suffix:
+
+1. **Add the suffix immediately**
    ```bash
    mv old-skill-name old-skill-name-cskill
    ```
 
-2. **Atualize referências internas**
-   - Atualize SKILL.md
-   - Modifique marketplace.json
-   - Atualize documentação
+2. **Update internal references**
+   - Update SKILL.md
+   - Modify marketplace.json
+   - Update documentation
 
-3. **Teste funcionamento**
-   - Verifique que a skill ainda funciona
-   - Confirme instalação correta
+3. **Test functionality**
+   - Verify skill still works
+   - Confirm correct installation
 
-### **Documentação de Migração**
-Para cada skill migrada, documente:
+### **Migration Documentation**
+For each migrated skill, document:
 ```markdown
 ## Migration History
 - **Original Name**: `old-name`
@@ -334,41 +334,41 @@ Para cada skill migrada, documente:
 - **Impact**: None, purely cosmetic change
 ```
 
-## 📖 **Guia Rápido de Referência**
+## 📖 **Quick Reference Guide**
 
-### **Para Criar Novo Nome:**
-1. **Identificar objetivo principal** (ex: "extract PDF text")
-2. **Extrair conceitos-chave** (ex: extract, pdf, text)
-3. **Montar nome base** (ex: pdf-text-extractor)
-4. **Adicionar sufixo** (ex: pdf-text-extractor-cskill)
+### **To Create New Name:**
+1. **Identify main objective** (ex: "extract PDF text")
+2. **Extract key concepts** (ex: extract, pdf, text)
+3. **Build base name** (ex: pdf-text-extractor)
+4. **Add suffix** (ex: pdf-text-extractor-cskill)
 
-### **Para Validar Nome Existente:**
-1. **Verificar sufixo "-cskill"**
-2. **Confirmar formato minúsculas**
-3. **Checar caracteres válidos**
-4. **Avaliar descritividade**
+### **To Validate Existing Name:**
+1. **Check "-cskill" suffix**
+2. **Confirm lowercase format**
+3. **Check valid characters**
+4. **Evaluate descriptiveness**
 
-### **Para Solucionar Problemas:**
-- **Nome muito curto**: Adicionar descritor
-- **Nome muito longo**: Remover palavras secundárias
-- **Nome confuso**: Usar sinônimos mais claros
-- **Conflito de nomes**: Adicionar diferenciador
+### **To Troubleshoot:**
+- **Name too short**: Add descriptor
+- **Name too long**: Remove secondary words
+- **Confusing name**: Use clearer synonyms
+- **Name conflict**: Add differentiator
 
-## ✅ **Resumo da Convenção**
+## ✅ **Convention Summary**
 
-**Fórmula:** `{descrição-descritiva}-cskill/`
+**Formula:** `{descriptive-description}-cskill/`
 
-**Regras Essenciais:**
-- ✅ Sempre terminar com "-cskill"
-- ✅ Sempre minúsculas
-- ✅ Usar hífens como separadores
-- ✅ Ser descritivo e claro
+**Essential Rules:**
+- ✅ Always end with "-cskill"
+- ✅ Always lowercase
+- ✅ Use hyphens as separators
+- ✅ Be descriptive and clear
 
-**Resultados:**
-- 🎯 Identificação imediata como Claude Skill
-- 🏗️ Origem clara (Agent-Skill-Creator)
-- 📁 Organização facilitada
-- 🔍 Busca eficiente
-- 💬 Comunicação clara
+**Results:**
+- 🎯 Immediate identification as Claude Skill
+- 🏗️ Clear origin (Agent-Skill-Creator)
+- 📁 Easy organization
+- 🔍 Efficient search
+- 💬 Clear communication
 
-**Esta convenção garante consistência profissional e elimina qualquer confusão sobre a origem e tipo das skills criadas!**
+**This convention ensures professional consistency and eliminates any confusion about the origin and type of created skills!**
