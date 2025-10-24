@@ -62,7 +62,7 @@ class AgentDBBridge:
     def _initialize_silently(self):
         """Initialize AgentDB silently without user intervention"""
         try:
-            # Try both CLI and npx approaches for AgentDB
+            # Step 1: Try detection first (current behavior)
             cli_available = self._check_cli_availability()
             npx_available = self._check_npx_availability()
 
@@ -71,8 +71,16 @@ class AgentDBBridge:
                 self.use_cli = cli_available  # Prefer native CLI
                 self._auto_configure()
                 logger.info("AgentDB initialized successfully (invisible mode)")
-            else:
-                logger.info("AgentDB not available - using fallback mode")
+                return
+
+            # Step 2: Try automatic installation if not found
+            logger.info("AgentDB not found - attempting automatic installation")
+            if self._attempt_automatic_install():
+                logger.info("AgentDB automatically installed and configured")
+                return
+
+            # Step 3: Fallback mode if installation fails
+            logger.info("AgentDB not available - using fallback mode")
 
         except Exception as e:
             logger.info(f"AgentDB initialization failed: {e} - using fallback mode")
@@ -94,13 +102,125 @@ class AgentDBBridge:
         """Check if AgentDB is available via npx"""
         try:
             result = subprocess.run(
-                ["npx", "agentdb", "--help"],
+                ["npx", "@anthropic-ai/agentdb", "--help"],
                 capture_output=True,
                 text=True,
                 timeout=10
             )
             return result.returncode == 0
         except (FileNotFoundError, subprocess.TimeoutExpired):
+            return False
+
+    def _attempt_automatic_install(self) -> bool:
+        """Attempt to install AgentDB automatically"""
+        try:
+            # Check if npm is available first
+            if not self._check_npm_availability():
+                logger.info("npm not available - cannot install AgentDB automatically")
+                return False
+
+            # Try installation methods in order of preference
+            installation_methods = [
+                self._install_npm_global,
+                self._install_npx_fallback
+            ]
+
+            for method in installation_methods:
+                try:
+                    if method():
+                        # Verify installation worked
+                        if self._verify_installation():
+                            self.is_available = True
+                            self._auto_configure()
+                            logger.info("AgentDB automatically installed and configured")
+                            return True
+                except Exception as e:
+                    logger.info(f"Installation method failed: {e}")
+                    continue
+
+            logger.info("All automatic installation methods failed")
+            return False
+
+        except Exception as e:
+            logger.info(f"Automatic installation failed: {e}")
+            return False
+
+    def _check_npm_availability(self) -> bool:
+        """Check if npm is available"""
+        try:
+            result = subprocess.run(
+                ["npm", "--version"],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+            return result.returncode == 0
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            return False
+
+    def _install_npm_global(self) -> bool:
+        """Install AgentDB globally via npm"""
+        try:
+            logger.info("Attempting npm global installation of AgentDB...")
+            result = subprocess.run(
+                ["npm", "install", "-g", "@anthropic-ai/agentdb"],
+                capture_output=True,
+                text=True,
+                timeout=300  # 5 minutes timeout
+            )
+
+            if result.returncode == 0:
+                logger.info("npm global installation successful")
+                return True
+            else:
+                logger.info(f"npm global installation failed: {result.stderr}")
+                return False
+
+        except Exception as e:
+            logger.info(f"npm global installation error: {e}")
+            return False
+
+    def _install_npx_fallback(self) -> bool:
+        """Try to use npx approach (doesn't require global installation)"""
+        try:
+            logger.info("Testing npx approach for AgentDB...")
+            # Test if npx can download and run agentdb
+            result = subprocess.run(
+                ["npx", "@anthropic-ai/agentdb", "--version"],
+                capture_output=True,
+                text=True,
+                timeout=60
+            )
+
+            if result.returncode == 0:
+                logger.info("npx approach successful - AgentDB available via npx")
+                return True
+            else:
+                logger.info(f"npx approach failed: {result.stderr}")
+                return False
+
+        except Exception as e:
+            logger.info(f"npx approach error: {e}")
+            return False
+
+    def _verify_installation(self) -> bool:
+        """Verify that AgentDB was installed successfully"""
+        try:
+            # Check CLI availability first
+            if self._check_cli_availability():
+                logger.info("AgentDB CLI verified after installation")
+                return True
+
+            # Check npx availability as fallback
+            if self._check_npx_availability():
+                logger.info("AgentDB npx availability verified after installation")
+                return True
+
+            logger.info("AgentDB installation verification failed")
+            return False
+
+        except Exception as e:
+            logger.info(f"Installation verification error: {e}")
             return False
 
     def _auto_configure(self):

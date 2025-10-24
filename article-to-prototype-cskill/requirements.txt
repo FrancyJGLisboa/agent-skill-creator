@@ -1,0 +1,19 @@
+# Article-to-Prototype Skill Dependencies
+
+# PDF Processing
+PyPDF2>=3.0.0
+pdfplumber>=0.10.0
+
+# Web Content Extraction
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+trafilatura>=1.6.0
+
+# Jupyter Notebook Support
+nbformat>=5.9.0
+
+# Markdown Processing
+mistune>=3.0.0
+
+# Optional: If using Claude API for enhanced analysis
+# anthropic>=0.18.0

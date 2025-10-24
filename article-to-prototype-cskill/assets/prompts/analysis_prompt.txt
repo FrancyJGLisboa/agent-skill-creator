@@ -1,0 +1,31 @@
+Analyze the following technical content and identify:
+
+1. **Algorithms**: Any described algorithms, procedures, or methods
+   - Name and description
+   - Steps or pseudocode
+   - Complexity if mentioned
+
+2. **Architectures**: System or software architecture patterns
+   - Pattern name (microservices, MVC, etc.)
+   - Components and their relationships
+   - Design decisions
+
+3. **Dependencies**: Required libraries, frameworks, or tools
+   - Library names
+   - Versions if specified
+   - Purpose or usage
+
+4. **Domain**: Primary technical domain
+   - Machine learning
+   - Web development
+   - Systems programming
+   - Data science
+   - Scientific computing
+   - Other
+
+5. **Technical Concepts**: Key concepts explained
+   - Definitions
+   - Relationships
+   - Implementation notes
+
+Provide structured analysis with confidence scores.

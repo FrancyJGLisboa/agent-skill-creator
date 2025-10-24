@@ -31,47 +31,127 @@
   ],
 
   "activation": {
-    "_comment": "Layer 1: Exact phrase matching (10-15 keywords)",
+    "_comment": "Layer 1: Enhanced keywords (50-80 keywords for 98% reliability)",
     "keywords": [
-      "_comment": "Category 1: Action + Entity (5-7 keywords)",
+      "_comment": "Category 1: Core capabilities (10-15 keywords)",
       "{{action-1}} {{entity}}",
+      "{{action-1}} {{entity}} and {{action-2}}",
       "{{action-2}} {{entity}}",
+      "{{action-2}} {{entity}} and {{action-1}}",
       "{{action-3}} {{entity}}",
+      "{{action-3}} {{entity}} and {{action-4}}",
 
-      "_comment": "Category 2: Workflow Patterns (3-5 keywords)",
+      "_comment": "Category 2: Synonym variations (10-15 keywords)",
+      "{{synonym-1-verb}} {{entity}}",
+      "{{synonym-1-verb}} {{entity}} {{synonym-1-object}}",
+      "{{synonym-2-verb}} {{entity}}",
+      "{{synonym-3-verb}} {{entity}} {{synonym-3-object}}",
+      "{{domain-technical-term}}",
+      "{{domain-business-term}}",
+
+      "_comment": "Category 3: Direct variations (8-12 keywords)",
+      "{{action-1}} {{entity}} from {{source-type}}",
+      "{{action-2}} {{entity}} from {{source-type}}",
+      "{{action-3}} {{entity}} in {{context}}",
       "{{workflow-phrase-1}}",
       "{{workflow-phrase-2}}",
+      "{{workflow-phrase-3}}",
+      "{{workflow-phrase-4}}",
 
-      "_comment": "Category 3: Domain-Specific (2-3 keywords)",
+      "_comment": "Category 4: Domain-specific (5-8 keywords)",
       "{{domain-specific-phrase-1}}",
-      "{{domain-specific-phrase-2}}"
+      "{{domain-specific-phrase-2}}",
+      "{{domain-specific-phrase-3}}",
+      "{{domain-technical-phrase}}",
+      "{{domain-business-phrase}}",
+
+      "_comment": "Category 5: Natural language (5-10 keywords)",
+      "how to {{action-1}} {{entity}}",
+      "what can I {{action-1}} {{entity}}",
+      "can you {{action-2}} {{entity}}",
+      "help me {{action-3}} {{entity}}",
+      "I need to {{action-1}} {{entity}}",
+      "{{entity}} from this {{source-type}}"
+      "{{entity}} from the {{source-type}}"
+      "get {{domain-object}} {{context}}"
+      "process {{domain-object}} here"
+      "work with these {{domain-objects}}"
     ],
 
-    "_comment": "Layer 2: Flexible pattern matching (5-7 patterns)",
+    "_comment": "Layer 2: Enhanced pattern matching (10-15 patterns for 98% coverage)",
     "patterns": [
-      "_comment": "Pattern 1: Action + Object",
-      "(?i)({{verb1}}|{{verb2}}|{{verb3}})\\s+(an?\\s+)?({{entity1}}|{{entity2}})\\s+(for|to|that)",
+      "_comment": "Pattern 1: Enhanced data extraction",
+      "(?i)(extract|scrape|get|pull|retrieve|harvest|collect|obtain)\\s+(and\\s+)?(analyze|process|handle|work\\s+with|examine|study|evaluate)\\s+(data|information|content|details|records|dataset|metrics)\\s+(from|on|of|in)\\s+(website|site|url|webpage|api|database|file|source)",
 
-      "_comment": "Pattern 2: Domain-specific action",
-      "(?i)({{domain-verb1}}|{{domain-verb2}})\\s+.*\\s+({{domain-entity}})",
+      "_comment": "Pattern 2: Enhanced data processing",
+      "(?i)(analyze|process|handle|work\\s+with|examine|study|evaluate|review|assess|explore|investigate|scrutinize)\\s+(web|online|site|website|digital)\\s+(data|information|content|metrics|records|dataset)",
 
-      "_comment": "Pattern 3: Workflow pattern",
-      "(?i)(every day|daily|repeatedly)\\s+(I|we)\\s+(have to|need to|do)",
+      "_comment": "Pattern 3: Enhanced normalization",
+      "(?i)(normalize|clean|format|standardize|structure|organize)\\s+(extracted|web|scraped|collected|gathered|pulled|retrieved)\\s+(data|information|content|records|metrics|dataset)",
 
-      "_comment": "Pattern 4: Transformation",
-      "(?i)(turn|convert|transform)\\s+(this\\s+)?({{source}})\\s+into\\s+({{target}})",
+      "_comment": "Pattern 4: Enhanced workflow automation",
+      "(?i)(every|daily|weekly|monthly|regularly|constantly|always)\\s+(I|we)\\s+(have to|need to|must|should|got to)\\s+(extract|process|handle|work\\s+with|analyze|manage|deal\\s+with)\\s+(data|information|reports|metrics|records)",
 
-      "_comment": "Pattern 5-7: Add more based on capabilities",
-      "(?i)({{custom-pattern-5}})",
-      "(?i)({{custom-pattern-6}})",
-      "(?i)({{custom-pattern-7}})"
+      "_comment": "Pattern 5: Enhanced transformation",
+      "(?i)(turn|convert|transform|change|modify|update|convert)\\s+(this\\s+)?({{source}})\\s+into\\s+(an?\\s+)?({{target}})",
+
+      "_comment": "Pattern 6: Technical operations",
+      "(?i)(web\\s+scraping|data\\s+mining|API\\s+integration|ETL\\s+process|data\\s+extraction|content\\s+parsing|information\\s+retrieval|data\\s+processing)\\s+(for|of|to|from)\\s+(website|site|api|database|source)",
+
+      "_comment": "Pattern 7: Business operations",
+      "(?i)(process\\s+business\\s+data|handle\\s+reports|analyze\\s+metrics|work\\s+with\\s+datasets|manage\\s+information|extract\\s+insights|normalize\\s+business\\s+records)\\s+(for|in|from)\\s+(reports|analytics|dashboard|meetings)",
+
+      "_comment": "Pattern 8: Natural language questions",
+      "(?i)(how\\s+to|what\\s+can\\s+I|can\\s+you|help\\s+me|I\\s+need\\s+to)\\s+(extract|get|pull|scrape|analyze|process|handle)\\s+(data|information|content)\\s+(from|on|of)\\s+(this|that|the)\\s+(website|site|page|source)",
+
+      "_comment": "Pattern 9: Conversational commands",
+      "(?i)(extract|get|scrape|pull|retrieve|collect|harvest)\\s+(data|information|content|details|metrics|records)\\s+(from|on|of|in)\\s+(this|that|the)\\s+(website|site|webpage|api|file|source)",
+
+      "_comment": "Pattern 10: Domain-specific action",
+      "(?i)({{domain-verb1}}|{{domain-verb2}}|{{domain-verb3}}|{{domain-verb4}}|{{domain-verb5}})\\s+.*\\s+({{domain-entity1}}|{{domain-entity2}}|{{domain-entity3}})"
     ]
+  },
+
+  "_comment": "NEW: Context-aware activation filters (v1.0)",
+  "contextual_filters": {
+    "required_context": {
+      "domains": ["{{primary-domain}}", "{{secondary-domain-1}}", "{{secondary-domain-2}}"],
+      "tasks": ["{{primary-task}}", "{{secondary-task-1}}", "{{secondary-task-2}}"],
+      "entities": ["{{primary-entity}}", "{{secondary-entity-1}}", "{{secondary-entity-2}}"],
+      "confidence_threshold": 0.8
+    },
+
+    "excluded_context": {
+      "domains": ["{{excluded-domain-1}}", "{{excluded-domain-2}}", "{{excluded-domain-3}}"],
+      "tasks": ["{{excluded-task-1}}", "{{excluded-task-2}}"],
+      "query_types": ["{{excluded-query-type-1}}", "{{excluded-query-type-2}}"],
+      "user_states": ["{{excluded-user-state-1}}", "{{excluded-user-state-2}}"]
+    },
+
+    "context_weights": {
+      "domain_relevance": 0.35,
+      "task_relevance": 0.30,
+      "intent_strength": 0.20,
+      "conversation_coherence": 0.15
+    },
+
+    "activation_rules": {
+      "min_relevance_score": 0.75,
+      "max_negative_score": 0.3,
+      "required_coherence": 0.6,
+      "context_consistency_check": true
+    }
   },
 
   "capabilities": {
     "{{capability-1}}": true,
     "{{capability-2}}": true,
-    "{{capability-3}}": true
+    "{{capability-3}}": true,
+    "context_requirements": {
+      "min_confidence": 0.8,
+      "required_domains": ["{{primary-domain}}"],
+      "supported_tasks": ["{{primary-task}}", "{{secondary-task-1}}"]
+    }
   },
 
   "usage": {

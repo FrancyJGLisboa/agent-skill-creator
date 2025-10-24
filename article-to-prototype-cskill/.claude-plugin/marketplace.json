@@ -1,0 +1,113 @@
+{
+  "name": "article-to-prototype-cskill",
+  "version": "1.0.0",
+  "type": "skill",
+  "description": "Autonomously extracts technical content from articles (PDF, web, markdown, notebooks) and generates functional prototypes/POCs in the appropriate programming language",
+  "author": "Agent-Skill-Creator",
+  "keywords": [
+    "article",
+    "paper",
+    "pdf",
+    "web",
+    "notebook",
+    "extraction",
+    "prototype",
+    "poc",
+    "implementation",
+    "code-generation",
+    "multi-format",
+    "multi-language"
+  ],
+  "activation": {
+    "keywords": [
+      "extract from article",
+      "implement from paper",
+      "create prototype from",
+      "read article and build",
+      "parse pdf and implement",
+      "parse url and implement",
+      "article to code",
+      "paper to prototype",
+      "implement algorithm from",
+      "build from documentation"
+    ],
+    "patterns": [
+      "(?i)(extract|parse|read)\\s+(from\\s+)?(article|paper|pdf|url|notebook)",
+      "(?i)(implement|build|create|generate)\\s+(from\\s+)?(article|paper|documentation)",
+      "(?i)(prototype|poc)\\s+from\\s+(article|paper)"
+    ]
+  },
+  "capabilities": [
+    "pdf-extraction",
+    "web-scraping",
+    "notebook-parsing",
+    "markdown-processing",
+    "content-analysis",
+    "algorithm-detection",
+    "language-inference",
+    "code-generation",
+    "prototype-creation",
+    "multi-language-support"
+  ],
+  "supported_formats": [
+    "pdf",
+    "url",
+    "html",
+    "markdown",
+    "ipynb",
+    "txt"
+  ],
+  "supported_languages": [
+    "python",
+    "javascript",
+    "typescript",
+    "rust",
+    "go",
+    "julia",
+    "java",
+    "cpp"
+  ],
+  "dependencies": {
+    "python": ">=3.8",
+    "pip": [
+      "PyPDF2>=3.0.0",
+      "pdfplumber>=0.10.0",
+      "requests>=2.31.0",
+      "beautifulsoup4>=4.12.0",
+      "trafilatura>=1.6.0",
+      "nbformat>=5.9.0",
+      "mistune>=3.0.0",
+      "anthropic>=0.18.0"
+    ]
+  },
+  "features": [
+    "multi-format-extraction",
+    "intelligent-analysis",
+    "language-detection",
+    "prototype-generation",
+    "agentdb-integration"
+  ],
+  "usage": {
+    "example": "Extract algorithms from this PDF and implement them in Python",
+    "input_types": [
+      "file_path",
+      "url",
+      "text"
+    ],
+    "output_types": [
+      "code",
+      "prototype",
+      "documentation"
+    ]
+  },
+  "metadata": {
+    "category": "code-generation",
+    "subcategory": "prototype-creation",
+    "complexity": "medium",
+    "estimated_lines": 1800,
+    "created_by": "agent-skill-creator",
+    "architecture": "simple-skill",
+    "agentdb_enabled": true,
+    "learning_enabled": true
+  }
+}

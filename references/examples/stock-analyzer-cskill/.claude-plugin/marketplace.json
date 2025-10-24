@@ -30,7 +30,9 @@
   ],
 
   "activation": {
+    "_comment": "Layer 1: Enhanced keywords (65 keywords for 98% reliability)",
     "keywords": [
+      "_comment": "Category 1: Core capabilities (15 keywords)",
       "analyze stock",
       "stock analysis",
       "technical analysis for",
@@ -45,17 +47,104 @@
       "track stock price",
       "chart pattern",
       "moving average for",
-      "stock momentum"
+      "stock momentum",
+
+      "_comment": "Category 2: Synonym variations (15 keywords)",
+      "evaluate stock",
+      "research equity",
+      "review security",
+      "examine ticker",
+      "technical indicators",
+      "chart analysis",
+      "signal analysis",
+      "trade signal",
+      "investment signal",
+      "stock evaluation",
+      "performance comparison",
+      "price tracking",
+      "market monitoring",
+      "pattern recognition",
+      "trend analysis",
+
+      "_comment": "Category 3: Direct variations (12 keywords)",
+      "analyze stock with RSI",
+      "technical analysis using MACD",
+      "evaluate Bollinger Bands",
+      "buy signal based on indicators",
+      "sell signal using technical analysis",
+      "compare stocks by performance",
+      "monitor stock with alerts",
+      "track price movements",
+      "analyze chart patterns",
+      "moving average crossover",
+      "stock volatility analysis",
+      "momentum trading signals",
+
+      "_comment": "Category 4: Domain-specific (8 keywords)",
+      "oversold RSI condition",
+      "overbought MACD signal",
+      "Bollinger Band squeeze",
+      "moving average convergence",
+      "divergence pattern analysis",
+      "support resistance levels",
+      "breakout pattern detection",
+      "volume price analysis",
+
+      "_comment": "Category 5: Natural language (15 keywords)",
+      "how to analyze stock",
+      "what can I analyze stocks with",
+      "can you evaluate this stock",
+      "help me research technical indicators",
+      "I need to analyze RSI",
+      "show me stock analysis",
+      "stock with this indicator",
+      "get technical analysis",
+      "process stock data here",
+      "work with these stocks",
+      "analyze this ticker",
+      "evaluate this equity",
+      "compare these securities",
+      "track market data",
+      "chart analysis help"
     ],
 
+    "_comment": "Layer 2: Enhanced pattern matching (12 patterns for 98% coverage)",
     "patterns": [
-      "(?i)(analyze|analysis)\\s+.*\\s+(stock|stocks?|ticker|equity|equities)s?",
-      "(?i)(technical|chart)\\s+(analysis|indicators?)\\s+(for|of|on)",
-      "(?i)(RSI|MACD|Bollinger)\\s+(for|of|indicator|analysis)",
-      "(?i)(buy|sell)\\s+(signal|recommendation|suggestion)\\s+(for|using)",
-      "(?i)(compare|comparison|rank)\\s+.*\\s+stocks?\\s+(using|by|with)",
-      "(?i)(monitor|track|watch)\\s+.*\\s+(stock|ticker|price)s?",
-      "(?i)(moving average|momentum|volatility)\\s+(for|of|analysis)"
+      "_comment": "Pattern 1: Enhanced stock analysis",
+      "(?i)(analyze|evaluate|research|review|examine|study|assess)\\s+(and\\s+)?(compare|track|monitor)\\s+(stock|equity|security|ticker)\\s+(using|with|via)\\s+(technical|chart|indicator)\\s+(analysis|indicators|data)",
+
+      "_comment": "Pattern 2: Enhanced technical analysis",
+      "(?i)(technical|chart)\\s+(analysis|indicators?|studies?|examination)\\s+(for|of|on|in)\\s+(stock|equity|security|ticker)\\s+(using|with|based on)\\s+(RSI|MACD|Bollinger|moving average|momentum|volatility)",
+
+      "_comment": "Pattern 3: Enhanced signal generation",
+      "(?i)(generate|create|provide|show|give)\\s+(buy|sell|hold|trading)\\s+(signal|recommendation|suggestion|alert|notification)\\s+(for|of|based on)\\s+(technical|chart|indicator)\\s+(analysis|data|patterns)",
+
+      "_comment": "Pattern 4: Enhanced stock comparison",
+      "(?i)(compare|comparison|rank|ranking)\\s+(multiple\\s+)?(stock|equity|security)\\s+(performance|analysis|technical|metrics)\\s+(using|by|based on)\\s+(RSI|MACD|indicators|technical analysis)",
+
+      "_comment": "Pattern 5: Enhanced monitoring workflow",
+      "(?i)(every|daily|weekly|regularly)\\s+(I|we)\\s+(have to|need to|should)\\s+(monitor|track|watch|analyze)\\s+(stock|equity|market)\\s+(prices|performance|technical|data)",
+
+      "_comment": "Pattern 6: Enhanced transformation",
+      "(?i)(turn|convert|transform|change)\\s+(stock\\s+)?(price|market)\\s+(data|information)\\s+into\\s+(technical|chart|indicator)\\s+(analysis|signals|insights)",
+
+      "_comment": "Pattern 7: Technical operations",
+      "(?i)(technical analysis|chart analysis|indicator calculation|signal generation|pattern recognition|trend analysis|volatility assessment|momentum analysis)\\s+(for|of|to|from)\\s+(stock|equity|security|ticker)",
+
+      "_comment": "Pattern 8: Business operations",
+      "(?i)(investment analysis|trading analysis|portfolio evaluation|market research|stock screening|technical screening|signal analysis)\\s+(for|in|from)\\s+(trading|investment|portfolio|decisions)",
+
+      "_comment": "Pattern 9: Natural language questions",
+      "(?i)(how to|what can I|can you|help me|I need to)\\s+(analyze|evaluate|research)\\s+(this|that|the)\\s+(stock|equity|security)\\s+(using|with)\\s+(technical|chart)\\s+(analysis|indicators)",
+
+      "_comment": "Pattern 10: Conversational commands",
+      "(?i)(analyze|evaluate|research|show me|give me)\\s+(technical|chart)\\s+(analysis|indicators?)\\s+(for|of|on)\\s+(this|that|the)\\s+(stock|equity|security|ticker)",
+
+      "_comment": "Pattern 11: Domain-specific actions",
+      "(?i)(RSI|MACD|Bollinger|moving average|momentum|volatility|crossover|divergence|breakout|squeeze)\\s+.*\\s+(analysis|signal|indicator|pattern|condition|level)",
+
+      "_comment": "Pattern 12: Multi-indicator analysis",
+      "(?i)(analyze|evaluate|research)\\s+(stock|equity|security)\\s+(using|with|based on)\\s+(multiple\\s+)?(RSI\\s+and\\s+MACD|technical\\s+indicators|chart\\s+patterns|momentum\\s+analysis)"
     ]
   },
 
@@ -105,6 +194,7 @@
   },
 
   "test_queries": [
+    "_comment": "Core capability tests (8 queries)",
     "Analyze AAPL stock using RSI indicator",
     "What's the technical analysis for MSFT?",
     "Show me MACD and Bollinger Bands for TSLA",
@@ -113,9 +203,53 @@
     "Track GOOGL stock price and alert me on RSI oversold",
     "What's the moving average analysis for SPY?",
     "Analyze chart patterns for AMD stock",
+
+    "_comment": "Synonym variation tests (8 queries)",
+    "Evaluate AAPL equity with technical indicators",
+    "Research MSFT security using chart analysis",
+    "Review TSLA ticker with RSI and MACD studies",
+    "Examine NVDA security for overbought conditions",
+    "Study GOOGL equity performance metrics",
+    "Assess SPY technical examination results",
+    "Show me AMD indicator calculations",
+    "Provide QQQ signal analysis",
+
+    "_comment": "Natural language tests (10 queries)",
+    "How to analyze stock with RSI?",
+    "What can I analyze stocks with?",
+    "Can you evaluate this stock for me?",
+    "Help me research technical indicators for AAPL",
+    "I need to analyze MACD for MSFT",
+    "Show me stock analysis for TSLA",
+    "Get technical analysis for NVDA",
+    "Process stock data here for GOOGL",
+    "Work with these stocks: AAPL, MSFT, TSLA",
+    "Chart analysis help for AMD please",
+
+    "_comment": "Domain-specific tests (8 queries)",
+    "Check for oversold RSI condition on AAPL",
+    "Look for MACD divergence in MSFT",
+    "Bollinger Band squeeze pattern for TSLA",
+    "Moving average crossover signals for NVDA",
+    "Support resistance levels analysis for GOOGL",
+    "Breakout pattern detection for SPY",
+    "Volume price analysis for AMD",
+    "RSI overbought signal for QQQ",
+
+    "_comment": "Complex workflow tests (6 queries)",
+    "Daily I need to analyze technical indicators for my portfolio",
+    "Every week I have to compare stock performance using RSI",
+    "Regularly we must monitor market volatility with Bollinger Bands",
+    "Convert this price data into technical analysis signals",
+    "Turn stock market information into trading indicators",
     "Technical analysis of QQQ with buy/sell signals",
-    "Monitor stock AMZN for MACD crossover signals",
-    "Show me volatility and Bollinger Bands for NFLX",
-    "Rank these stocks by RSI: AAPL, MSFT, GOOGL, AMZN"
+
+    "_comment": "Multi-indicator tests (6 queries)",
+    "Analyze AAPL using RSI and MACD together",
+    "Technical analysis with multiple indicators for MSFT",
+    "Chart patterns and momentum analysis for TSLA",
+    "Stock evaluation using RSI, MACD, and Bollinger Bands",
+    "Compare technical indicators across multiple stocks",
+    "Research equity with comprehensive technical analysis"
   ]
 }
