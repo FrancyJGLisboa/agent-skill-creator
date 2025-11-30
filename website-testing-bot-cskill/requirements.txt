@@ -1,0 +1,28 @@
+# Website Testing Bot - Dependencies
+# Core HTTP and HTML parsing
+requests>=2.31.0
+aiohttp>=3.9.0
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+
+# URL handling
+urllib3>=2.0.0
+
+# Data processing
+dataclasses-json>=0.6.0
+
+# Async support
+asyncio-throttle>=1.0.0
+
+# Optional: Browser automation (for advanced testing)
+# selenium>=4.15.0
+# playwright>=1.40.0
+
+# Optional: Advanced accessibility testing
+# axe-selenium-python>=2.1.6
+
+# Development dependencies
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+black>=23.0.0
+mypy>=1.7.0

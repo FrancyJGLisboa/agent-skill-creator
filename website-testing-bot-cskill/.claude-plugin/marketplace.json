@@ -1,0 +1,402 @@
+{
+  "name": "website-testing-bot-cskill",
+  "version": "1.0.0",
+  "metadata": {
+    "author": "Agent Skill Creator",
+    "created": "2025-11-30",
+    "category": "quality-assurance",
+    "complexity": "complex",
+    "tags": [
+      "website-testing",
+      "qa-automation",
+      "commercial-readiness",
+      "accessibility",
+      "performance",
+      "security",
+      "element-testing",
+      "agent-handoff"
+    ]
+  },
+  "plugins": [
+    {
+      "name": "website-testing-bot-plugin",
+      "description": "Ultimate website testing bot providing exhaustive analysis of every site element including buttons, links, URLs, images, menus, forms, navigation, headers, footers, modals, tooltips, and interactive components. Performs comprehensive testing across functional validation, performance benchmarking, security auditing, accessibility compliance, SEO optimization, cross-browser compatibility, mobile responsiveness, load capacity estimation, and uniqueness scoring. Generates detailed commercial readiness grades with scaling predictions, uniqueness ratings against template detection, and overall readiness status classifications. Produces complete agent-handoff reports with explicit fix recommendations requiring zero assumptions about receiving agent knowledge. Tests every clickable element, validates all resource loading, checks broken links, verifies image optimization, assesses JavaScript functionality, evaluates CSS rendering, and stress-tests concurrent user capacity for production deployment sign-off.",
+      "skills": ["./"]
+    }
+  ],
+  "activation": {
+    "keywords": {
+      "core_capabilities": [
+        "test website",
+        "website testing",
+        "site testing",
+        "web testing",
+        "test my site",
+        "test my website",
+        "audit website",
+        "website audit",
+        "site audit",
+        "qa website",
+        "website qa",
+        "quality assurance website",
+        "validate website",
+        "website validation",
+        "check website"
+      ],
+      "synonym_variations": [
+        "examine website",
+        "analyze site",
+        "inspect website",
+        "evaluate website",
+        "assess website",
+        "review website",
+        "scan website",
+        "probe website",
+        "verify site",
+        "diagnose website",
+        "investigate site",
+        "scrutinize website",
+        "benchmark website",
+        "grade website",
+        "rate website"
+      ],
+      "direct_variations": [
+        "test all buttons",
+        "test all links",
+        "check broken links",
+        "test images",
+        "test navigation",
+        "test forms",
+        "test menus",
+        "check accessibility",
+        "test performance",
+        "load testing",
+        "stress test website",
+        "security test site"
+      ],
+      "domain_specific": [
+        "commercial readiness",
+        "production readiness",
+        "launch readiness",
+        "go-live testing",
+        "pre-launch audit",
+        "deployment validation",
+        "release candidate testing",
+        "scale capacity test",
+        "uniqueness score",
+        "template detection",
+        "cookie cutter check"
+      ],
+      "natural_language": [
+        "is my website ready to launch",
+        "can my site handle traffic",
+        "how many users can my site handle",
+        "is my website unique enough",
+        "does my site have broken links",
+        "are there issues with my website",
+        "what's wrong with my website",
+        "find problems on my site",
+        "prepare website for production",
+        "sign off website for launch",
+        "ready to sell my website",
+        "commercial grade website check",
+        "is my site production ready",
+        "website health check",
+        "comprehensive site analysis"
+      ]
+    },
+    "patterns": [
+      "(?i)(test|audit|check|validate|examine|analyze|inspect|scan|evaluate|assess|review|verify|probe|diagnose)\\s+(my\\s+)?(website|site|web\\s*site|web\\s*app|web\\s*application|webpage|web\\s*page)",
+      "(?i)(website|site|web)\\s+(test|testing|audit|auditing|check|checking|validation|analysis|inspection|evaluation|assessment|review|scan|scanning)",
+      "(?i)(find|check|detect|identify|locate|discover|reveal|uncover)\\s+(broken|dead|missing|invalid|bad|faulty|problematic)\\s+(links|urls|images|buttons|elements|resources)",
+      "(?i)(commercial|production|launch|deployment|release|go-?live|pre-?launch)\\s+(ready|readiness|testing|validation|audit|check|grade|assessment)",
+      "(?i)(how\\s+many|what|estimate|calculate|determine|assess)\\s+(users|visitors|traffic|load|requests|connections)\\s+(can|could|will|would)\\s+(my\\s+)?(site|website|web\\s*app)\\s+(handle|support|sustain|accommodate)",
+      "(?i)(scale|scaling|scalability|capacity|load|stress|performance|benchmark)\\s+(test|testing|analysis|assessment|evaluation|check)\\s+(for\\s+)?(website|site|web\\s*app)",
+      "(?i)(unique|uniqueness|original|originality|template|cookie-?cutter|generic|custom)\\s+(score|rating|grade|check|test|analysis|detection|assessment)",
+      "(?i)(test|check|validate|verify|audit)\\s+(all|every|each)\\s+(button|link|image|form|menu|element|component|feature|page)",
+      "(?i)(accessibility|a11y|wcag|ada|section\\s*508)\\s+(test|testing|check|checking|audit|auditing|compliance|validation|assessment)",
+      "(?i)(security|vulnerability|penetration|pen-?test|owasp|xss|sql\\s*injection|csrf)\\s+(test|testing|scan|scanning|audit|auditing|check|assessment)",
+      "(?i)(sign-?off|signoff|approve|approval|certify|certification)\\s+(for\\s+)?(launch|production|commercial|deployment|release|go-?live)",
+      "(?i)(agent|ai|bot|automated)\\s+(handoff|hand-?off|report|fix|fixing|repair|remediation)\\s+(for\\s+)?(website|site|issues|problems|errors)",
+      "(?i)(comprehensive|complete|full|thorough|exhaustive|detailed|in-?depth|ultimate)\\s+(website|site|web)\\s+(test|testing|audit|analysis|check|review|assessment)",
+      "(?i)(ready|readiness|prepared|preparation)\\s+(to\\s+)?(sell|launch|deploy|release|ship|go-?live|commercialize)",
+      "(?i)(what|find|identify|list|show|report)\\s+(all\\s+)?(issues|problems|errors|bugs|defects|faults|failures)\\s+(on|with|in)\\s+(my\\s+)?(website|site|web\\s*app)"
+    ],
+    "context_aware": {
+      "domain_relevance": {
+        "required_concepts": ["website", "testing", "quality", "audit"],
+        "boost_concepts": ["commercial", "production", "launch", "readiness", "scale", "unique"],
+        "exclude_concepts": ["mobile app only", "desktop application", "game testing"]
+      },
+      "confidence_threshold": 0.75,
+      "false_positive_prevention": {
+        "exclude_patterns": [
+          "(?i)^(what is|explain|define|describe)\\s+(website|web)\\s+(testing|audit)",
+          "(?i)unit\\s+test|code\\s+test|api\\s+test\\s+only"
+        ]
+      }
+    }
+  },
+  "capabilities": {
+    "element_testing": {
+      "description": "Exhaustive testing of every interactive and static element",
+      "features": [
+        "Button functionality and state testing",
+        "Link validation and destination verification",
+        "Image loading, optimization, and alt-text checking",
+        "Form submission and validation testing",
+        "Menu navigation and dropdown functionality",
+        "Modal and popup behavior testing",
+        "Tooltip and hover state verification",
+        "Video and audio player testing",
+        "Iframe and embedded content validation",
+        "Dynamic content loading verification"
+      ]
+    },
+    "performance_testing": {
+      "description": "Comprehensive performance benchmarking and load capacity estimation",
+      "features": [
+        "Page load time measurement",
+        "Time to first byte (TTFB) analysis",
+        "First contentful paint (FCP) timing",
+        "Largest contentful paint (LCP) measurement",
+        "Cumulative layout shift (CLS) detection",
+        "First input delay (FID) estimation",
+        "Concurrent user capacity estimation",
+        "Server response stress testing",
+        "Resource loading optimization analysis",
+        "CDN and caching effectiveness evaluation"
+      ]
+    },
+    "security_testing": {
+      "description": "Security vulnerability scanning and risk assessment",
+      "features": [
+        "SSL/TLS certificate validation",
+        "Mixed content detection",
+        "XSS vulnerability scanning",
+        "CSRF protection verification",
+        "SQL injection risk assessment",
+        "Security header analysis",
+        "Cookie security evaluation",
+        "Authentication flow testing",
+        "Data exposure risk detection",
+        "Third-party script security review"
+      ]
+    },
+    "accessibility_testing": {
+      "description": "WCAG compliance and accessibility audit",
+      "features": [
+        "WCAG 2.1 AA compliance checking",
+        "Screen reader compatibility testing",
+        "Keyboard navigation verification",
+        "Color contrast analysis",
+        "Alt text completeness checking",
+        "ARIA attribute validation",
+        "Focus management testing",
+        "Skip link verification",
+        "Heading hierarchy validation",
+        "Form label association checking"
+      ]
+    },
+    "uniqueness_analysis": {
+      "description": "Template detection and originality scoring",
+      "features": [
+        "Template fingerprint detection",
+        "CSS framework identification",
+        "Design pattern originality scoring",
+        "Content uniqueness analysis",
+        "Component customization assessment",
+        "Layout originality evaluation",
+        "Visual design differentiation scoring",
+        "Functionality innovation rating",
+        "Brand identity integration check",
+        "Competitive differentiation analysis"
+      ]
+    },
+    "commercial_grading": {
+      "description": "Production readiness and commercial viability assessment",
+      "features": [
+        "Maximum concurrent user estimation",
+        "Traffic spike handling capacity",
+        "Database query efficiency rating",
+        "API response time benchmarking",
+        "Error rate under load analysis",
+        "Recovery time objective (RTO) estimate",
+        "Horizontal scaling readiness",
+        "Vertical scaling ceiling",
+        "Cost per user estimation",
+        "Infrastructure bottleneck identification"
+      ]
+    },
+    "report_generation": {
+      "description": "Comprehensive agent-handoff report creation",
+      "features": [
+        "Issue-by-issue detailed documentation",
+        "Explicit fix instructions with no assumptions",
+        "File path and line number references",
+        "Code snippet suggestions",
+        "Priority ranking for fixes",
+        "Dependency chain documentation",
+        "Testing verification steps",
+        "Success criteria definitions",
+        "Rollback instructions",
+        "Post-fix validation checklist"
+      ]
+    }
+  },
+  "usage": {
+    "when_to_use": [
+      "Before launching a website commercially",
+      "When preparing for production deployment",
+      "To get comprehensive quality assurance sign-off",
+      "When estimating scaling and capacity requirements",
+      "To verify uniqueness and avoid template-like appearance",
+      "When preparing a fix list for another agent or developer",
+      "Before selling or transferring a website project",
+      "For pre-release candidate validation",
+      "When needing detailed accessibility compliance reports",
+      "To identify all broken or problematic elements"
+    ],
+    "when_not_to_use": [
+      "For mobile app testing (web apps only)",
+      "For API-only testing without frontend",
+      "For desktop application testing",
+      "When only needing simple uptime monitoring",
+      "For real-time production monitoring (use monitoring tools instead)"
+    ],
+    "input_types": [
+      "Website URL",
+      "Sitemap URL",
+      "List of URLs to test",
+      "Specific testing focus areas",
+      "Target user capacity numbers",
+      "Competitor URLs for uniqueness comparison"
+    ],
+    "output_types": [
+      "Comprehensive test report JSON",
+      "Agent-handoff instruction document",
+      "Commercial readiness grade (A-F with score)",
+      "Uniqueness rating (1-100 with breakdown)",
+      "Readiness status (Under Construction / Needs Polishing / Ready)",
+      "Issue list with explicit fix instructions",
+      "Performance benchmark data",
+      "Security vulnerability report",
+      "Accessibility compliance checklist"
+    ]
+  },
+  "test_queries": {
+    "core_capability_tests": [
+      "Test my website at example.com for commercial readiness",
+      "Audit my site and prepare a report for another agent to fix issues",
+      "Check all buttons, links, and images on my website",
+      "How many users can my website handle before overload?",
+      "Is my website unique or does it look like a template?"
+    ],
+    "synonym_variation_tests": [
+      "Examine my website for production deployment",
+      "Analyze my site for launch readiness",
+      "Inspect every element on my webpage",
+      "Evaluate my website's commercial viability",
+      "Assess my site's uniqueness score"
+    ],
+    "natural_language_tests": [
+      "Is my website ready to launch commercially?",
+      "What's wrong with my website before I sell it?",
+      "Can my site handle 10000 concurrent users?",
+      "Find all the broken links on my site",
+      "Prepare my website for production sign-off",
+      "I need a complete audit with fix instructions for my developer",
+      "Does my website look too generic or template-like?",
+      "What needs to be fixed before I can go live?",
+      "Give me the ultimate readiness report for my website",
+      "Test everything on my site and tell another agent how to fix it"
+    ],
+    "domain_specific_tests": [
+      "Run WCAG accessibility compliance check on my site",
+      "Perform security vulnerability scan on my website",
+      "Test my website's scalability for commercial use",
+      "Check my site for cookie cutter template patterns",
+      "Generate agent handoff report with zero assumption instructions"
+    ],
+    "complex_workflow_tests": [
+      "Test my website completely, grade its commercial readiness, score its uniqueness, and prepare a detailed fix report for an AI agent that knows nothing about the site",
+      "Audit example.com for production launch, estimate max user capacity, check accessibility compliance, and create prioritized fix instructions",
+      "Examine every element on my site, find all issues, grade overall readiness, and generate explicit repair instructions assuming the fixer has no context"
+    ]
+  },
+  "grading_system": {
+    "commercial_readiness": {
+      "grades": {
+        "A+": "Enterprise-ready: 100k+ concurrent users, <100ms response, zero critical issues",
+        "A": "Production-ready: 50k-100k users, <200ms response, no critical issues",
+        "B+": "Near-ready: 25k-50k users, <500ms response, minor issues only",
+        "B": "Viable: 10k-25k users, <1s response, some issues to address",
+        "C+": "Developing: 5k-10k users, acceptable performance, notable issues",
+        "C": "Early stage: 1k-5k users, performance concerns, multiple issues",
+        "D": "Not ready: <1k users, significant performance issues, many problems",
+        "F": "Critical: Fundamental issues preventing commercial use"
+      },
+      "scoring_factors": [
+        "Maximum concurrent user capacity (25%)",
+        "Response time under load (20%)",
+        "Error rate percentage (15%)",
+        "Security vulnerability count (15%)",
+        "Accessibility compliance (10%)",
+        "Mobile responsiveness (10%)",
+        "SEO readiness (5%)"
+      ]
+    },
+    "uniqueness_rating": {
+      "scale": "1-100",
+      "thresholds": {
+        "90-100": "Highly Original - Custom design, unique functionality, strong brand identity",
+        "75-89": "Distinctive - Customized template with significant modifications",
+        "50-74": "Moderate - Recognizable template base with some customization",
+        "25-49": "Generic - Minimal template customization, common patterns",
+        "1-24": "Template Clone - Nearly unmodified template, no unique identity"
+      },
+      "evaluation_criteria": [
+        "Visual design originality (25%)",
+        "Layout structure uniqueness (20%)",
+        "Functionality innovation (20%)",
+        "Content presentation style (15%)",
+        "Interactive element creativity (10%)",
+        "Brand identity integration (10%)"
+      ]
+    },
+    "readiness_status": {
+      "statuses": {
+        "READY": "All critical tests pass, no blockers, approved for commercial launch",
+        "NEEDS_POLISHING": "Functional but has issues requiring attention before launch",
+        "UNDER_CONSTRUCTION": "Significant incomplete features or critical issues present"
+      },
+      "criteria": {
+        "READY": [
+          "Zero critical issues",
+          "All pages load successfully",
+          "All forms functional",
+          "No broken links",
+          "Accessibility score > 80%",
+          "Security scan clean",
+          "Performance grade B or higher"
+        ],
+        "NEEDS_POLISHING": [
+          "No critical issues",
+          "Minor functional problems",
+          "Some broken links acceptable",
+          "Accessibility score > 60%",
+          "No high-severity security issues",
+          "Performance grade C or higher"
+        ],
+        "UNDER_CONSTRUCTION": [
+          "Critical issues present",
+          "Major functional failures",
+          "Significant broken functionality",
+          "Accessibility score < 60%",
+          "Security vulnerabilities found",
+          "Performance grade D or lower"
+        ]
+      }
+    }
+  }
+}
