@@ -1,0 +1,322 @@
+{
+  "name": "home-plant-trainer-cskill",
+  "owner": {
+    "name": "Agent Creator",
+    "email": "noreply@example.com"
+  },
+
+  "metadata": {
+    "description": "Adaptive residential plant design advisor for home landscapes. Zone-aware, condition-driven plant selection with automatic species swapping based on USDA zone, sun exposure, water needs, and size constraints. Plant-only designs - no hardscape.",
+    "version": "1.0.0",
+    "created": "2025-12-21",
+    "updated": "2025-12-21",
+    "language": "en-US",
+    "features": [
+      "Plant Role Matrix (Structural, Accent, Screening, Foundation, Groundcover, Canopy, Understory)",
+      "Adaptive zone/sun/water/size plant selection",
+      "Style-based design packages (Traditional, Farmhouse, Craftsman, Modern)",
+      "Auto-swap plant recommendations for any climate",
+      "Client-facing explanation engine for proposals",
+      "Front yard, backyard, and side yard design models"
+    ]
+  },
+
+  "plugins": [
+    {
+      "name": "home-plant-trainer-plugin",
+      "description": "Comprehensive residential plant design advisor for home landscapes. Provides zone-aware, adaptive plant recommendations based on USDA hardiness zones, sun exposure (full, part, shade), water requirements (dry, average, wet), and mature size constraints. Features Plant Role Matrix for defining structural, accent, screening, foundation, groundcover, canopy, and understory layers. Supports style-based design packages including Traditional/Colonial, Farmhouse, Craftsman, and Modern aesthetics. Generates front yard curb appeal designs, backyard privacy and living space layouts, and side yard transition plantings. Includes auto-swap logic for plant substitutions across climate zones while maintaining design intent. Provides client-ready explanation templates for landscape proposals. Plant-only focus - no hardscape recommendations. Perfect for residential landscape planning, plant selection, zone-based design, and creating cohesive home-integrated plantings.",
+      "source": "./",
+      "strict": false,
+      "skills": ["./"]
+    }
+  ],
+
+  "activation": {
+    "_comment": "Layer 1: Enhanced keywords (75 keywords for 98% reliability)",
+    "keywords": [
+      "_comment": "Category 1: Core plant design capabilities (15 keywords)",
+      "plant design",
+      "plant selection",
+      "landscape plants",
+      "residential planting",
+      "home landscape",
+      "yard plants",
+      "garden design",
+      "plant recommendations",
+      "plant advisor",
+      "planting plan",
+      "plant palette",
+      "plant layout",
+      "landscape design plants",
+      "home garden plants",
+      "residential landscape",
+
+      "_comment": "Category 2: Zone and condition keywords (15 keywords)",
+      "USDA zone",
+      "hardiness zone",
+      "plant zone",
+      "sun exposure plants",
+      "shade plants",
+      "drought tolerant plants",
+      "full sun plants",
+      "part shade plants",
+      "wet soil plants",
+      "dry soil plants",
+      "native plants",
+      "climate adapted plants",
+      "zone compatible",
+      "heat tolerant plants",
+      "cold hardy plants",
+
+      "_comment": "Category 3: Plant role and layer keywords (15 keywords)",
+      "structural plants",
+      "accent plants",
+      "screening plants",
+      "foundation plants",
+      "groundcover plants",
+      "canopy trees",
+      "understory plants",
+      "privacy plants",
+      "border plants",
+      "edge plants",
+      "specimen plants",
+      "focal point plants",
+      "layered planting",
+      "plant layers",
+      "backbone plants",
+
+      "_comment": "Category 4: Space and location keywords (12 keywords)",
+      "front yard plants",
+      "backyard plants",
+      "side yard plants",
+      "curb appeal plants",
+      "entry planting",
+      "foundation planting",
+      "privacy screen plants",
+      "outdoor living plants",
+      "patio plants",
+      "walkway plants",
+      "driveway plants",
+      "property line plants",
+
+      "_comment": "Category 5: Style and design keywords (10 keywords)",
+      "traditional landscape",
+      "farmhouse garden",
+      "craftsman landscape",
+      "modern landscape",
+      "colonial garden",
+      "cottage garden",
+      "naturalistic planting",
+      "formal garden",
+      "informal garden",
+      "native garden",
+
+      "_comment": "Category 6: Natural language queries (8 keywords)",
+      "what plants should I use",
+      "recommend plants for",
+      "best plants for my yard",
+      "help me choose plants",
+      "plant suggestions for",
+      "plants that work in",
+      "swap this plant",
+      "alternative plant for"
+    ],
+
+    "_comment": "Layer 2: Enhanced pattern matching (14 patterns for 98% coverage)",
+    "patterns": [
+      "_comment": "Pattern 1: Plant selection by zone",
+      "(?i)(recommend|suggest|select|choose|find|what)\\s+(plants?|shrubs?|trees?|perennials?|groundcover)\\s+(for|in)\\s+(zone|USDA|hardiness)\\s+(\\d+[ab]?)",
+
+      "_comment": "Pattern 2: Plant selection by condition",
+      "(?i)(plants?|shrubs?|trees?)\\s+(for|that|with)\\s+(full\\s+sun|part\\s+shade|shade|dry|wet|drought|clay|sandy)\\s+(soil|conditions?|areas?|spots?)?",
+
+      "_comment": "Pattern 3: Plant role queries",
+      "(?i)(structural|accent|screening|foundation|groundcover|canopy|understory|privacy|border|focal)\\s+(plants?|shrubs?|trees?|planting)",
+
+      "_comment": "Pattern 4: Space-based design",
+      "(?i)(front\\s+yard|backyard|back\\s+yard|side\\s+yard|entry|foundation|curb\\s+appeal|property\\s+line)\\s+(plants?|planting|landscape|design)",
+
+      "_comment": "Pattern 5: Style-based design",
+      "(?i)(traditional|farmhouse|craftsman|modern|colonial|cottage|formal|informal|native|naturalistic)\\s+(garden|landscape|planting|style)\\s+(design|plants?)?",
+
+      "_comment": "Pattern 6: Plant swap and substitution",
+      "(?i)(swap|substitute|replace|alternative|equivalent|instead\\s+of)\\s+(this\\s+)?(plant|shrub|tree)\\s*(for|with|to)?",
+
+      "_comment": "Pattern 7: Layered planting queries",
+      "(?i)(layer|layers?|layered|layering)\\s+(planting|plants?|design|scheme)",
+
+      "_comment": "Pattern 8: Size and constraint queries",
+      "(?i)(plants?|shrubs?|trees?)\\s+(under|less\\s+than|max|maximum)\\s+(\\d+)\\s*(ft|feet|foot|inches?)",
+
+      "_comment": "Pattern 9: Home integration queries",
+      "(?i)(frame|soften|complement|integrate|match)\\s+(the\\s+)?(home|house|entry|entrance|facade|architecture)",
+
+      "_comment": "Pattern 10: Maintenance level queries",
+      "(?i)(low|medium|high|minimal|easy)\\s+maintenance\\s+(plants?|landscape|garden|planting)",
+
+      "_comment": "Pattern 11: Seasonal interest queries",
+      "(?i)(year[- ]round|four\\s+season|spring|summer|fall|winter)\\s+(interest|color|bloom|structure)\\s+(plants?)?",
+
+      "_comment": "Pattern 12: Natural language design help",
+      "(?i)(help\\s+me|I\\s+need|can\\s+you|create|design|plan)\\s+(a\\s+)?(plant|planting|landscape)\\s+(design|plan|layout|scheme)\\s+(for)?",
+
+      "_comment": "Pattern 13: Wildlife and ecosystem",
+      "(?i)(pollinator|butterfly|bird|wildlife|native|ecosystem)\\s+(friendly|attracting|garden|plants?)",
+
+      "_comment": "Pattern 14: Problem-solving queries",
+      "(?i)(plants?\\s+for|solve|fix|address)\\s+(erosion|slope|drainage|privacy|shade|sun)\\s+(problem|issue|area)?"
+    ]
+  },
+
+  "contextual_filters": {
+    "required_context": {
+      "domains": ["residential landscaping", "home gardening", "plant design", "landscape architecture"],
+      "tasks": ["plant selection", "design recommendation", "zone adaptation", "style matching"],
+      "entities": ["plants", "shrubs", "trees", "perennials", "groundcover", "zones"],
+      "confidence_threshold": 0.8
+    },
+
+    "excluded_context": {
+      "domains": ["commercial landscaping", "hardscape design", "construction", "irrigation systems"],
+      "tasks": ["patio installation", "wall building", "paver laying", "concrete work"],
+      "query_types": ["hardscape materials", "construction techniques", "equipment rental"],
+      "user_states": ["looking for contractors", "seeking installation quotes"]
+    },
+
+    "context_weights": {
+      "domain_relevance": 0.35,
+      "task_relevance": 0.30,
+      "intent_strength": 0.20,
+      "conversation_coherence": 0.15
+    },
+
+    "activation_rules": {
+      "min_relevance_score": 0.75,
+      "max_negative_score": 0.3,
+      "required_coherence": 0.6,
+      "context_consistency_check": true
+    }
+  },
+
+  "capabilities": {
+    "plant_role_matrix": true,
+    "zone_adaptation": true,
+    "condition_matching": true,
+    "style_packages": true,
+    "auto_swap": true,
+    "proposal_explanations": true,
+    "context_requirements": {
+      "min_confidence": 0.8,
+      "required_domains": ["residential landscaping"],
+      "supported_tasks": ["plant selection", "design recommendation", "zone adaptation"]
+    }
+  },
+
+  "usage": {
+    "example": "Create a front yard planting plan for zone 7, full sun, low maintenance with a craftsman style",
+
+    "input_types": [
+      "USDA hardiness zone (3-10)",
+      "Sun exposure (full, part, shade)",
+      "Water conditions (dry, average, wet)",
+      "Space constraints (height, width limits)",
+      "Design style (Traditional, Farmhouse, Craftsman, Modern)",
+      "Yard location (front, back, side)",
+      "Plant role requirements (structural, accent, screening, etc.)"
+    ],
+
+    "output_types": [
+      "Plant role matrix with layer assignments",
+      "Zone-adapted plant recommendations",
+      "Style-matched plant palettes",
+      "Plant swap alternatives with reasoning",
+      "Client-ready proposal explanations",
+      "Maintenance guidance by plant",
+      "Seasonal interest timeline"
+    ],
+
+    "when_to_use": [
+      "User asks for residential plant recommendations",
+      "User mentions USDA zones or hardiness zones",
+      "User specifies sun, shade, or water conditions for plants",
+      "User wants plants for specific yard areas (front, back, side)",
+      "User mentions design styles (craftsman, farmhouse, modern, etc.)",
+      "User needs foundation, screening, or accent plants",
+      "User wants to swap or substitute a plant for their zone",
+      "User asks about plant layers or landscape structure",
+      "User needs low maintenance or native plant options",
+      "User wants curb appeal or entry planting ideas"
+    ],
+
+    "when_not_to_use": [
+      "User asks about hardscape (patios, walls, pavers, walkways)",
+      "User wants commercial or large-scale landscape design",
+      "User asks about irrigation or drainage systems",
+      "User needs landscape contractor recommendations",
+      "User asks about lawn care or turf grass specifically",
+      "User wants interior houseplant advice",
+      "User asks about vegetable gardening or food production",
+      "User needs pest or disease diagnosis"
+    ]
+  },
+
+  "test_queries": [
+    "_comment": "Core capability tests (10 queries)",
+    "What structural plants work in zone 6 full sun?",
+    "Create a front yard planting plan for zone 8",
+    "Recommend foundation plants for a craftsman home",
+    "What are good screening plants for privacy in zone 5?",
+    "Design a backyard plant layout with year-round interest",
+    "Suggest groundcover plants for dry shade",
+    "What plants frame a home entry well?",
+    "Give me accent plants for a modern landscape",
+    "What understory trees work in zone 7 part shade?",
+    "Create a layered planting scheme for my front yard",
+
+    "_comment": "Condition-based tests (8 queries)",
+    "Plants for zone 4 with clay soil",
+    "Drought tolerant shrubs for full sun zone 9",
+    "Shade plants that handle wet soil in zone 6",
+    "Cold hardy evergreen screening plants",
+    "Heat tolerant accent plants for zone 8b",
+    "Native plants for zone 5 dry conditions",
+    "Low maintenance groundcover for part shade",
+    "Salt tolerant plants for coastal zone 7",
+
+    "_comment": "Style-based tests (6 queries)",
+    "Traditional landscape plants for a colonial home",
+    "Farmhouse style garden plants for zone 6",
+    "Modern minimalist planting palette",
+    "Cottage garden plants for zone 5 full sun",
+    "Naturalistic planting for a craftsman yard",
+    "Formal foundation planting for zone 7",
+
+    "_comment": "Plant swap tests (6 queries)",
+    "Swap boxwood for zone 4",
+    "Alternative to Japanese maple for full sun zone 8",
+    "Replace hydrangea with something drought tolerant",
+    "Substitute for lavender in zone 5 shade",
+    "What can I use instead of knockout roses?",
+    "Zone 9 equivalent for rhododendron",
+
+    "_comment": "Space and role tests (8 queries)",
+    "Front yard curb appeal plants zone 7",
+    "Backyard privacy screen plants full sun",
+    "Side yard transition planting shade",
+    "Foundation plants under 4 feet",
+    "Canopy tree for small yard zone 6",
+    "Border plants for pathway edge",
+    "Focal point specimen plant zone 8",
+    "Entry framing shrubs craftsman style",
+
+    "_comment": "Natural language tests (8 queries)",
+    "Help me choose plants for my front yard in zone 6",
+    "What plants should I use to screen my neighbor?",
+    "I need low maintenance plants for full sun",
+    "Can you recommend plants that attract butterflies?",
+    "Best plants for my shady backyard zone 5",
+    "Plants that complement my modern home",
+    "Create a planting plan for curb appeal",
+    "What works instead of boxwood in cold climates?"
+  ]
+}
