@@ -377,7 +377,7 @@ The suite structure makes it possible to update the inventory-tracker without to
 
 ### Marketplace Discoverability
 
-Each plugin entry in `marketplace.json` has its own description and keywords. This means a suite's individual components can be discovered by different searches:
+Each plugin entry in `marketplace.json` has its own `description` field. This means a suite's individual components can be discovered by different searches:
 - "track sales" finds the sales-monitor plugin
 - "customer churn" finds the customer-analytics plugin
 - "inventory alerts" finds the inventory-tracker plugin

@@ -3,7 +3,7 @@
 **Turn any workflow into reusable AI agent software — no spec writing, no prompt engineering, no coding required.**
 
 [![Agent Skills Open Standard](https://img.shields.io/badge/Agent%20Skills-Open%20Standard-blue)](https://github.com/anthropics/agent-skills-spec)
-[![Version](https://img.shields.io/badge/version-4.0.0-brightgreen)]()
+[![Version](https://img.shields.io/badge/version-4.1.0-brightgreen)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)]()
 
 ![Agent Skill Creator Overview](Dynamous/agentskillimage.png)

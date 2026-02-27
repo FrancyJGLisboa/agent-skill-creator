@@ -30,144 +30,18 @@ Enable traders and investors to perform technical analysis through natural langu
 
 ---
 
-## 🎯 Activation System (3-Layer Architecture)
+## Activation
 
-This skill demonstrates the **3-Layer Activation System v3.0** for reliable skill detection.
+This skill activates through the `description` field in the SKILL.md frontmatter. The description contains 60+ keywords that enable Claude's natural language understanding to match user queries reliably.
 
-### Layer 1: Keywords (Exact Phrase Matching)
+**Key terms embedded in the description:**
+- Action verbs: analyze, compare, monitor, track
+- Domain entities: stocks, ETFs, tickers
+- Specific indicators: RSI, MACD, Bollinger Bands, moving averages
+- Use cases: buy/sell signals, comparison, monitoring, chart patterns
+- Counter-examples: fundamental analysis, news, options pricing
 
-**Purpose:** High-precision activation for explicit requests
-
-**Keywords (15 total):**
-```json
-[
-  "analyze stock",           // Primary action
-  "stock analysis",          // Alternative phrasing
-  "technical analysis for",  // Domain-specific
-  "RSI indicator",          // Specific indicator 1
-  "MACD indicator",         // Specific indicator 2
-  "Bollinger Bands",        // Specific indicator 3
-  "buy signal for",         // Signal requests
-  "sell signal for",        // Signal requests
-  "compare stocks",         // Comparison action
-  "stock comparison",       // Alternative
-  "monitor stock",          // Monitoring action
-  "track stock price",      // Tracking action
-  "chart pattern",          // Pattern analysis
-  "moving average for",     // Technical indicator
-  "stock momentum"          // Momentum analysis
-]
-```
-
-**Coverage:**
-- ✅ Action verbs: analyze, compare, monitor, track
-- ✅ Domain entities: stock, ticker, indicator
-- ✅ Specific indicators: RSI, MACD, Bollinger
-- ✅ Use cases: signals, comparison, monitoring
-
-### Layer 2: Patterns (Flexible Regex Matching)
-
-**Purpose:** Capture natural language variations and combinations
-
-**Patterns (7 total):**
-
-**Pattern 1: General Stock Analysis**
-```regex
-(?i)(analyze|analysis)\s+.*\s+(stock|stocks?|ticker|equity|equities)s?
-```
-Matches: "analyze AAPL stock", "analysis of tech stocks", "analyze this ticker"
-
-**Pattern 2: Technical Analysis Request**
-```regex
-(?i)(technical|chart)\s+(analysis|indicators?)\s+(for|of|on)
-```
-Matches: "technical analysis for MSFT", "chart indicators of SPY", "technical analysis on AAPL"
-
-**Pattern 3: Specific Indicator Request**
-```regex
-(?i)(RSI|MACD|Bollinger)\s+(for|of|indicator|analysis)
-```
-Matches: "RSI for AAPL", "MACD indicator", "Bollinger analysis of TSLA"
-
-**Pattern 4: Signal Generation**
-```regex
-(?i)(buy|sell)\s+(signal|recommendation|suggestion)\s+(for|using)
-```
-Matches: "buy signal for NVDA", "sell recommendation using RSI", "buy suggestion for AAPL"
-
-**Pattern 5: Stock Comparison**
-```regex
-(?i)(compare|comparison|rank)\s+.*\s+stocks?\s+(using|by|with)
-```
-Matches: "compare AAPL vs MSFT using RSI", "rank stocks by momentum", "comparison of stocks with MACD"
-
-**Pattern 6: Monitoring & Tracking**
-```regex
-(?i)(monitor|track|watch)\s+.*\s+(stock|ticker|price)s?
-```
-Matches: "monitor AMZN stock", "track TSLA price", "watch these tickers"
-
-**Pattern 7: Moving Average & Momentum**
-```regex
-(?i)(moving average|momentum|volatility)\s+(for|of|analysis)
-```
-Matches: "moving average for SPY", "momentum analysis of QQQ", "volatility of AAPL"
-
-### Layer 3: Description + NLU (Natural Language Understanding)
-
-**Purpose:** Fallback coverage for edge cases and natural phrasing
-
-**Enhanced Description (80+ keywords):**
-```
-Comprehensive technical analysis tool for stocks and ETFs. Analyzes price movements,
-volume patterns, and momentum indicators including RSI (Relative Strength Index),
-MACD (Moving Average Convergence Divergence), Bollinger Bands, moving averages,
-and chart patterns. Generates buy and sell signals based on technical indicators.
-Compares multiple stocks for relative strength analysis. Monitors stock performance
-and tracks price alerts. Perfect for traders needing technical analysis, chart
-interpretation, momentum tracking, volatility assessment, and comparative stock
-evaluation using proven technical analysis methods and trading indicators.
-```
-
-**Key Terms Included:**
-- Action verbs: analyzes, generates, compares, monitors, tracks
-- Domain entities: stocks, ETFs, tickers, equities
-- Indicators: RSI, MACD, Bollinger Bands, moving averages
-- Use cases: buy signals, sell signals, comparison, alerts, monitoring
-- Technical terms: momentum, volatility, chart patterns, price movements
-
-**Coverage:**
-- ✅ Primary use case clearly stated upfront
-- ✅ All major indicators explicitly mentioned with full names
-- ✅ Synonyms and variations included
-- ✅ Target user persona defined ("traders")
-- ✅ Natural language flow maintained
-
-### Activation Test Results
-
-**Layer 1 (Keywords) Test:**
-- Tested: 15 keywords × 3 variations = 45 queries
-- Success rate: 45/45 = 100% ✅
-
-**Layer 2 (Patterns) Test:**
-- Tested: 7 patterns × 5 variations = 35 queries
-- Success rate: 35/35 = 100% ✅
-
-**Layer 3 (Description/NLU) Test:**
-- Tested: 10 edge case queries
-- Success rate: 9/10 = 90% ✅
-
-**Integration Test:**
-- Total test queries: 12
-- Activated correctly: 12
-- Success rate: 12/12 = 100% ✅
-
-**Negative Test (False Positives):**
-- Out-of-scope queries: 7
-- Correctly did not activate: 7
-- Success rate: 7/7 = 100% ✅
-
-**Overall Activation Reliability: 98%** (Grade A)
+**Activation reliability: 95%+** across tested query variations
 
 ---
 
@@ -187,8 +61,7 @@ evaluation using proven technical analysis methods and trading indicators.
 
 ```
 stock-analyzer/
-├── .claude-plugin/
-│   └── marketplace.json          # Activation & metadata
+├── SKILL.md                      # Skill definition and activation (this file)
 ├── scripts/
 │   ├── main.py                   # Orchestrator
 │   ├── indicators/
@@ -202,7 +75,6 @@ stock-analyzer/
 │   └── utils/
 │       └── validators.py        # Input validation
 ├── README.md                     # User documentation
-├── SKILL.md                      # Technical specification (this file)
 └── requirements.txt              # Dependencies
 ```
 
@@ -352,7 +224,7 @@ class SignalGenerator:
 
 ## Usage Examples
 
-### when_to_use Cases (from marketplace.json)
+### When to Use (from SKILL.md description)
 
 1. ✅ "Analyze AAPL stock using RSI indicator"
 2. ✅ "What's the MACD for MSFT right now?"
@@ -360,7 +232,7 @@ class SignalGenerator:
 4. ✅ "Compare AAPL vs GOOGL using technical analysis"
 5. ✅ "Monitor TSLA and alert when RSI is oversold"
 
-### when_not_to_use Cases (from marketplace.json)
+### When NOT to Use (from SKILL.md description)
 
 1. ❌ "What's the P/E ratio of AAPL?" → Use fundamental analysis skill
 2. ❌ "Latest news about TSLA" → Use news/sentiment skill
@@ -510,11 +382,9 @@ matplotlib>=3.7.0
 
 ## References
 
-- **Activation System:** See `phase4-detection.md`
-- **Pattern Library:** See `activation-patterns-guide.md`
-- **Testing Guide:** See `activation-testing-guide.md`
-- **Quality Checklist:** See `activation-quality-checklist.md`
-- **Templates:** See `references/templates/`
+- **Activation Guide:** See `references/phase4-detection.md`
+- **Architecture Guide:** See `references/architecture-guide.md`
+- **Quality Standards:** See `references/quality-standards.md`
 
 ---
 

@@ -636,7 +636,7 @@ Ask questions about agriculture and the agent will respond.
 - [ ] **CHANGELOG.md** created with complete v1.0.0 entry
 - [ ] **INSTALACAO.md** with complete didactic tutorial
 - [ ] **comprehensive_{domain}_report()** implemented
-- [ ] marketplace.json with version field
+- [ ] SKILL.md with version in frontmatter metadata
 - [ ] 18+ files created
 - [ ] ~1500+ lines of Python code
 - [ ] ~10,000+ words of documentation
