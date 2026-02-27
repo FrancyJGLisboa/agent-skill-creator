@@ -6,6 +6,8 @@
 [![Version](https://img.shields.io/badge/version-4.0.0-brightgreen)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)]()
 
+![Agent Skill Creator Overview](Dynamous/agentskillimage.png)
+
 ---
 
 ## The Problem
