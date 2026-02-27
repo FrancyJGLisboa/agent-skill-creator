@@ -275,15 +275,75 @@ Every skill goes through automated checks before delivery and on every publish:
 |------|---------------|
 | **Spec Validation** | SKILL.md structure, frontmatter format, naming rules, file references |
 | **Security Scan** | No hardcoded API keys, no credentials, no injection patterns |
+| **Staleness Check** | Review dates, dependency health, API schema drift |
 
 Run them independently anytime:
 
 ```bash
 python3 scripts/validate.py ./my-skill/
 python3 scripts/security_scan.py ./my-skill/
+python3 scripts/staleness_check.py ./my-skill/
+python3 scripts/staleness_check.py ./my-skill/ --check-deps --check-drift
 ```
 
 Skills that fail validation cannot be published. Skills with high-severity security issues are blocked.
+
+---
+
+## Staleness Detection
+
+Skills go stale. APIs change, compliance rules update, data sources move. A skill that worked six months ago may silently produce wrong results today. Staleness detection surfaces this before users hit it.
+
+Three layers, each opt-in:
+
+**Review tracking** — Every skill can declare when it was last reviewed and how often it should be. The staleness checker compares these dates and flags overdue skills. Skills without explicit dates fall back to the last git commit date on SKILL.md.
+
+```bash
+python3 scripts/staleness_check.py ./my-skill/
+# Exit code 0 = fresh, 1 = overdue for review
+```
+
+**Dependency health** — Skills can declare external URLs they depend on (APIs, data sources). The `--check-deps` flag HTTP-checks each one and reports failures.
+
+```bash
+python3 scripts/staleness_check.py ./my-skill/ --check-deps
+# Exit code 2 = one or more dependencies unreachable
+```
+
+**Schema drift** — Skills can declare the expected top-level keys in API responses. The `--check-drift` flag fetches each endpoint and compares actual keys against expected. Missing keys = the API changed under you.
+
+```bash
+python3 scripts/staleness_check.py ./my-skill/ --check-drift
+```
+
+All three layers are controlled by optional frontmatter fields. Existing skills work unchanged — the tool just suggests adding the metadata:
+
+```yaml
+metadata:
+  created: 2026-02-27
+  last_reviewed: 2026-02-27
+  review_interval_days: 90
+  dependencies:
+    - url: https://api.example.com/v1
+      name: Example API
+      type: api
+  schema_expectations:
+    - url: https://api.example.com/v1/data
+      method: GET
+      expected_keys:
+        - id
+        - price
+        - volume
+```
+
+For teams using the skill registry, `stale` scans every published skill at once:
+
+```bash
+python3 scripts/skill_registry.py stale
+# NAME            VERSION  STATUS   DAYS SINCE  SOURCE          INTERVAL
+# sales-report    1.2.0    OVERDUE  127         last_reviewed   90
+# deploy-check    2.0.1    FRESH    12          published       90
+```
 
 ---
 
@@ -299,15 +359,21 @@ python3 scripts/skill_registry.py search "query"                     # Search sk
 python3 scripts/skill_registry.py info skill-name                    # Skill details
 python3 scripts/skill_registry.py install skill-name                 # Install a skill
 python3 scripts/skill_registry.py remove skill-name --force          # Remove a skill
+python3 scripts/skill_registry.py stale                              # Report stale skills
+python3 scripts/skill_registry.py stale --json                       # Machine-readable output
 ```
 
-### Validation and Security
+### Validation, Security, and Staleness
 
 ```bash
 python3 scripts/validate.py ./skill/               # Spec compliance
 python3 scripts/validate.py ./skill/ --json         # Machine-readable output
 python3 scripts/security_scan.py ./skill/           # Security audit
 python3 scripts/security_scan.py ./skill/ --json    # Machine-readable output
+python3 scripts/staleness_check.py ./skill/                      # Review staleness
+python3 scripts/staleness_check.py ./skill/ --check-deps         # + dependency health
+python3 scripts/staleness_check.py ./skill/ --check-drift        # + schema drift
+python3 scripts/staleness_check.py ./skill/ --json               # Machine-readable output
 ```
 
 ### Export
@@ -342,6 +408,7 @@ agent-skill-creator/
   scripts/
     validate.py                 # Spec compliance checker
     security_scan.py            # Security scanner
+    staleness_check.py          # Staleness detection (review, deps, drift)
     export_utils.py             # Cross-platform export
     skill_registry.py           # Team skill registry
     install-template.sh         # Template for generated installers

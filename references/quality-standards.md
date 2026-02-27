@@ -17,6 +17,14 @@
 - Concrete examples, not abstract
 - Not just external links
 
+**Current, Not Stale**
+- Include `metadata.created` and `metadata.last_reviewed` dates in frontmatter
+- Set `metadata.review_interval_days` (default: 90 days)
+- Declare external dependencies in `metadata.dependencies` so health can be checked
+- Declare expected API response shapes in `metadata.schema_expectations` for drift detection
+- Run `python3 scripts/staleness_check.py path/to/skill/` periodically to detect stale skills
+- When publishing to a registry, use `python3 scripts/skill_registry.py stale` to audit all skills
+
 ---
 
 ## Standards by File Type

@@ -38,6 +38,7 @@ if str(_SCRIPTS_DIR) not in sys.path:
 
 from validate import validate_skill, _parse_frontmatter, _parse_yaml_field, _parse_subfield_value
 from security_scan import security_scan
+from staleness_check import DEFAULT_REVIEW_INTERVAL_DAYS
 
 
 # --- Constants ---
@@ -148,12 +149,20 @@ def extract_skill_metadata(skill_path: Path) -> dict:
     # Author: try metadata.author first
     author = _parse_subfield_value(frontmatter, "metadata", "author") or ""
 
+    # Temporal metadata for staleness tracking
+    created = _parse_subfield_value(frontmatter, "metadata", "created") or ""
+    last_reviewed = _parse_subfield_value(frontmatter, "metadata", "last_reviewed") or ""
+    interval = _parse_subfield_value(frontmatter, "metadata", "review_interval_days") or ""
+
     return {
         "name": name.strip(),
         "description": description.strip(),
         "version": version.strip(),
         "author": author.strip(),
         "license": license_val.strip(),
+        "created": created.strip(),
+        "last_reviewed": last_reviewed.strip(),
+        "review_interval_days": interval.strip(),
     }
 
 
@@ -369,7 +378,18 @@ def cmd_publish(args: argparse.Namespace) -> None:
         shutil.rmtree(dest)
     shutil.copytree(skill_path, dest, ignore=COPY_IGNORE_PATTERNS)
 
-    # Step 7: Add entry
+    # Step 7: Add entry (including staleness metadata)
+    staleness_data = {}
+    if metadata.get("created"):
+        staleness_data["created"] = metadata["created"]
+    if metadata.get("last_reviewed"):
+        staleness_data["last_reviewed"] = metadata["last_reviewed"]
+    if metadata.get("review_interval_days"):
+        try:
+            staleness_data["review_interval_days"] = int(metadata["review_interval_days"])
+        except ValueError:
+            pass
+
     entry = {
         "name": name,
         "description": metadata["description"],
@@ -389,6 +409,7 @@ def cmd_publish(args: argparse.Namespace) -> None:
             "clean": scan["clean"],
             "issues": len(scan["issues"]),
         },
+        "staleness": staleness_data,
     }
     data["skills"].append(entry)
     save_registry(registry_path, data)
@@ -589,6 +610,116 @@ def cmd_remove(args: argparse.Namespace) -> None:
     print(f"Removed '{args.skill_name}' from registry.")
 
 
+def cmd_stale(args: argparse.Namespace) -> None:
+    """Report skills that are overdue for review."""
+    from datetime import date, timedelta
+
+    registry_path = Path(args.registry).resolve()
+    data = load_registry(registry_path)
+    today = date.today()
+
+    results: list[dict] = []
+    for skill in data["skills"]:
+        staleness = skill.get("staleness", {})
+        published = skill.get("published", "")
+
+        # Determine reference date: last_reviewed > created > published
+        ref_date = None
+        date_source = "none"
+
+        lr = staleness.get("last_reviewed", "")
+        cr = staleness.get("created", "")
+
+        if lr:
+            try:
+                parts = lr.split("-")
+                ref_date = date(int(parts[0]), int(parts[1]), int(parts[2]))
+                date_source = "last_reviewed"
+            except (ValueError, IndexError):
+                pass
+
+        if ref_date is None and cr:
+            try:
+                parts = cr.split("-")
+                ref_date = date(int(parts[0]), int(parts[1]), int(parts[2]))
+                date_source = "created"
+            except (ValueError, IndexError):
+                pass
+
+        if ref_date is None and published:
+            try:
+                parts = published[:10].split("-")
+                ref_date = date(int(parts[0]), int(parts[1]), int(parts[2]))
+                date_source = "published"
+            except (ValueError, IndexError):
+                pass
+
+        interval = staleness.get("review_interval_days", DEFAULT_REVIEW_INTERVAL_DAYS)
+        if not isinstance(interval, int):
+            try:
+                interval = int(interval)
+            except (ValueError, TypeError):
+                interval = DEFAULT_REVIEW_INTERVAL_DAYS
+
+        days_since = None
+        status = "unknown"
+        if ref_date:
+            days_since = (today - ref_date).days
+            deadline = ref_date + timedelta(days=interval)
+            if today > deadline:
+                status = "overdue"
+            elif (deadline - today).days <= 30:
+                status = "due_soon"
+            else:
+                status = "fresh"
+
+        results.append({
+            "name": skill.get("name", ""),
+            "version": skill.get("version", ""),
+            "status": status,
+            "days_since_review": days_since,
+            "date_source": date_source,
+            "review_interval_days": interval,
+        })
+
+    if getattr(args, "json", False):
+        print(json.dumps(results, indent=2))
+        return
+
+    # Text table output
+    if not results:
+        print("No skills in registry.")
+        return
+
+    headers = ["NAME", "VERSION", "STATUS", "DAYS SINCE", "SOURCE", "INTERVAL"]
+    rows = []
+    for r in results:
+        rows.append([
+            r["name"],
+            r["version"],
+            r["status"].upper(),
+            str(r["days_since_review"]) if r["days_since_review"] is not None else "N/A",
+            r["date_source"],
+            str(r["review_interval_days"]),
+        ])
+
+    widths = [len(h) for h in headers]
+    for row in rows:
+        for i, cell in enumerate(row):
+            widths[i] = max(widths[i], len(cell))
+
+    header_line = "  ".join(h.ljust(widths[i]) for i, h in enumerate(headers))
+    print(header_line)
+    for row in rows:
+        print("  ".join(cell.ljust(widths[i]) for i, cell in enumerate(row)))
+
+    # Summary
+    overdue = sum(1 for r in results if r["status"] == "overdue")
+    due_soon = sum(1 for r in results if r["status"] == "due_soon")
+    if overdue or due_soon:
+        print(f"\nSummary: {overdue} overdue, {due_soon} due soon, {len(results)} total")
+
+
 # --- CLI ---
 
 def _add_registry_arg(parser: argparse.ArgumentParser) -> None:
@@ -652,6 +783,11 @@ def build_parser() -> argparse.ArgumentParser:
     _add_registry_arg(p_remove)
     p_remove.add_argument("--force", action="store_true", help="Confirm removal")
 
+    # stale
+    p_stale = subparsers.add_parser("stale", help="Report skills overdue for review")
+    _add_registry_arg(p_stale)
+    p_stale.add_argument("--json", action="store_true", help="Output as JSON")
+
     return parser
 
 
@@ -672,6 +808,7 @@ def main() -> None:
         "install": cmd_install,
         "info":    cmd_info,
         "remove":  cmd_remove,
+        "stale":   cmd_stale,
     }
 
     cmd_func = commands.get(args.command)

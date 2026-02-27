@@ -852,6 +852,13 @@ license: MIT
 metadata:
   author: Author Name
   version: 1.0.0
+  created: 2026-02-27
+  last_reviewed: 2026-02-27
+  review_interval_days: 90
+  dependencies:
+    - url: https://api.example.com/v1
+      name: Example API
+      type: api
 ---
 ```
 
@@ -1281,6 +1288,7 @@ See README.md for complete multi-platform installation instructions.
 - [ ] SKILL.md created FIRST with spec-compliant frontmatter
 - [ ] SKILL.md is <500 lines
 - [ ] Frontmatter has: name, description (<=1024 chars), license, metadata (author, version)
+- [ ] Temporal metadata included (metadata.created, metadata.last_reviewed, metadata.review_interval_days)
 - [ ] Name is kebab-case, no `-cskill`, matches directory
 - [ ] All Python scripts implemented with functional code
 - [ ] No TODO, no `pass`, no `NotImplementedError`, no placeholders
@@ -1292,6 +1300,7 @@ See README.md for complete multi-platform installation instructions.
 - [ ] `requirements.txt` created (if third-party dependencies used)
 - [ ] Spec validation passed (`scripts/validate.py`)
 - [ ] Security scan passed (`scripts/security_scan.py`)
+- [ ] Staleness check passed (`scripts/staleness_check.py`)
 - [ ] Results reported to user
 
 ---

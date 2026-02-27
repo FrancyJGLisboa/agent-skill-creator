@@ -31,6 +31,9 @@ MAX_BODY_LINES_WARNING = 500
 NAME_PATTERN = re.compile(r"^[a-z0-9]([a-z0-9-]*[a-z0-9])?$")
 CONSECUTIVE_HYPHENS_PATTERN = re.compile(r"--")
 
+# Pattern for YYYY-MM-DD date format
+DATE_FORMAT_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
 # Pattern for local file references in markdown: [text](path) excluding http/https/mailto/#
 LOCAL_LINK_PATTERN = re.compile(
     r"\[([^\]]*)\]\(([^)]+)\)"
@@ -344,6 +347,34 @@ def validate_skill(skill_path: str) -> dict:
             warnings.append("'metadata.author' sub-field is missing")
         if not _subfield_exists(frontmatter, "metadata", "version"):
             warnings.append("'metadata.version' sub-field is missing")
+
+        # Temporal metadata validation (optional, warnings only)
+        created_val = _parse_subfield_value(frontmatter, "metadata", "created")
+        reviewed_val = _parse_subfield_value(frontmatter, "metadata", "last_reviewed")
+        interval_val = _parse_subfield_value(frontmatter, "metadata", "review_interval_days")
+
+        if created_val and not DATE_FORMAT_PATTERN.match(created_val.strip()):
+            warnings.append(
+                f"'metadata.created' should be YYYY-MM-DD format (found: '{created_val}')"
+            )
+        if reviewed_val and not DATE_FORMAT_PATTERN.match(reviewed_val.strip()):
+            warnings.append(
+                f"'metadata.last_reviewed' should be YYYY-MM-DD format (found: '{reviewed_val}')"
+            )
+        if interval_val:
+            try:
+                int(interval_val.strip())
+            except ValueError:
+                warnings.append(
+                    f"'metadata.review_interval_days' should be an integer (found: '{interval_val}')"
+                )
+
+        has_temporal = bool(created_val or reviewed_val or interval_val)
+        if not has_temporal:
+            warnings.append(
+                "Consider adding temporal metadata (metadata.created, metadata.last_reviewed, "
+                "metadata.review_interval_days) for staleness tracking"
+            )
 
     # Referenced local files
     if body is not None:

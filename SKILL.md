@@ -410,6 +410,20 @@ license: MIT                # or appropriate license
 metadata:
   author: Author Name
   version: 1.0.0
+  created: YYYY-MM-DD                # When the skill was created
+  last_reviewed: YYYY-MM-DD          # Last time content was verified current
+  review_interval_days: 90           # Days between required reviews
+  dependencies:                      # External URLs the skill depends on (optional)
+    - url: https://api.example.com/v1
+      name: Example API
+      type: api
+  schema_expectations:               # Expected API response shapes (optional)
+    - url: https://api.example.com/v1/data
+      method: GET
+      expected_keys:
+        - id
+        - name
+        - value
 ---
 # /skill-name — Short Description
 
