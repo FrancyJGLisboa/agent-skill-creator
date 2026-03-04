@@ -414,6 +414,20 @@ The registry is a git repo. Version history, access control, and review workflow
 
 See `references/pipeline-phases.md` for detailed Phase 5 instructions.
 
+### Update Check
+
+When loading this skill, silently check if the local copy is behind the remote. Run:
+
+```bash
+cd <skill-install-dir> && git rev-parse HEAD 2>/dev/null
+cd <skill-install-dir> && git ls-remote origin HEAD 2>/dev/null | cut -f1
+```
+
+If both commands succeed and the hashes differ, mention to the user:
+"A newer version of agent-skill-creator is available. Run `git pull` in <path> to update."
+
+Do not block or interrupt for this. If either command fails (no git, no network, not a git repo), skip silently.
+
 ### Generated SKILL.md Format
 
 Every generated skill's SKILL.md must follow this structure:

@@ -24,9 +24,17 @@ Every AI coding tool — Claude Code, GitHub Copilot, Cursor, Windsurf, Codex, G
 
 ## Quick Start
 
-### 1. Install (one command)
+### 1. Install
 
-Pick the line that matches your tool:
+**Option A — One-liner (installs to all detected tools):**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/FrancyJGLisboa/agent-skill-creator/main/scripts/bootstrap.sh | sh
+```
+
+This clones to `~/.agents/skills/agent-skill-creator` and symlinks to every detected global platform (Claude Code, Gemini CLI, Goose, OpenCode, Copilot). Run `git pull` once to update everywhere.
+
+**Option B — Git clone (pick your tool):**
 
 ```bash
 # Claude Code / VS Code Copilot (global — works in all projects)
@@ -37,6 +45,15 @@ git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .cursor/rule
 
 # Codex CLI / Gemini CLI / Kiro / Antigravity (universal path)
 git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.agents/skills/agent-skill-creator
+```
+
+**Option C — Already cloned? Symlink to all tools:**
+
+```bash
+cd agent-skill-creator
+./install.sh              # Symlink to all detected platforms
+./install.sh --dry-run    # Preview without changes
+./install.sh --uninstall  # Remove all symlinks
 ```
 
 One install at `~/.claude/skills/` works for both Claude Code and VS Code Copilot. One install at `~/.agents/skills/` works for Codex CLI, Gemini CLI, Kiro, Antigravity, and other tools that read the universal path.
@@ -287,10 +304,10 @@ python3 scripts/export_utils.py ./agent-skill-creator/ --variant desktop
 ### Update
 
 ```bash
-cd ~/.claude/skills/agent-skill-creator && git pull
-# or
 cd ~/.agents/skills/agent-skill-creator && git pull
 ```
+
+If you used `bootstrap.sh` or `./install.sh`, all symlinks update automatically — just `git pull` once from the canonical location. The skill also performs a silent git-based version check when loaded and will mention if a newer version is available.
 
 ---
 
@@ -403,6 +420,23 @@ python3 scripts/staleness_check.py ./skill/ --check-drift        # + schema drif
 python3 scripts/staleness_check.py ./skill/ --json               # Machine-readable output
 ```
 
+### Install Any Skill (Universal Installer)
+
+```bash
+# From git URL — clones and symlinks to all detected platforms
+./scripts/install-skill.sh https://github.com/someone/sales-report-skill.git
+
+# From local path — copies and symlinks to all detected platforms
+./scripts/install-skill.sh ./sales-report-skill
+
+# To a specific platform only
+./scripts/install-skill.sh ./sales-report-skill --platform cursor --project
+
+# Preview / remove
+./scripts/install-skill.sh ./sales-report-skill --dry-run
+./scripts/install-skill.sh ./sales-report-skill --uninstall
+```
+
 ### Export
 
 ```bash
@@ -434,13 +468,16 @@ All commands use exit code `0` for success, `1` for errors. All support `--json`
 agent-skill-creator/
   SKILL.md                      # The skill definition (what the agent reads)
   README.md                     # This file
+  install.sh                    # Symlink self-installer (for cloned repos)
   scripts/
+    bootstrap.sh                # Curl one-liner bootstrap (installs everywhere)
+    install-skill.sh            # Universal skill installer (any skill, any tool)
+    install-template.sh         # Template for generated installers (14 platforms)
     validate.py                 # Spec compliance checker
     security_scan.py            # Security scanner
     staleness_check.py          # Staleness detection (review, deps, drift)
     export_utils.py             # Cross-platform export
     skill_registry.py           # Team skill registry
-    install-template.sh         # Template for generated installers (14 platforms)
   references/                   # Detailed docs (loaded by the agent on demand)
     pipeline-phases.md          # Full creation pipeline
     architecture-guide.md       # Skill structure decisions
