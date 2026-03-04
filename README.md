@@ -307,7 +307,7 @@ python3 scripts/export_utils.py ./agent-skill-creator/ --variant desktop
 cd ~/.agents/skills/agent-skill-creator && git pull
 ```
 
-If you used `bootstrap.sh` or `./install.sh`, all symlinks update automatically — just `git pull` once from the canonical location. The skill also performs a silent git-based version check when loaded and will mention if a newer version is available.
+If you used the one-liner (Option A) or `./install.sh` (Option C), all symlinks update automatically — just `git pull` once from the canonical location. The skill also performs a silent git-based version check when loaded and will mention if a newer version is available.
 
 ---
 
@@ -458,7 +458,7 @@ All commands use exit code `0` for success, `1` for errors. All support `--json`
 
 **Platform not auto-detected**: Use `--platform cursor` (or copilot, windsurf, codex, gemini, kiro, trae, goose, opencode, roo-code, antigravity, universal) to specify explicitly.
 
-**Install to all tools at once**: Use `./install.sh --all` to install to every detected platform in one command.
+**Install to all tools at once**: Inside a generated skill, use `./install.sh --all` to install to every detected platform in one command.
 
 ---
 
