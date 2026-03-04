@@ -47,38 +47,41 @@ A variant of interactive mode that explains each phase as it runs:
 
 ## Wizard Steps
 
-### Step 1: Requirements Gathering
+### Step 1: Understand from Evidence
 
-The wizard begins by collecting structured requirements from the user.
+Instead of asking structured questions, present your understanding derived from whatever the user provided.
 
-**System prompt**:
+**If the user provided files/URLs/screenshots:**
 ```
-I'll help you create a skill for [objective]. Let me ask a few
-questions to understand your requirements.
-
-1. What data sources or APIs should this skill use?
-   (e.g., specific API, any free API, I'm not sure)
-
-2. What are the main tasks this skill should perform?
-   (e.g., fetch data, analyze trends, generate reports)
-
-3. How often will this skill run?
-   (e.g., on-demand, daily, weekly)
-
-4. What output format do you need?
-   (e.g., text summary, PDF report, CSV data, HTML dashboard)
-
-5. Any constraints I should know about?
-   (e.g., must be free, must support specific regions, rate limits)
+From your [evidence], here's what I understand:
+- You [workflow description derived from artifacts]
+- The data comes from [source]
+- The output goes to [recipient/format]
+- This happens [frequency]
+- [One specific thing you couldn't figure out]?
 ```
 
-**User response example**:
+**If the user provided only text:**
 ```
-1. Use NOAA for historical data, Open-Meteo for forecasts
-2. Compare current weather to 10-year averages, flag anomalies
-3. Weekly automated runs plus on-demand
-4. PDF report with charts
-5. Must be free, focus on US agricultural regions
+I understand you need [summary]. Before I build, let me confirm:
+- [Most critical assumption that could be wrong]?
+```
+
+**If the user provided almost nothing (single word, vague phrase):**
+```
+In the context of [their role/desk], '[word]' likely means [interpretation A].
+Does that sound right, or did you mean [interpretation B]?
+```
+
+**Rules:**
+- Never ask more than 2 questions at once
+- Never present a numbered questionnaire
+- Always lead with what you KNOW (from evidence), then ask about what you DON'T
+- If you're 80%+ confident, just build it and let them correct the output
+
+**User response example** (confirming a hypothesis):
+```
+yes, but the report goes to the VP not the team lead. and weekly not daily.
 ```
 
 ### Step 2: Workflow Analysis

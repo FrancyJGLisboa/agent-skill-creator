@@ -39,6 +39,36 @@ Research and **DECIDE** autonomously which API or data source to use for the ski
 
 ## Detailed Process
 
+### Step 0: Input Triage
+
+Before identifying the domain, classify what the user actually provided:
+
+| Input Type | Strategy |
+|---|---|
+| Well-formed description | Proceed to Step 1 normally |
+| Files only (Excel, PDF, code, CSV) | Reverse-engineer: open each file, reconstruct the workflow from structure. Tab names, column headers, formulas, and formatting ARE the specification |
+| URLs only | Fetch each URL. Understand the data source. Infer what the user would do with this data based on their role/context |
+| Screenshot/image | Read visually. Identify: what tool is shown? What data? What manual step is visible? What's the pain? |
+| Email/forwarded chain | Extract: who asked for what, what was agreed, what's the actual request (ignore disclaimers, scheduling, CC lists) |
+| Single word or phrase | Infer from context: user's desk/role, existing skills in their environment, databases available. Present the most likely interpretation and confirm |
+| Mixed (files + sentence) | The files are the spec. The sentence is commentary. Cross-reference both |
+| "here" + files | The files ARE the input. Process them all. Present your understanding. |
+
+**After triage, ALWAYS present your understanding before proceeding:**
+
+"From your [files/URLs/screenshot], I understand you [reconstructed workflow].
+The output goes to [inferred recipient]. [Specific question if needed]. Right?"
+
+The user confirms with one word. Then proceed to Step 1.
+
+**Discovery check (before building):**
+Before designing a new skill, verify:
+- Is this data already in a database the user has access to?
+- Has a colleague already built a skill for this?
+- Is there a simpler solution (existing API, existing tool, existing infrastructure)?
+
+The best outcome is sometimes: "You don't need a new skill — this data already exists in [database]. Let me show you how to query it."
+
 ### Step 1: Identify Domain
 
 From user input, extract the main domain:

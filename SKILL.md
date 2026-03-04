@@ -38,6 +38,25 @@ User invokes `/agent-skill-creator` followed by their input:
 /agent-skill-creator Based on compliance-checklist.pdf, create a skill for SOX audits
 ```
 
+The user can also drop artifacts, paste URLs, share screenshots, or provide minimal context:
+
+```
+/agent-skill-creator here
+  [+ drops 5 files into chat: spreadsheet, PDF output, screenshot, email, half-working script]
+
+/agent-skill-creator [pastes 2 URLs and a half-sentence]
+  https://apps.fas.usda.gov/psdonline/app/index.html
+  same thing as the wasde extractor but for this
+
+/agent-skill-creator [screenshot of Bloomberg terminal + Excel side by side]
+  this is ridiculous. there has to be a better way
+
+/agent-skill-creator freight
+
+/agent-skill-creator [pastes a forwarded email chain with 6 replies and legal disclaimers]
+  my colleague in London built something for this. can we do the same?
+```
+
 The user can also activate naturally without the prefix:
 
 ```
@@ -50,7 +69,34 @@ Export this skill for Cursor
 
 ## How the Factory Works
 
-Raw material goes in. A validated, security-scanned, self-contained skill comes out. The factory operates in two stages:
+Raw material goes in. A validated, security-scanned, self-contained skill comes out.
+
+### Evidence-Based Intent Derivation
+
+Before any phase begins, triage whatever the user provided. Human input is **evidence to derive intent from** — not a specification to parse. Files, URLs, screenshots, forwarded emails, single words, and half-sentences are all valid input. The absence of a well-formed description is not the absence of intent.
+
+**Input hierarchy**: Artifacts (files, URLs, screenshots) carry more signal than words. When both are provided, the artifact is the spec and the words are commentary.
+
+**Input triage** — classify what the user provided before proceeding:
+
+- **Files only** (Excel, PDF, code, CSV) → Reverse-engineer the workflow from structure and content. Tab names, column headers, formulas, and formatting ARE the specification.
+- **URLs only** → Fetch each URL. Understand the data source. Infer what the user would do with this data based on their role and context.
+- **Screenshot/image** → Read visually. Identify: what tool is shown? What data? What manual step is visible? What is the pain?
+- **Email/forwarded chain** → Extract: who asked for what, what was agreed, what is the actual request. Ignore disclaimers, scheduling, CC lists.
+- **Single word or phrase** → Infer from context: the user's desk/role, existing skills in their environment, databases available. Present the most likely interpretation and confirm.
+- **Mixed (files + sentence)** → The files are the spec. The sentence is commentary. Cross-reference both.
+- **"here" + files** → The files ARE the input. Process them all. Present your understanding.
+- **Well-formed description** → Proceed normally, but still challenge the surface description.
+
+**Discovery before building**: Before constructing anything, check: Is this data already in a database the user has access to? Has a colleague built a skill for this? Is there an API that makes a scraping approach unnecessary? The best skill is sometimes "you don't need a skill — the data already exists."
+
+**Hypothesis, not questionnaire**: Never present 5 questions upfront. Present: "From your files, I understand you do X → Y → Z weekly. The output goes to [person]. Right?" The human confirms or corrects with one word.
+
+**Progressive refinement**: Build at 60% understanding. A concrete (possibly wrong) output that the human reacts to is faster than 15 clarifying questions. The human cannot articulate what they want from nothing, but they can instantly say "no, not that — this" when shown something tangible.
+
+**Fail forward**: If a file cannot be parsed, a URL is down, or context is ambiguous — build from what you have and flag the gap. Never block on a missing piece.
+
+The factory operates in two stages:
 
 ### Stage 1: Understand and Specify (Phases 1-2)
 
@@ -60,8 +106,9 @@ Read every piece of material the user provides. Follow links. Read files. Parse 
 
 **Clarity principles** (self-guided, no external dependency):
 
+0. **Treat input as evidence, not instructions.** The user's files, URLs, and screenshots are primary evidence. Their words (if any) are secondary commentary. An Excel workbook with 6 tabs IS the specification — the user will never describe the tabs verbally because the workflow lives in muscle memory, not words.
 1. **Read everything before concluding anything.** Do not start forming the spec after the first paragraph. Consume all material — every link, every file, every page — then synthesize.
-2. **Challenge the surface description.** The human's words are a starting point, not a specification. Look for what's missing, what's implied, what's contradictory. If someone says "generate a report," ask yourself: report for whom? In what format? With what data? At what frequency? Answering what triggers it?
+2. **Challenge the surface description.** The human's words are a starting point, not a specification. Look for what's missing, what's implied, what's contradictory. If someone says "generate a report," ask yourself: report for whom? In what format? With what data? At what frequency? Answering what triggers it? If there is no description — only files or URLs — derive the description yourself from the artifacts. The absence of words is not the absence of intent.
 3. **Extract implicit requirements.** Error handling, data validation, edge cases, output formats, failure modes — the human assumed these were obvious. They aren't. Make them explicit in your spec.
 4. **Identify the real output.** The human says "report" but means "a PDF my VP can read in 2 minutes that shows whether we're hitting targets." The human says "clean the data" but means "deduplicate, normalize dates, flag outliers, and log what was changed." Dig past the label to the substance.
 5. **Generate a spec that surpasses the human's understanding.** Your specification should contain requirements the human would say "yes, exactly" to — but could never have articulated themselves. That is the standard.
