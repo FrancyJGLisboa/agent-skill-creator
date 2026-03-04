@@ -369,6 +369,14 @@ def generate_installation_guide(
 
 This skill works on all platforms supporting the Agent Skills Open Standard.
 
+### Universal Path (works with 6+ tools)
+
+```bash
+cp -r {skill_name}/ ~/.agents/skills/{skill_name}/
+```
+
+Works with Codex CLI, Gemini CLI, Kiro, Antigravity, and other tools that read `~/.agents/skills/`.
+
 ### Using install.sh (Recommended)
 
 If the skill includes an `install.sh` script:
@@ -382,11 +390,20 @@ If the skill includes an `install.sh` script:
 ./install.sh --platform copilot
 ./install.sh --platform cursor
 
+# Install to ALL detected platforms
+./install.sh --all
+
 # Project-level install
 ./install.sh --project
 
 # Preview without installing
 ./install.sh --dry-run
+```
+
+### Alternative: npx
+
+```bash
+npx skills add ./{skill_name}
 ```
 
 ### Manual Installation by Platform
@@ -412,7 +429,8 @@ cp -r {skill_name}/ .cursor/rules/{skill_name}/
 
 #### Windsurf
 ```bash
-cp -r {skill_name}/ .windsurf/skills/{skill_name}/
+# Project-level
+cp -r {skill_name}/ .windsurf/rules/{skill_name}/
 ```
 
 #### Cline
@@ -422,12 +440,42 @@ cp -r {skill_name}/ .clinerules/{skill_name}/
 
 #### OpenAI Codex CLI
 ```bash
-cp -r {skill_name}/ .codex/skills/{skill_name}/
+cp -r {skill_name}/ ~/.agents/skills/{skill_name}/
 ```
 
 #### Gemini CLI
 ```bash
-cp -r {skill_name}/ .gemini/skills/{skill_name}/
+cp -r {skill_name}/ ~/.gemini/skills/{skill_name}/
+```
+
+#### Kiro
+```bash
+cp -r {skill_name}/ .kiro/skills/{skill_name}/
+```
+
+#### Trae
+```bash
+cp -r {skill_name}/ .trae/rules/{skill_name}/
+```
+
+#### Goose
+```bash
+cp -r {skill_name}/ ~/.config/goose/skills/{skill_name}/
+```
+
+#### OpenCode
+```bash
+cp -r {skill_name}/ ~/.config/opencode/skills/{skill_name}/
+```
+
+#### Roo Code
+```bash
+cp -r {skill_name}/ .roo/rules/{skill_name}/
+```
+
+#### Antigravity
+```bash
+cp -r {skill_name}/ .agents/skills/{skill_name}/
 ```
 
 ### Claude Desktop / claude.ai (Web)
@@ -454,13 +502,19 @@ with open('{skill_name}-api-{{version}}.zip', 'rb') as f:
 
 | Platform | Install Method | Updates | marketplace.json |
 |----------|---------------|---------|-----------------|
+| **Universal** | install.sh / copy | git pull | Not used |
 | **Claude Code** | install.sh / copy | git pull | Optional |
 | **GitHub Copilot** | install.sh / copy | git pull | Not used |
-| **Cursor** | install.sh / copy | git pull | Not used |
+| **Cursor** | install.sh / copy (+ .mdc) | git pull | Not used |
 | **Windsurf** | install.sh / copy | git pull | Not used |
 | **Cline** | install.sh / copy | git pull | Not used |
 | **Codex CLI** | install.sh / copy | git pull | Not used |
 | **Gemini CLI** | install.sh / copy | git pull | Not used |
+| **Kiro** | install.sh / copy | git pull | Not used |
+| **Trae** | install.sh / copy | git pull | Not used |
+| **Goose** | install.sh / copy | git pull | Not used |
+| **OpenCode** | install.sh / copy | git pull | Not used |
+| **Roo Code** | install.sh / copy | git pull | Not used |
 | **Desktop/Web** | .zip upload | Re-upload | Not used |
 | **Claude API** | API upload | New upload | Not used |
 

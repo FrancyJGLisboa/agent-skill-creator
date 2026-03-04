@@ -159,14 +159,20 @@ After the skill passes validation and security scan, install it immediately on t
 **Detection logic** (check in order):
 
 ```
-~/.claude/         exists → Claude Code
-.cursor/           exists → Cursor (project-level)
-~/.cursor/         exists → Cursor (user-level)
-.github/           exists → GitHub Copilot
-.windsurf/         exists → Windsurf
-.clinerules/       exists → Cline
-.codex/            exists → Codex CLI
-.gemini/           exists → Gemini CLI
+~/.claude/              exists → Claude Code
+.cursor/                exists → Cursor (project-level)
+~/.cursor/              exists → Cursor (user-level)
+.github/                exists → GitHub Copilot
+~/.codeium/windsurf/    exists → Windsurf (user-level)
+.windsurf/              exists → Windsurf (project-level)
+.clinerules/            exists → Cline
+~/.gemini/              exists → Gemini CLI
+.kiro/                  exists → Kiro
+.trae/                  exists → Trae
+.roo/                   exists → Roo Code
+~/.config/goose/        exists → Goose
+~/.config/opencode/     exists → OpenCode
+~/.agents/              exists → Universal (.agents/skills/)
 ```
 
 **Install action**: Copy or symlink the generated skill directory into the platform's skill path:
@@ -174,6 +180,9 @@ After the skill passes validation and security scan, install it immediately on t
 ```bash
 # Example for Claude Code (user-level):
 cp -R ./sales-report-skill ~/.claude/skills/sales-report-skill
+
+# Example for universal path (works with Codex CLI, Gemini CLI, Kiro, Antigravity, etc.):
+cp -R ./sales-report-skill ~/.agents/skills/sales-report-skill
 
 # Example for Cursor (project-level):
 cp -R ./sales-report-skill .cursor/rules/sales-report-skill
@@ -201,6 +210,14 @@ I couldn't auto-detect your platform. To install, run:
 Or specify your platform:
 
   ./sales-report-skill/install.sh --platform cursor
+
+Or install to all detected platforms at once:
+
+  ./sales-report-skill/install.sh --all
+
+Alternative (if npx is available):
+
+  npx skills add ./sales-report-skill
 ```
 
 The `install.sh` inside the skill handles auto-detection, platform-specific paths, project vs user level, dry-run mode, and post-install activation instructions. It is the fallback for users who receive the skill as a package (not created in their current session).
@@ -460,13 +477,20 @@ Generated skills work on all platforms supporting the SKILL.md standard:
 
 | Platform | Install Location | Command |
 |----------|-----------------|---------|
+| **Universal** | `~/.agents/skills/` or `.agents/skills/` | `./install.sh --platform universal` |
 | Claude Code | `~/.claude/skills/` or `.claude/skills/` | `./install.sh` or copy |
 | GitHub Copilot | `.github/skills/` | `./install.sh --platform copilot` |
-| Cursor | `.cursor/rules/` | `./install.sh --platform cursor` |
-| Windsurf | `.windsurf/skills/` | `./install.sh --platform windsurf` |
+| Cursor | `.cursor/rules/` (auto-generates `.mdc`) | `./install.sh --platform cursor` |
+| Windsurf | `.windsurf/rules/` or `global_rules.md` | `./install.sh --platform windsurf` |
 | Cline | `.clinerules/` | `./install.sh --platform cline` |
-| Codex CLI | `.codex/skills/` | `./install.sh --platform codex` |
-| Gemini CLI | `.gemini/skills/` | `./install.sh --platform gemini` |
+| Codex CLI | `~/.agents/skills/` | `./install.sh --platform codex` |
+| Gemini CLI | `~/.gemini/skills/` | `./install.sh --platform gemini` |
+| Kiro | `.kiro/skills/` | `./install.sh --platform kiro` |
+| Trae | `.trae/rules/` | `./install.sh --platform trae` |
+| Goose | `~/.config/goose/skills/` | `./install.sh --platform goose` |
+| OpenCode | `~/.config/opencode/skills/` | `./install.sh --platform opencode` |
+| Roo Code | `.roo/rules/` | `./install.sh --platform roo-code` |
+| Antigravity | `.agents/skills/` | `./install.sh --platform antigravity` |
 
 See `references/cross-platform-guide.md` for full platform details.
 

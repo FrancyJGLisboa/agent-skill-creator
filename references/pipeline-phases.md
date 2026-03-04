@@ -1104,58 +1104,22 @@ Detailed documentation files. Each must be self-contained with real content.
 
 ### Step 6: Generate install.sh
 
-Create a cross-platform installer script:
+Generate the installer from `scripts/install-template.sh` — the canonical template. Replace `{{SKILL_NAME}}` with the actual skill name and `chmod +x`:
 
 ```bash
-#!/usr/bin/env bash
-set -euo pipefail
-
-SKILL_NAME="skill-name"
-SKILL_DIR="$(cd "$(dirname "$0")" && pwd)"
-
-# Platform detection
-detect_platform() {
-    case "${1:-auto}" in
-        claude|claude-code)  echo "$HOME/.claude/skills" ;;
-        copilot|github)      echo ".github/skills" ;;
-        cursor)              echo ".cursor/rules" ;;
-        windsurf)            echo ".windsurf/skills" ;;
-        cline)               echo ".clinerules" ;;
-        codex)               echo ".codex/skills" ;;
-        gemini)              echo ".gemini/skills" ;;
-        auto)
-            # Auto-detect based on environment
-            if command -v claude >/dev/null 2>&1; then
-                echo "$HOME/.claude/skills"
-            elif [ -d ".github" ]; then
-                echo ".github/skills"
-            elif [ -d ".cursor" ]; then
-                echo ".cursor/rules"
-            else
-                echo "$HOME/.claude/skills"  # default
-            fi
-            ;;
-        *)
-            echo "Unknown platform: $1" >&2
-            echo "Supported: claude, copilot, cursor, windsurf, cline, codex, gemini" >&2
-            exit 1
-            ;;
-    esac
-}
-
-PLATFORM="${1:-auto}"
-TARGET_BASE=$(detect_platform "$PLATFORM")
-TARGET_DIR="$TARGET_BASE/$SKILL_NAME"
-
-echo "Installing $SKILL_NAME..."
-echo "Target: $TARGET_DIR"
-
-mkdir -p "$TARGET_DIR"
-cp -r "$SKILL_DIR"/* "$TARGET_DIR/" 2>/dev/null || true
-cp -r "$SKILL_DIR"/.[!.]* "$TARGET_DIR/" 2>/dev/null || true
-
-echo "Installed successfully to $TARGET_DIR"
+# During skill generation:
+sed "s/{{SKILL_NAME}}/skill-name/g" scripts/install-template.sh > skill-name/install.sh
+chmod +x skill-name/install.sh
 ```
+
+The template handles:
+- POSIX-compatible shell (`set -eu`, no bashisms)
+- 14 platforms: claude-code, copilot, cursor, windsurf, cline, codex, gemini, kiro, trae, goose, opencode, roo-code, antigravity, universal
+- Corrected paths: Codex → `~/.agents/skills/`, Windsurf → `.windsurf/rules/` (project) / `global_rules.md` (global)
+- Format adapters: auto-generates `.mdc` for Cursor, `.md` rules for Windsurf, plain `.md` for Cline/Roo/Trae
+- Universal `.agents/skills/` secondary symlink after every install
+- `--all` flag to install to every detected tool at once
+- `--dry-run` for preview without changes
 
 ### Step 7: Write README.md
 
@@ -1168,27 +1132,49 @@ Brief description.
 
 ## Installation
 
+### Universal Path (works with 6+ tools)
+
+```bash
+git clone <repo-url> ~/.agents/skills/skill-name
+```
+
+Works with Codex CLI, Gemini CLI, Kiro, Antigravity, and other tools that read `~/.agents/skills/`.
+
 ### Using install.sh (Recommended)
 
 ```bash
 chmod +x install.sh
-./install.sh              # Auto-detect platform
-./install.sh claude       # Claude Code
-./install.sh copilot      # GitHub Copilot
-./install.sh cursor       # Cursor
+./install.sh                          # Auto-detect platform
+./install.sh --platform claude-code   # Claude Code
+./install.sh --platform cursor        # Cursor (auto-generates .mdc)
+./install.sh --all                    # All detected platforms
+./install.sh --dry-run                # Preview without installing
+```
+
+### Alternative: npx
+
+```bash
+npx skills add <repo-url>
 ```
 
 ### Manual Installation
 
 | Platform | Copy to |
 |---|---|
+| Universal | `~/.agents/skills/skill-name/` |
 | Claude Code | `~/.claude/skills/skill-name/` or `.claude/skills/skill-name/` |
 | GitHub Copilot | `.github/skills/skill-name/` |
 | Cursor | `.cursor/rules/skill-name/` |
-| Windsurf | `.windsurf/skills/skill-name/` |
+| Windsurf | `.windsurf/rules/skill-name/` |
 | Cline | `.clinerules/skill-name/` |
-| Codex CLI | `.codex/skills/skill-name/` |
-| Gemini CLI | `.gemini/skills/skill-name/` |
+| Codex CLI | `~/.agents/skills/skill-name/` |
+| Gemini CLI | `~/.gemini/skills/skill-name/` |
+| Kiro | `.kiro/skills/skill-name/` |
+| Trae | `.trae/rules/skill-name/` |
+| Goose | `~/.config/goose/skills/skill-name/` |
+| OpenCode | `~/.config/opencode/skills/skill-name/` |
+| Roo Code | `.roo/rules/skill-name/` |
+| Antigravity | `.agents/skills/skill-name/` |
 
 ## Prerequisites
 

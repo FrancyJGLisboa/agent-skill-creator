@@ -11,7 +11,7 @@
 #   2 — Platform not detected
 #   3 — Permission denied
 
-set -euo pipefail
+set -eu
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -60,9 +60,11 @@ USAGE
 OPTIONS
     --platform PLATFORM   Explicit platform selection. One of:
                           claude-code, copilot, cursor, windsurf,
-                          cline, codex, gemini
+                          cline, codex, gemini, kiro, trae, goose,
+                          opencode, roo-code, antigravity, universal
     --project             Install at project level (current directory)
     --path PATH           Custom install path (overrides detection)
+    --all                 Install to ALL detected tool paths at once
     --dry-run             Show what would happen without making changes
     -h, --help            Show this help message
 
@@ -71,6 +73,7 @@ EXAMPLES
     ./install.sh --project                # Auto-detect platform, project-level
     ./install.sh --platform cursor        # Force Cursor, user-level
     ./install.sh --path ~/my-skills/      # Custom destination
+    ./install.sh --all                    # Install to every detected tool
     ./install.sh --dry-run                # Preview without installing
 EOF
 }
@@ -82,6 +85,7 @@ PLATFORM=""
 PROJECT_LEVEL=false
 CUSTOM_PATH=""
 DRY_RUN=false
+INSTALL_ALL=false
 
 parse_args() {
     while [ $# -gt 0 ]; do
@@ -99,6 +103,10 @@ parse_args() {
                 [ $# -ge 2 ] || { error "Missing value for --path"; exit 1; }
                 CUSTOM_PATH="$2"
                 shift 2
+                ;;
+            --all)
+                INSTALL_ALL=true
+                shift
                 ;;
             --dry-run)
                 DRY_RUN=true
@@ -121,7 +129,7 @@ parse_args() {
 # SKILL.md validation
 # ---------------------------------------------------------------------------
 validate_skill_md() {
-    local skill_md="${SCRIPT_DIR}/SKILL.md"
+    skill_md="${SCRIPT_DIR}/SKILL.md"
 
     if [ ! -f "$skill_md" ]; then
         error "SKILL.md not found in ${SCRIPT_DIR}"
@@ -130,7 +138,6 @@ validate_skill_md() {
     fi
 
     # Check that the file starts with YAML frontmatter delimiter
-    local first_line
     first_line="$(head -n 1 "$skill_md")"
     if [ "$first_line" != "---" ]; then
         error "SKILL.md must start with YAML frontmatter (---)"
@@ -138,11 +145,10 @@ validate_skill_md() {
     fi
 
     # Verify required frontmatter fields: name and description
-    # We look between the opening --- and closing --- for these fields.
-    local in_frontmatter=false
-    local found_name=false
-    local found_description=false
-    local line_num=0
+    in_frontmatter=false
+    found_name=false
+    found_description=false
+    line_num=0
 
     while IFS= read -r line; do
         line_num=$((line_num + 1))
@@ -153,7 +159,6 @@ validate_skill_md() {
         fi
 
         if $in_frontmatter && [ "$line" = "---" ]; then
-            # End of frontmatter
             break
         fi
 
@@ -181,18 +186,20 @@ validate_skill_md() {
 # ---------------------------------------------------------------------------
 # Platform detection
 # ---------------------------------------------------------------------------
-# Returns the detected platform slug or exits with code 2.
+SUPPORTED_PLATFORMS="claude-code, copilot, cursor, windsurf, cline, codex, gemini, kiro, trae, goose, opencode, roo-code, antigravity, universal"
+
 detect_platform() {
     # If explicitly provided, validate and return it.
     if [ -n "$PLATFORM" ]; then
         case "$PLATFORM" in
-            claude-code|copilot|cursor|windsurf|cline|codex|gemini)
+            claude-code|copilot|cursor|windsurf|cline|codex|gemini|\
+            kiro|trae|goose|opencode|roo-code|antigravity|universal)
                 info "Platform explicitly set to: ${PLATFORM}"
                 return 0
                 ;;
             *)
                 error "Unknown platform: ${PLATFORM}"
-                error "Supported: claude-code, copilot, cursor, windsurf, cline, codex, gemini"
+                error "Supported: ${SUPPORTED_PLATFORMS}"
                 exit 2
                 ;;
         esac
@@ -204,24 +211,83 @@ detect_platform() {
         PLATFORM="claude-code"
     elif [ -d "${HOME}/.cursor" ] || [ -d ".cursor" ]; then
         PLATFORM="cursor"
-    elif [ -d "${HOME}/.windsurf" ]; then
+    elif [ -d "${HOME}/.codeium/windsurf" ] || [ -d ".windsurf" ]; then
         PLATFORM="windsurf"
     elif [ -d "${HOME}/.cline" ] || [ -d ".clinerules" ]; then
         PLATFORM="cline"
-    elif [ -d "${HOME}/.codex" ]; then
-        PLATFORM="codex"
     elif [ -d "${HOME}/.gemini" ]; then
         PLATFORM="gemini"
+    elif [ -d ".kiro" ]; then
+        PLATFORM="kiro"
+    elif [ -d ".trae" ]; then
+        PLATFORM="trae"
+    elif [ -d ".roo" ]; then
+        PLATFORM="roo-code"
+    elif [ -d "${HOME}/.config/goose" ]; then
+        PLATFORM="goose"
+    elif [ -d "${HOME}/.config/opencode" ]; then
+        PLATFORM="opencode"
+    elif [ -d "${HOME}/.agents" ]; then
+        PLATFORM="universal"
     elif [ -d "${HOME}/.copilot" ] || [ -d ".github" ]; then
         PLATFORM="copilot"
     else
         error "Could not auto-detect any supported AI coding platform."
         error "Use --platform PLATFORM to specify one explicitly."
-        error "Supported: claude-code, copilot, cursor, windsurf, cline, codex, gemini"
+        error "Supported: ${SUPPORTED_PLATFORMS}"
         exit 2
     fi
 
     info "Auto-detected platform: ${PLATFORM}"
+}
+
+# ---------------------------------------------------------------------------
+# Detect all installed platforms (for --all)
+# ---------------------------------------------------------------------------
+detect_all_platforms() {
+    ALL_PLATFORMS=""
+    if [ -d "${HOME}/.claude" ]; then
+        ALL_PLATFORMS="${ALL_PLATFORMS} claude-code"
+    fi
+    if [ -d "${HOME}/.cursor" ] || [ -d ".cursor" ]; then
+        ALL_PLATFORMS="${ALL_PLATFORMS} cursor"
+    fi
+    if [ -d "${HOME}/.codeium/windsurf" ] || [ -d ".windsurf" ]; then
+        ALL_PLATFORMS="${ALL_PLATFORMS} windsurf"
+    fi
+    if [ -d "${HOME}/.cline" ] || [ -d ".clinerules" ]; then
+        ALL_PLATFORMS="${ALL_PLATFORMS} cline"
+    fi
+    if [ -d "${HOME}/.gemini" ]; then
+        ALL_PLATFORMS="${ALL_PLATFORMS} gemini"
+    fi
+    if [ -d ".kiro" ]; then
+        ALL_PLATFORMS="${ALL_PLATFORMS} kiro"
+    fi
+    if [ -d ".trae" ]; then
+        ALL_PLATFORMS="${ALL_PLATFORMS} trae"
+    fi
+    if [ -d ".roo" ]; then
+        ALL_PLATFORMS="${ALL_PLATFORMS} roo-code"
+    fi
+    if [ -d "${HOME}/.config/goose" ]; then
+        ALL_PLATFORMS="${ALL_PLATFORMS} goose"
+    fi
+    if [ -d "${HOME}/.config/opencode" ]; then
+        ALL_PLATFORMS="${ALL_PLATFORMS} opencode"
+    fi
+    if [ -d "${HOME}/.copilot" ] || [ -d ".github" ]; then
+        ALL_PLATFORMS="${ALL_PLATFORMS} copilot"
+    fi
+    # Always include universal
+    ALL_PLATFORMS="${ALL_PLATFORMS} universal"
+
+    # Trim leading space
+    ALL_PLATFORMS="$(printf '%s' "$ALL_PLATFORMS" | sed 's/^ //')"
+
+    if [ -z "$ALL_PLATFORMS" ]; then
+        ALL_PLATFORMS="universal"
+    fi
 }
 
 # ---------------------------------------------------------------------------
@@ -236,30 +302,44 @@ resolve_install_path() {
         return 0
     fi
 
-    local base=""
+    base=""
 
     if $PROJECT_LEVEL; then
         # Project-level: paths are relative to the current working directory.
         case "$PLATFORM" in
-            claude-code) base=".claude/skills" ;;
-            copilot)     base=".github/skills" ;;
-            cursor)      base=".cursor/rules" ;;
-            windsurf)    base=".windsurf/skills" ;;
-            cline)       base=".clinerules" ;;
-            codex)       base=".codex/skills" ;;
-            gemini)      base=".gemini/skills" ;;
+            claude-code)   base=".claude/skills" ;;
+            copilot)       base=".github/skills" ;;
+            cursor)        base=".cursor/rules" ;;
+            windsurf)      base=".windsurf/rules" ;;
+            cline)         base=".clinerules" ;;
+            codex)         base=".agents/skills" ;;
+            gemini)        base=".gemini/skills" ;;
+            kiro)          base=".kiro/skills" ;;
+            trae)          base=".trae/rules" ;;
+            goose)         base=".agents/skills" ;;
+            opencode)      base=".agents/skills" ;;
+            roo-code)      base=".roo/rules" ;;
+            antigravity)   base=".agents/skills" ;;
+            universal)     base=".agents/skills" ;;
         esac
         INSTALL_DIR="$(pwd)/${base}/${SKILL_NAME}"
     else
         # User-level: paths are under the home directory.
         case "$PLATFORM" in
-            claude-code) base="${HOME}/.claude/skills" ;;
-            copilot)     base="${HOME}/.copilot/skills" ;;
-            cursor)      base="${HOME}/.cursor/rules" ;;
-            windsurf)    base="${HOME}/.windsurf/skills" ;;
-            cline)       base="${HOME}/.cline/rules" ;;
-            codex)       base="${HOME}/.codex/skills" ;;
-            gemini)      base="${HOME}/.gemini/skills" ;;
+            claude-code)   base="${HOME}/.claude/skills" ;;
+            copilot)       base="${HOME}/.copilot/skills" ;;
+            cursor)        base="${HOME}/.cursor/rules" ;;
+            windsurf)      base="${HOME}/.codeium/windsurf/skills" ;;
+            cline)         base="${HOME}/.cline/rules" ;;
+            codex)         base="${HOME}/.agents/skills" ;;
+            gemini)        base="${HOME}/.gemini/skills" ;;
+            kiro)          base="${HOME}/.agents/skills" ;;
+            trae)          base="${HOME}/.agents/skills" ;;
+            goose)         base="${HOME}/.config/goose/skills" ;;
+            opencode)      base="${HOME}/.config/opencode/skills" ;;
+            roo-code)      base="${HOME}/.agents/skills" ;;
+            antigravity)   base="${HOME}/.agents/skills" ;;
+            universal)     base="${HOME}/.agents/skills" ;;
         esac
         INSTALL_DIR="${base}/${SKILL_NAME}"
     fi
@@ -268,13 +348,163 @@ resolve_install_path() {
 }
 
 # ---------------------------------------------------------------------------
+# Format adapters — convert SKILL.md to platform-native formats
+# ---------------------------------------------------------------------------
+
+# Generate a .mdc file for Cursor from SKILL.md
+generate_cursor_mdc() {
+    target_dir="$1"
+    skill_md="${SCRIPT_DIR}/SKILL.md"
+
+    # Extract description from frontmatter
+    desc=""
+    in_fm=false
+    lnum=0
+    while IFS= read -r line; do
+        lnum=$((lnum + 1))
+        if [ "$lnum" -eq 1 ]; then in_fm=true; continue; fi
+        if $in_fm && [ "$line" = "---" ]; then break; fi
+        if $in_fm; then
+            case "$line" in
+                description:*) desc="$(echo "$line" | sed 's/^description:[[:space:]]*//')" ;;
+            esac
+        fi
+    done < "$skill_md"
+
+    mdc_file="${target_dir}/${SKILL_NAME}.mdc"
+
+    if $DRY_RUN; then
+        info "Would generate Cursor .mdc: ${mdc_file}"
+        return 0
+    fi
+
+    # Extract body (everything after second ---)
+    body="$(awk 'BEGIN{c=0} /^---$/{c++;next} c>=2{print}' "$skill_md")"
+
+    cat > "$mdc_file" <<MDCEOF
+---
+description: ${desc}
+globs:
+alwaysApply: true
+---
+${body}
+MDCEOF
+    success "Generated Cursor .mdc: ${mdc_file}"
+}
+
+# Generate a .md rule file for Windsurf (.windsurf/rules/ or global_rules.md)
+generate_windsurf_rule() {
+    target_dir="$1"
+    is_global="$2"  # "true" or "false"
+    skill_md="${SCRIPT_DIR}/SKILL.md"
+
+    # Extract body (everything after second ---)
+    body="$(awk 'BEGIN{c=0} /^---$/{c++;next} c>=2{print}' "$skill_md")"
+
+    if [ "$is_global" = "true" ]; then
+        # Append to global_rules.md with idempotent markers
+        global_file="${HOME}/.codeium/windsurf/memories/global_rules.md"
+
+        if $DRY_RUN; then
+            info "Would append to Windsurf global_rules.md: ${global_file}"
+            return 0
+        fi
+
+        mkdir -p "$(dirname "$global_file")"
+
+        # Remove existing block if present (idempotent, exact match)
+        if [ -f "$global_file" ]; then
+            awk -v begin_marker="<!-- BEGIN ${SKILL_NAME} -->" \
+                -v end_marker="<!-- END ${SKILL_NAME} -->" '
+                BEGIN { skip=0 }
+                $0 == begin_marker { skip=1; next }
+                $0 == end_marker   { skip=0; next }
+                !skip { print }
+            ' "$global_file" > "${global_file}.tmp"
+            mv "${global_file}.tmp" "$global_file"
+        fi
+
+        # Append new block
+        cat >> "$global_file" <<WSEOF
+
+<!-- BEGIN ${SKILL_NAME} -->
+${body}
+<!-- END ${SKILL_NAME} -->
+WSEOF
+        success "Appended to Windsurf global_rules.md"
+    else
+        # Project-level: create a .md rule file
+        rule_file="${target_dir}/${SKILL_NAME}.md"
+
+        if $DRY_RUN; then
+            info "Would generate Windsurf rule: ${rule_file}"
+            return 0
+        fi
+
+        mkdir -p "$target_dir"
+        printf '%s\n' "$body" > "$rule_file"
+        success "Generated Windsurf rule: ${rule_file}"
+    fi
+}
+
+# Generate plain markdown (strip YAML frontmatter) for Cline/Roo/Trae
+generate_plain_rule() {
+    target_dir="$1"
+    filename="$2"
+    skill_md="${SCRIPT_DIR}/SKILL.md"
+
+    plain_file="${target_dir}/${filename}"
+
+    if $DRY_RUN; then
+        info "Would generate plain rule: ${plain_file}"
+        return 0
+    fi
+
+    mkdir -p "$target_dir"
+    awk 'BEGIN{c=0} /^---$/{c++;next} c>=2{print}' "$skill_md" > "$plain_file"
+    success "Generated plain rule: ${plain_file}"
+}
+
+# ---------------------------------------------------------------------------
+# Universal .agents/skills/ secondary install (symlink or copy)
+# ---------------------------------------------------------------------------
+install_universal_secondary() {
+    # Skip if primary target is already .agents/
+    case "$PLATFORM" in
+        codex|antigravity|universal) return 0 ;;
+    esac
+
+    universal_dir="${HOME}/.agents/skills/${SKILL_NAME}"
+
+    if $DRY_RUN; then
+        info "Would create universal symlink: ${universal_dir} -> ${INSTALL_DIR}"
+        return 0
+    fi
+
+    mkdir -p "${HOME}/.agents/skills"
+
+    # Remove existing entry if present
+    if [ -e "$universal_dir" ] || [ -L "$universal_dir" ]; then
+        rm -rf "$universal_dir"
+    fi
+
+    # Try symlink first, fallback to copy
+    if ln -s "$INSTALL_DIR" "$universal_dir" 2>/dev/null; then
+        success "Universal symlink: ${universal_dir} -> ${INSTALL_DIR}"
+    elif cp -R "$INSTALL_DIR" "$universal_dir" 2>/dev/null; then
+        success "Universal copy: ${universal_dir}"
+    else
+        warn "Could not create universal path at ${universal_dir}"
+    fi
+}
+
+# ---------------------------------------------------------------------------
 # File installation
 # ---------------------------------------------------------------------------
 install_files() {
     # Collect the list of files to install.
     # We copy everything in SCRIPT_DIR except the install script itself.
-    local file_count=0
-    local install_script_name
+    file_count=0
     install_script_name="$(basename "$0")"
 
     if $DRY_RUN; then
@@ -282,7 +512,6 @@ install_files() {
         info "Would create directory: ${INSTALL_DIR}"
         for file in "${SCRIPT_DIR}"/*; do
             [ -e "$file" ] || continue
-            local fname
             fname="$(basename "$file")"
             # Skip the install script itself
             [ "$fname" = "$install_script_name" ] && continue
@@ -292,9 +521,8 @@ install_files() {
         # Also handle dotfiles
         for file in "${SCRIPT_DIR}"/.*; do
             [ -e "$file" ] || continue
-            local fname
             fname="$(basename "$file")"
-            [ "$fname" = "." ] || [ "$fname" = ".." ] && continue
+            if [ "$fname" = "." ] || [ "$fname" = ".." ]; then continue; fi
             info "Would copy: ${fname}"
             file_count=$((file_count + 1))
         done
@@ -313,7 +541,6 @@ install_files() {
     # Copy files.
     for file in "${SCRIPT_DIR}"/*; do
         [ -e "$file" ] || continue
-        local fname
         fname="$(basename "$file")"
         [ "$fname" = "$install_script_name" ] && continue
 
@@ -328,7 +555,6 @@ install_files() {
     # Copy dotfiles (if any).
     for file in "${SCRIPT_DIR}"/.*; do
         [ -e "$file" ] || continue
-        local fname
         fname="$(basename "$file")"
         [ "$fname" = "." ] || [ "$fname" = ".." ] && continue
 
@@ -341,6 +567,33 @@ install_files() {
     done
 
     success "Copied ${file_count} file(s) to ${INSTALL_DIR}"
+}
+
+# ---------------------------------------------------------------------------
+# Run format adapters based on platform
+# ---------------------------------------------------------------------------
+run_adapters() {
+    case "$PLATFORM" in
+        cursor)
+            generate_cursor_mdc "$INSTALL_DIR"
+            ;;
+        windsurf)
+            if $PROJECT_LEVEL; then
+                generate_windsurf_rule "$(pwd)/.windsurf/rules" "false"
+            else
+                generate_windsurf_rule "" "true"
+            fi
+            ;;
+        cline)
+            generate_plain_rule "$INSTALL_DIR" "${SKILL_NAME}.md"
+            ;;
+        roo-code)
+            generate_plain_rule "$INSTALL_DIR" "${SKILL_NAME}.md"
+            ;;
+        trae)
+            generate_plain_rule "$INSTALL_DIR" "${SKILL_NAME}.md"
+            ;;
+    esac
 }
 
 # ---------------------------------------------------------------------------
@@ -372,21 +625,25 @@ print_activation_instructions() {
             printf "To activate the skill in Cursor:\n"
             printf "  1. Open your project in Cursor.\n"
             printf "  2. The rule is loaded automatically from:\n"
-            printf "     ${BOLD}${INSTALL_DIR}/SKILL.md${NC}\n"
+            printf "     ${BOLD}${INSTALL_DIR}/${SKILL_NAME}.mdc${NC}\n"
             printf "  3. Use trigger phrases to invoke the skill.\n"
             ;;
         windsurf)
             printf "To activate the skill in Windsurf:\n"
-            printf "  1. Open your project in Windsurf.\n"
-            printf "  2. The skill is available at:\n"
-            printf "     ${BOLD}${INSTALL_DIR}/SKILL.md${NC}\n"
+            if $PROJECT_LEVEL; then
+                printf "  1. Open your project in Windsurf.\n"
+                printf "  2. The rule is loaded from .windsurf/rules/\n"
+            else
+                printf "  1. Open Windsurf.\n"
+                printf "  2. The skill was added to global_rules.md.\n"
+            fi
             printf "  3. Use trigger phrases to invoke the skill.\n"
             ;;
         cline)
             printf "To activate the skill in Cline:\n"
             printf "  1. Open your project in VS Code with Cline.\n"
             printf "  2. The rule is loaded from:\n"
-            printf "     ${BOLD}${INSTALL_DIR}/SKILL.md${NC}\n"
+            printf "     ${BOLD}${INSTALL_DIR}/${SKILL_NAME}.md${NC}\n"
             printf "  3. Cline will pick up the rule automatically.\n"
             ;;
         codex)
@@ -394,7 +651,7 @@ print_activation_instructions() {
             printf "  1. Start a new Codex CLI session.\n"
             printf "  2. The skill is available at:\n"
             printf "     ${BOLD}${INSTALL_DIR}/SKILL.md${NC}\n"
-            printf "  3. Reference the skill in your instructions.\n"
+            printf "  3. Codex reads from ~/.agents/skills/ automatically.\n"
             ;;
         gemini)
             printf "To activate the skill in Gemini CLI:\n"
@@ -403,9 +660,116 @@ print_activation_instructions() {
             printf "     ${BOLD}${INSTALL_DIR}/SKILL.md${NC}\n"
             printf "  3. The skill will be loaded automatically.\n"
             ;;
+        kiro)
+            printf "To activate the skill in Kiro:\n"
+            printf "  1. Open your project in Kiro.\n"
+            printf "  2. The skill is available at:\n"
+            printf "     ${BOLD}${INSTALL_DIR}/SKILL.md${NC}\n"
+            printf "  3. Kiro reads from .kiro/skills/ automatically.\n"
+            ;;
+        trae)
+            printf "To activate the skill in Trae:\n"
+            printf "  1. Open your project in Trae.\n"
+            printf "  2. The rule is loaded from:\n"
+            printf "     ${BOLD}${INSTALL_DIR}/${SKILL_NAME}.md${NC}\n"
+            printf "  3. Use trigger phrases to invoke the skill.\n"
+            ;;
+        goose)
+            printf "To activate the skill in Goose:\n"
+            printf "  1. Start a new Goose session.\n"
+            printf "  2. The skill is available at:\n"
+            printf "     ${BOLD}${INSTALL_DIR}/SKILL.md${NC}\n"
+            printf "  3. Goose reads from ~/.config/goose/skills/ automatically.\n"
+            ;;
+        opencode)
+            printf "To activate the skill in OpenCode:\n"
+            printf "  1. Start a new OpenCode session.\n"
+            printf "  2. The skill is available at:\n"
+            printf "     ${BOLD}${INSTALL_DIR}/SKILL.md${NC}\n"
+            printf "  3. OpenCode reads from ~/.config/opencode/skills/ automatically.\n"
+            ;;
+        roo-code)
+            printf "To activate the skill in Roo Code:\n"
+            printf "  1. Open your project in VS Code with Roo Code.\n"
+            printf "  2. The rule is loaded from:\n"
+            printf "     ${BOLD}${INSTALL_DIR}/${SKILL_NAME}.md${NC}\n"
+            printf "  3. Roo Code will pick up the rule automatically.\n"
+            ;;
+        antigravity)
+            printf "To activate the skill in Antigravity:\n"
+            printf "  1. Open your project.\n"
+            printf "  2. The skill is available at:\n"
+            printf "     ${BOLD}${INSTALL_DIR}/SKILL.md${NC}\n"
+            printf "  3. Antigravity reads from .agents/skills/ automatically.\n"
+            ;;
+        universal)
+            printf "The skill is installed at the universal path:\n"
+            printf "  ${BOLD}${INSTALL_DIR}/SKILL.md${NC}\n\n"
+            printf "Tools that read ~/.agents/skills/ (Codex CLI, Gemini CLI,\n"
+            printf "Kiro, Antigravity, and others) will discover it automatically.\n"
+            ;;
     esac
 
     printf "\n"
+}
+
+# ---------------------------------------------------------------------------
+# Install for a single platform
+# ---------------------------------------------------------------------------
+install_single() {
+    detect_platform
+    resolve_install_path
+    install_files
+    run_adapters
+    install_universal_secondary
+    print_activation_instructions
+
+    if $DRY_RUN; then
+        info "Dry run complete. No changes were made."
+    else
+        success "Skill '${SKILL_NAME}' installed successfully for ${PLATFORM}."
+    fi
+}
+
+# ---------------------------------------------------------------------------
+# Install for all detected platforms (--all)
+# ---------------------------------------------------------------------------
+install_all() {
+    detect_all_platforms
+    info "Installing to all detected platforms: ${ALL_PLATFORMS}"
+    printf "%-40s\n" "----------------------------------------"
+
+    installed_count=0
+    first_non_agents_dir=""
+    for plat in $ALL_PLATFORMS; do
+        printf "\n"
+        info "--- Installing for: ${plat} ---"
+        PLATFORM="$plat"
+        resolve_install_path
+        install_files
+        run_adapters
+        installed_count=$((installed_count + 1))
+        # Remember the first non-.agents/ install dir for universal symlink
+        if [ -z "$first_non_agents_dir" ]; then
+            case "$plat" in
+                codex|antigravity|universal) ;;
+                *) first_non_agents_dir="$INSTALL_DIR" ;;
+            esac
+        fi
+    done
+
+    # Create universal symlink from the first non-.agents/ install
+    if [ -n "$first_non_agents_dir" ]; then
+        INSTALL_DIR="$first_non_agents_dir"
+        install_universal_secondary
+    fi
+
+    printf "\n"
+    if $DRY_RUN; then
+        info "Dry run complete. No changes were made."
+    else
+        success "Skill '${SKILL_NAME}' installed to ${installed_count} platform(s)."
+    fi
 }
 
 # ---------------------------------------------------------------------------
@@ -417,15 +781,11 @@ main() {
 
     parse_args "$@"
     validate_skill_md
-    detect_platform
-    resolve_install_path
-    install_files
-    print_activation_instructions
 
-    if $DRY_RUN; then
-        info "Dry run complete. No changes were made."
+    if $INSTALL_ALL; then
+        install_all
     else
-        success "Skill '${SKILL_NAME}' installed successfully for ${PLATFORM}."
+        install_single
     fi
 
     exit 0

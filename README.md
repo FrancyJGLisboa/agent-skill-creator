@@ -27,6 +27,9 @@ Every AI agent (Claude Code, GitHub Copilot, Cursor, Windsurf, Codex, Gemini) st
 ### 1. Install (one command)
 
 ```bash
+# Universal path (works with Codex CLI, Gemini CLI, Kiro, Antigravity, and more)
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.agents/skills/agent-skill-creator
+
 # Claude Code (global — works in all projects)
 git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.claude/skills/agent-skill-creator
 
@@ -187,7 +190,17 @@ The registry is a git repo on GitHub or GitLab. Clone it once, and every team me
 
 Works in IDEs and CLI tools. Same install, same invocation, same results.
 
-### Global install (available in all projects)
+### Universal install (works with 6+ tools from one path)
+
+The `~/.agents/skills/` directory is the emerging cross-tool convention. Install once and multiple tools discover the skill automatically:
+
+```bash
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.agents/skills/agent-skill-creator
+```
+
+Tools that read `~/.agents/skills/`: Codex CLI, Gemini CLI, Kiro, Antigravity, and growing.
+
+### Global install per tool
 
 These platforms support a global user-level skills directory. Install once, use in every project:
 
@@ -197,6 +210,15 @@ git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.claude/sk
 
 # Also works via the Copilot-specific global path
 git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.copilot/skills/agent-skill-creator
+
+# Gemini CLI
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.gemini/skills/agent-skill-creator
+
+# Goose
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.config/goose/skills/agent-skill-creator
+
+# OpenCode
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.config/opencode/skills/agent-skill-creator
 ```
 
 VS Code Copilot (1.108+, December 2025) adopted the [Agent Skills Open Standard](https://code.visualstudio.com/docs/copilot/customization/agent-skills) and searches `~/.claude/skills/` and `~/.copilot/skills/` by default. One install at `~/.claude/skills/` makes a skill globally available on both Claude Code and VS Code Copilot.
@@ -210,10 +232,19 @@ For platforms without a global skills directory, or if you prefer per-project in
 git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .github/skills/agent-skill-creator
 
 # Windsurf
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .windsurf/skills/agent-skill-creator
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .windsurf/rules/agent-skill-creator
 
 # Cline (VS Code Extension)
 git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .clinerules/agent-skill-creator
+
+# Kiro
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .kiro/skills/agent-skill-creator
+
+# Trae
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .trae/rules/agent-skill-creator
+
+# Roo Code
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .roo/rules/agent-skill-creator
 ```
 
 ### Cursor — global install
@@ -245,11 +276,17 @@ git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.claude/sk
 # GitHub Copilot CLI
 git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.copilot/skills/agent-skill-creator
 
-# OpenAI Codex CLI
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .codex/skills/agent-skill-creator
+# OpenAI Codex CLI (uses universal path)
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.agents/skills/agent-skill-creator
 
 # Gemini CLI
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .gemini/skills/agent-skill-creator
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.gemini/skills/agent-skill-creator
+```
+
+### Alternative: npx
+
+```bash
+npx skills add https://github.com/FrancyJGLisboa/agent-skill-creator.git
 ```
 
 ### Claude Desktop / claude.ai
