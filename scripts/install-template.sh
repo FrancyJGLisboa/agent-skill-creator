@@ -531,6 +531,11 @@ install_files() {
         return 0
     fi
 
+    # Clean existing install for idempotency (remove stale files from prior installs).
+    if [ -d "$INSTALL_DIR" ]; then
+        rm -rf "$INSTALL_DIR"
+    fi
+
     # Create destination directory.
     if ! mkdir -p "$INSTALL_DIR" 2>/dev/null; then
         error "Cannot create directory: ${INSTALL_DIR}"
