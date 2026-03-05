@@ -53,6 +53,7 @@ Before identifying the domain, classify what the user actually provided:
 | Single word or phrase | Infer from context: user's desk/role, existing skills in their environment, databases available. Present the most likely interpretation and confirm |
 | Mixed (files + sentence) | The files are the spec. The sentence is commentary. Cross-reference both |
 | "here" + files | The files ARE the input. Process them all. Present your understanding. |
+| Pasted reference material (guidelines, policies, wiki pages, style guides) | This IS the knowledge to codify. Read it all. Identify what it governs (writing, design, compliance, process). The user wants an active skill that enforces these rules, not a summary |
 
 **After triage, ALWAYS present your understanding before proceeding:**
 

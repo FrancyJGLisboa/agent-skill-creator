@@ -55,6 +55,12 @@ The user can also drop artifacts, paste URLs, share screenshots, or provide mini
 
 /agent-skill-creator [pastes a forwarded email chain with 6 replies and legal disclaimers]
   my colleague in London built something for this. can we do the same?
+
+/agent-skill-creator [pastes 3 corporate documents: brand voice guidelines, editorial style guide, visual design system]
+  we need everyone writing and designing to follow these
+
+/agent-skill-creator [pastes company wiki page about tone of voice + compliance rules + approved templates]
+  make a skill so the agents know our standards
 ```
 
 The user can also activate naturally without the prefix:
@@ -86,6 +92,7 @@ Before any phase begins, triage whatever the user provided. Human input is **evi
 - **Single word or phrase** → Infer from context: the user's desk/role, existing skills in their environment, databases available. Present the most likely interpretation and confirm.
 - **Mixed (files + sentence)** → The files are the spec. The sentence is commentary. Cross-reference both.
 - **"here" + files** → The files ARE the input. Process them all. Present your understanding.
+- **Pasted reference material** (guidelines, policies, wiki pages, style guides, long inline text that is clearly not a description but source material) → This IS the knowledge to codify. Read it all. Identify what it governs (writing, design, compliance, process). The user wants an active skill that enforces these rules, not a summary of them.
 - **Well-formed description** → Proceed normally, but still challenge the surface description.
 
 **Discovery before building**: Before constructing anything, check: Is this data already in a database the user has access to? Has a colleague built a skill for this? Is there an API that makes a scraping approach unnecessary? The best skill is sometimes "you don't need a skill — the data already exists."
