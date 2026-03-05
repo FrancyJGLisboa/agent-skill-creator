@@ -952,6 +952,52 @@ metadata:
 - Detailed methodologies go to `references/analysis-methods.md`
 - Troubleshooting goes to `references/troubleshooting.md`
 
+### Step 2.5: Write AGENTS.md (Companion Instruction File)
+
+Generate an AGENTS.md alongside SKILL.md to maximize cross-tool reach. ~15 tools read AGENTS.md (AAIF-governed format), including some that don't read SKILL.md (Augment, Continue.dev, Zed).
+
+**Template:**
+
+```markdown
+# skill-name
+
+> [One-line description from SKILL.md frontmatter]
+
+## Purpose
+
+[2-3 sentences explaining what this skill does and when to use it]
+
+## Activation
+
+This skill activates when users ask about [domain keywords]. Invoke with `/skill-name` on platforms that support slash commands, or ask naturally.
+
+**Example queries:**
+- "[example 1]"
+- "[example 2]"
+- "[example 3]"
+
+## Usage
+
+[Brief usage instructions — what to provide, what to expect back]
+
+## Implementation
+
+Full skill definition, scripts, and references are in the SKILL.md file and accompanying directories. See SKILL.md for complete instructions.
+
+## Files
+
+- `SKILL.md` — Full skill definition (agentskills.io format)
+- `scripts/` — Executable Python code
+- `references/` — Detailed documentation
+- `assets/` — Templates, configs
+- `install.sh` — Cross-platform installer
+```
+
+**Rules:**
+- Keep AGENTS.md concise (~50-100 lines). It is a pointer and summary, not a duplicate of SKILL.md.
+- Include enough context for tools that ONLY read AGENTS.md (they will not see SKILL.md).
+- Include activation keywords so description-based matching works.
+
 ### Step 3: Implement Python Scripts
 
 Every script must follow this quality standard:

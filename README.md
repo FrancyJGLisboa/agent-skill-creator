@@ -37,13 +37,22 @@ This clones to `~/.agents/skills/agent-skill-creator` and symlinks to every dete
 **Option B — Git clone (pick your tool):**
 
 ```bash
-# Claude Code / VS Code Copilot (global — works in all projects)
+# Claude Code (global)
 git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.claude/skills/agent-skill-creator
 
-# Cursor (per-project)
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .cursor/rules/agent-skill-creator
+# GitHub Copilot (global — Copilot's native path)
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.copilot/skills/agent-skill-creator
 
-# Codex CLI / Gemini CLI / Kiro / Antigravity (universal path)
+# GitHub Copilot (per-project)
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .github/skills/agent-skill-creator
+
+# Gemini CLI (native path)
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.gemini/skills/agent-skill-creator
+
+# Cursor (per-project only — no global path exists)
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .cursor/skills/agent-skill-creator
+
+# Codex CLI / OpenCode / Goose (universal path)
 git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.agents/skills/agent-skill-creator
 ```
 
@@ -56,7 +65,7 @@ cd agent-skill-creator
 ./install.sh --uninstall  # Remove all symlinks
 ```
 
-One install at `~/.claude/skills/` works for both Claude Code and VS Code Copilot. One install at `~/.agents/skills/` works for Codex CLI, Gemini CLI, Kiro, Antigravity, and other tools that read the universal path.
+Each tool has its own native path. GitHub Copilot reads `~/.copilot/skills/` (global) and `.github/skills/` (per-project). Codex CLI, OpenCode, and Goose read `~/.agents/skills/`. See the full platform table below.
 
 All 14 platforms: [see full list below](#all-platforms).
 
@@ -199,52 +208,48 @@ The registry is a git repo on GitHub or GitLab. Clone it once, and every team me
 
 ### How it works
 
-Skills are authored as **SKILL.md** (the open standard). Tools in **Tier 1** read SKILL.md natively. Tools in **Tier 2** need a different format — the installer auto-generates it (`.mdc` for Cursor, `.md` rules for Windsurf, plain markdown for Cline/Roo/Trae). You never deal with format conversion.
+Every generated skill outputs both **SKILL.md** (~15 tools read it natively) and **AGENTS.md** (~15 tools read it) to maximize reach. Tools in **Tier 2** need format conversion — the installer handles it automatically.
 
 | Tier | Platforms | What happens |
 |------|-----------|-------------|
-| **Tier 1 — Native** | Claude Code, Copilot, Codex CLI, Gemini CLI, Kiro, Antigravity, Goose, OpenCode | Reads SKILL.md directly |
-| **Tier 2 — Auto-adapted** | Cursor, Windsurf, Cline, Roo Code, Trae | Installer converts SKILL.md to native format |
-| **Tier 3 — Manual** | Zed, Junie, Aider | Copy skill body into tool's config file |
+| **Tier 1 — Native SKILL.md** | Claude Code, Copilot, Codex CLI, Gemini CLI, Kiro, Cline, Roo Code, Kilo Code, Goose, OpenCode, Factory Droid, Antigravity | Reads SKILL.md directly |
+| **Tier 2 — Auto-adapted** | Cursor, Windsurf, Trae, Junie | Installer converts SKILL.md to native format (.mdc, .md rules, guidelines) |
+| **Tier 3 — Manual** | Zed, Augment, Aider, Continue.dev | Copy skill body into tool's config file |
 
-### Universal path (`~/.agents/skills/`)
-
-The emerging cross-tool convention. One install, multiple tools discover it automatically:
+### Global install (each tool's native path)
 
 ```bash
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.agents/skills/agent-skill-creator
-```
-
-Tools that read this path today: **Codex CLI, Gemini CLI, Kiro, Antigravity** — and growing.
-
-### Global install (one install, all projects)
-
-```bash
-# Claude Code + VS Code Copilot (shared path — one install works for both)
+# Claude Code
 git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.claude/skills/agent-skill-creator
+
+# GitHub Copilot (Copilot's own native path)
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.copilot/skills/agent-skill-creator
 
 # Gemini CLI
 git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.gemini/skills/agent-skill-creator
 
-# Goose
+# Codex CLI / OpenCode / Goose (universal path)
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.agents/skills/agent-skill-creator
+
+# Goose (native path)
 git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.config/goose/skills/agent-skill-creator
 
-# OpenCode
+# OpenCode (native path)
 git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.config/opencode/skills/agent-skill-creator
 ```
 
-VS Code Copilot (1.108+) adopted the [Agent Skills Open Standard](https://code.visualstudio.com/docs/copilot/customization/agent-skills) and searches `~/.claude/skills/` by default. One install makes a skill globally available on both Claude Code and VS Code Copilot.
+GitHub Copilot also reads `~/.claude/skills/` as a fallback, but its native global path is `~/.copilot/skills/`. Use each tool's own path to avoid confusion.
 
 ### Per-project install
 
 ```bash
-# Copilot (per-project alternative)
+# GitHub Copilot
 git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .github/skills/agent-skill-creator
 
-# Cursor (auto-generates .mdc)
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .cursor/rules/agent-skill-creator
+# Cursor (project only — no global path exists)
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .cursor/skills/agent-skill-creator
 
-# Windsurf (auto-generates .md rule)
+# Windsurf
 git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .windsurf/rules/agent-skill-creator
 
 # Cline
@@ -257,7 +262,7 @@ git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .kiro/skills
 git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .trae/rules/agent-skill-creator
 
 # Roo Code
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .roo/rules/agent-skill-creator
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .roo/skills/agent-skill-creator
 ```
 
 ### Cursor — global workaround

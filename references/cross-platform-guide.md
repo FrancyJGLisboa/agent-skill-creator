@@ -1,95 +1,121 @@
 # Cross-Platform Compatibility Guide
 
-**Version:** 5.0
-**Purpose:** Complete compatibility matrix for Agent Skills across all platforms supporting the Agent Skills Open Standard
+**Version:** 6.0
+**Purpose:** Research-backed compatibility matrix for Agent Skills across all platforms. Data sourced from agentic-tool-skill-systems research (27 tools analyzed, March 2026).
 
 ---
 
 ## Overview
 
-Skills created by agent-skill-creator are compliant with the **Agent Skills Open Standard** and work across all platforms that support the SKILL.md format. As of v5.0, this includes 14+ platforms across 3 support tiers.
+Skills created by agent-skill-creator output both **SKILL.md** (agentskills.io spec, ~15 tools) and **AGENTS.md** (AAIF-governed spec, ~15 tools) to maximize cross-tool reach. Together they cover 20+ tools across 3 support tiers.
 
-### Supported Platforms
+**Standards governance:**
+- **SKILL.md** — maintained by Anthropic (agentskills.io). Defines skill format, frontmatter schema, progressive disclosure.
+- **AGENTS.md** — governed by AAIF (Agentic AI Foundation, Linux Foundation). Defines project instruction files. Adopted by 15+ tools.
+- **MCP** — governed by AAIF. Model Context Protocol for tool extension. 97M+ SDK downloads.
 
-#### Tier 1 — Native SKILL.md Support
+---
+
+## Tier 1 — Native SKILL.md Support
 
 These platforms read SKILL.md natively with no conversion needed:
 
-| Platform | Type | User-Level Path | Project-Level Path |
-|----------|------|-----------------|-------------------|
-| **Claude Code** | CLI | `~/.claude/skills/` | `.claude/skills/` |
-| **GitHub Copilot CLI** | CLI | `~/.copilot/skills/` | `.github/skills/` |
-| **VS Code Copilot** | IDE Extension | `~/.claude/skills/` | `.github/skills/` |
-| **Codex CLI** | CLI | `~/.agents/skills/` | `.agents/skills/` |
-| **Gemini CLI** | CLI | `~/.gemini/skills/` | `.gemini/skills/` |
-| **Kiro** | IDE | — | `.kiro/skills/` |
-| **Antigravity** | CLI | — | `.agents/skills/` |
-| **Goose** | CLI | `~/.config/goose/skills/` | — |
-| **OpenCode** | CLI | `~/.config/opencode/skills/` | — |
+| Platform | Type | Native Global Path | Native Project Path | Fallback Paths |
+|----------|------|--------------------|--------------------|----|
+| **Claude Code** | CLI | `~/.claude/skills/` | `.claude/skills/` | `.claude/commands/` (legacy) |
+| **GitHub Copilot** | CLI + IDE | `~/.copilot/skills/` | `.github/skills/`, `.claude/skills/` | Also reads `~/.claude/skills/` |
+| **Codex CLI** | CLI | `~/.agents/skills/` | `.agents/skills/` | Configurable |
+| **Gemini CLI** | CLI | `~/.gemini/skills/` | `.gemini/skills/` | `.agents/skills/` (alias) |
+| **Kiro** | IDE | `~/.kiro/skills/` | `.kiro/skills/` | Reads AGENTS.md |
+| **Goose** | CLI | `~/.config/goose/skills/` | `.goose/skills/`, `.agents/skills/`, `.claude/skills/` | Multiple tiers |
+| **OpenCode** | CLI | `~/.config/opencode/skills/` | `.opencode/skills/`, `.claude/skills/`, `.agents/skills/` | Walks git root |
+| **Cline** | VS Code Ext | `~/.cline/skills/` | `.clinerules/skills/`, `.agents/skills/` | `.clinerules/` (legacy) |
+| **Roo Code** | VS Code Ext | `~/.roo/skills/` | `.roo/skills/`, `.agents/skills/` | `.roorules`, `.clinerules` (legacy) |
+| **Kilo Code** | VS Code + JetBrains + CLI | `~/.kilocode/skills/` | `.kilocode/skills/` | `.roorules`, `.clinerules` (backward compat) |
+| **Factory Droid** | Enterprise CLI | `~/.factory/skills/` | `.factory/skills/` | `.agent/skills/` (legacy) |
+| **Antigravity** | IDE | `~/.gemini/antigravity/skills/` | `.agent/skills/` | Note: `.agent/` (singular, not `.agents/`) |
 
-#### Tier 2 — SKILL.md via Format Adapter
+## Tier 2 — SKILL.md via Format Adapter
 
 These platforms use their own rule format. The installer auto-generates the native format from SKILL.md:
 
-| Platform | Type | Native Format | Adapter Output | Install Path |
-|----------|------|--------------|----------------|-------------|
-| **Cursor** | IDE | `.mdc` | Auto-generated `.mdc` with frontmatter | `.cursor/rules/` |
-| **Windsurf** | IDE | `.md` rules | `.md` rule file or `global_rules.md` append | `.windsurf/rules/` (project) or `~/.codeium/windsurf/memories/global_rules.md` (global) |
-| **Cline** | VS Code Ext | Plain `.md` | Stripped frontmatter `.md` | `.clinerules/` |
-| **Roo Code** | VS Code Ext | Plain `.md` | Stripped frontmatter `.md` | `.roo/rules/` |
-| **Trae** | IDE | Plain `.md` | Stripped frontmatter `.md` | `.trae/rules/` |
+| Platform | Type | Native Format | Adaptation | Install Path | Limitations |
+|----------|------|--------------|------------|-------------|-------------|
+| **Cursor** | IDE | `.mdc` | Generates `.mdc` with `alwaysApply`/`globs`/`description` frontmatter | `.cursor/skills/` (project only, **no global path**) | Per-project only; 4 activation modes (Always Apply, Agent Decides, Glob, Manual) |
+| **Windsurf** | IDE | `.md` rules | Generates plain `.md` rule file | `.windsurf/rules/` (project) or `~/.codeium/windsurf/` (global) | **6,000 char per-file limit, 12,000 total combined** |
+| **Trae** | IDE | `.md` rules | Generates plain `.md` with `type:` frontmatter | `.trae/rules/` | 4 modes: Always Apply, File-specific, Intelligent, Manual |
+| **Junie** | JetBrains | `guidelines.md` | Extracts body as plain markdown | `.junie/skills/` | Public catalog at github.com/JetBrains/junie-guidelines |
 
-#### Tier 3 — Manual Configuration
+## Tier 3 — Manual Integration
 
-These platforms require manual integration:
+These platforms require manual setup:
 
-| Platform | Config File | Instructions |
-|----------|------------|-------------|
-| **Zed** | `.rules` | Copy SKILL.md body into `.rules` file |
-| **Junie** | `.junie/guidelines.md` | Copy SKILL.md body into guidelines |
-| **Aider** | `CONVENTIONS.md` | Copy SKILL.md body into CONVENTIONS.md |
-
-### The Unifying Standard
-
-All Tier 1 and Tier 2 platforms read from the same SKILL.md source:
-
-```yaml
----
-name: skill-name
-description: What the skill does and when to activate it
-license: MIT
-metadata:
-  author: Author Name
-  version: 1.0.0
----
-# Skill content here...
-```
-
-A skill created once works everywhere — directly on Tier 1, via auto-adapter on Tier 2.
+| Platform | Config File | Instructions | AGENTS.md? |
+|----------|------------|-------------|------------|
+| **Zed** | `.rules` file + Rules Library | Copy SKILL.md body into `.rules` at project root. Or add to Rules Library via UI. | YES (reads AGENTS.md) |
+| **Augment** | `.augment/rules/` | Copy as `.md` with `type: Always` or `type: Auto` frontmatter | YES (hierarchical AGENTS.md) |
+| **Aider** | `CONVENTIONS.md` | Copy SKILL.md body into CONVENTIONS.md. Configure `read:` in `.aider.conf.yml` | NO |
+| **Continue.dev** | `.continue/rules/` | Copy as `.md` with Continue-specific frontmatter (`alwaysApply`, `globs`, `regex`) | YES (recently added) |
 
 ---
 
-## Universal Path: `.agents/skills/`
+## AGENTS.md — Companion Output
 
-The `.agents/skills/` directory is an emerging cross-tool convention for agent skill discovery. Multiple tools already read from this path:
+Every generated skill outputs an AGENTS.md alongside SKILL.md. This is the AAIF-governed instruction file format read by 15+ tools:
 
-- **Codex CLI** — reads `~/.agents/skills/` and `.agents/skills/`
-- **Gemini CLI** — discovers skills in `~/.agents/skills/`
-- **Kiro** — reads `.agents/skills/` (project-level)
-- **Antigravity** — reads `.agents/skills/` (project-level)
+**Tools that read AGENTS.md:** Codex CLI (primary), Cursor, Roo Code, Kilo Code, Kiro, Goose, OpenCode, Continue.dev, Factory Droid, Augment, Gemini Code Assist, GitHub Copilot, Windsurf, Zed, Antigravity
 
-The installer creates a **secondary symlink** at `~/.agents/skills/<skill-name>` after every install (unless the primary target is already `.agents/`). This means a skill installed for Claude Code is also discoverable by Codex CLI, Gemini CLI, and other universal-path tools automatically.
+The AGENTS.md contains:
+- Skill purpose and description
+- Activation triggers and usage instructions
+- Reference to SKILL.md for full implementation details
 
-```bash
-# Install for Claude Code — also creates ~/.agents/skills/ symlink
-./install.sh --platform claude-code
+This means a generated skill is discoverable by virtually every major tool — either via SKILL.md or AGENTS.md or both.
 
-# Install directly to universal path
-./install.sh --platform universal
+---
 
-# Install to ALL detected platforms at once
-./install.sh --all
-```
+## Activation Mechanisms by Platform
+
+Not all platforms activate skills the same way:
+
+| Platform | Slash Command | Auto-Detect (Description) | File Pattern | Other |
+|----------|:---:|:---:|:---:|------|
+| Claude Code | `/skill-name` | Yes | — | Bundled skills auto-activate on SDK detection |
+| GitHub Copilot | `/skill-name` | Yes | `.instructions.md` applyTo | @agent-name, specialized agents |
+| Codex CLI | `/skills`, `$skill-name` | Yes | — | System skills |
+| Gemini CLI | `/command-name` | Yes | — | Custom commands via .toml |
+| Kiro | `/` invocation | Yes | fileMatch | 4 modes: always, auto, fileMatch, manual |
+| Cursor | Slash menu | Yes (Agent Decides) | Glob patterns | Always Apply, Manual @mention |
+| Windsurf | — | Yes | Glob patterns | Always On, Model Decision modes |
+| Cline | — | Yes (use_skill tool) | — | Always-on rules |
+| Roo Code | `/orchestrator`, `/code` | Yes | Mode rules | Mode switching |
+| Kilo Code | Mode commands | Yes | Within modes | 5 named modes |
+| Goose | — | Yes | — | "Use the X skill" |
+| OpenCode | — | Yes (skill() tool) | — | @mention for subagents |
+| Factory Droid | `/skill-name` | Yes | — | /droids menu |
+| Trae | — | Yes (Intelligent mode) | File-specific | `#Rule` syntax |
+| Zed | — | — | — | @mention (Rules Library) |
+| Augment | @mention | Yes (Auto type) | Auto mode | Always/Manual/Auto types |
+| Aider | `/read` only | — | — | Manual only |
+| Continue.dev | `/` slash commands | Yes | Globs, regex | alwaysApply: true |
+| Junie | Slash menu | Yes | For rules | Always-on for guidelines |
+
+---
+
+## Cross-Tool Path Sharing
+
+Which paths are read by multiple tools:
+
+| Path | Tools That Read It |
+|------|-------------------|
+| `~/.claude/skills/` | Claude Code, GitHub Copilot (fallback), Cursor (fallback), OpenCode (fallback), Goose (fallback) |
+| `~/.agents/skills/` | Codex CLI (primary), Gemini CLI (alias), OpenCode, Goose, Cline (fallback), Roo Code (fallback), Kilo Code (fallback) |
+| `.agents/skills/` | Codex CLI, Gemini CLI, OpenCode, Goose, Cline, Roo Code |
+| `.claude/skills/` | Claude Code, GitHub Copilot, Cursor, OpenCode, Goose |
+| `AGENTS.md` (file) | 15+ tools (widest reach format) |
+| `SKILL.md` (file) | 15+ tools (when in tool's native skill path) |
+
+**Important:** `.agents/skills/` (plural) and `.agent/skills/` (singular, used by Antigravity) are different paths.
 
 ---
 
@@ -110,6 +136,8 @@ alwaysApply: true
 <SKILL.md body without YAML frontmatter>
 ```
 
+**Limitations:** Cursor has no global skills path. Skills must be installed per-project in `.cursor/skills/`.
+
 ### Windsurf (.md rules)
 
 **Project-level**: Creates a `.md` file in `.windsurf/rules/`.
@@ -122,11 +150,26 @@ alwaysApply: true
 <!-- END skill-name -->
 ```
 
-Re-running the installer replaces the existing block rather than duplicating.
+**Limitations:** 6,000 character limit per rule file, 12,000 total combined. Long skills must be truncated or split.
 
-### Cline / Roo Code / Trae (plain .md)
+### Trae (.md rules)
 
-The adapter strips YAML frontmatter and outputs plain markdown. These tools read `.md` files from their respective rule directories.
+Generates plain `.md` with type frontmatter:
+
+```markdown
+---
+type: Always
+---
+<SKILL.md body>
+```
+
+### Cline / Roo Code / Kilo Code (plain .md)
+
+The adapter strips YAML frontmatter and outputs plain markdown. These tools read `.md` files from their respective skill directories.
+
+### Junie (guidelines.md)
+
+Extracts SKILL.md body as plain markdown into `.junie/skills/` directory.
 
 ---
 
@@ -135,178 +178,138 @@ The adapter strips YAML frontmatter and outputs plain markdown. These tools read
 ### Claude Code
 
 ```bash
-# Using install.sh (recommended)
-./install.sh
-
-# Manual: User-level
+# User-level (global)
 cp -r skill-name/ ~/.claude/skills/skill-name/
 
-# Manual: Project-level
+# Project-level
 cp -r skill-name/ .claude/skills/skill-name/
 ```
-
-**Best for:** Developers, power users, teams with git workflows.
 
 ### GitHub Copilot
 
 ```bash
-# Using install.sh
-./install.sh --platform copilot
+# User-level (Copilot's native global path)
+cp -r skill-name/ ~/.copilot/skills/skill-name/
 
-# Manual: Project-level
+# Project-level
 cp -r skill-name/ .github/skills/skill-name/
 ```
 
-**Best for:** GitHub-integrated workflows, VS Code users.
+Copilot also reads `~/.claude/skills/` as a fallback, but its native path is `~/.copilot/skills/`.
 
 ### Cursor
 
 ```bash
-# Using install.sh (auto-generates .mdc)
-./install.sh --platform cursor
-
-# Manual
-cp -r skill-name/ .cursor/rules/skill-name/
+# Project-level ONLY (no global path exists)
+cp -r skill-name/ .cursor/skills/skill-name/
 ```
 
-**Best for:** Cursor IDE users. The installer auto-generates a `.mdc` file alongside SKILL.md.
-
-### Windsurf
-
+For cross-project use, clone once and symlink per project:
 ```bash
-# Using install.sh (project-level — creates .windsurf/rules/ rule)
-./install.sh --platform windsurf --project
-
-# Using install.sh (user-level — appends to global_rules.md)
-./install.sh --platform windsurf
+git clone <repo> ~/agent-skills/skill-name
+mkdir -p .cursor/skills && ln -s ~/agent-skills/skill-name .cursor/skills/skill-name
 ```
-
-**Best for:** Windsurf IDE users.
-
-### Cline
-
-```bash
-# Using install.sh
-./install.sh --platform cline
-
-# Manual
-cp -r skill-name/ .clinerules/skill-name/
-```
-
-**Best for:** Cline extension users in VS Code.
 
 ### Codex CLI
 
 ```bash
-# Using install.sh (installs to ~/.agents/skills/)
-./install.sh --platform codex
-
-# Manual
 cp -r skill-name/ ~/.agents/skills/skill-name/
 ```
-
-**Best for:** OpenAI Codex CLI users. Codex reads from `~/.agents/skills/`.
 
 ### Gemini CLI
 
 ```bash
-# Using install.sh
-./install.sh --platform gemini
-
-# Manual
+# Native path (preferred)
 cp -r skill-name/ ~/.gemini/skills/skill-name/
-```
 
-**Best for:** Gemini CLI users.
+# Also reads ~/.agents/skills/ as fallback
+```
 
 ### Kiro
 
 ```bash
-# Using install.sh
-./install.sh --platform kiro
-
-# Manual
+# Project-level
 cp -r skill-name/ .kiro/skills/skill-name/
 ```
 
-**Best for:** Kiro IDE users (project-level).
-
-### Trae
+### Windsurf
 
 ```bash
-# Using install.sh (auto-generates plain .md)
-./install.sh --platform trae
+# Project-level
+./install.sh --platform windsurf --project
 
-# Manual
-cp -r skill-name/ .trae/rules/skill-name/
+# User-level (appends to global_rules.md)
+./install.sh --platform windsurf
 ```
 
-**Best for:** Trae IDE users.
-
-### Goose
+### Cline
 
 ```bash
-# Using install.sh
-./install.sh --platform goose
-
-# Manual
-cp -r skill-name/ ~/.config/goose/skills/skill-name/
+cp -r skill-name/ .clinerules/skills/skill-name/
 ```
-
-**Best for:** Goose CLI users.
-
-### OpenCode
-
-```bash
-# Using install.sh
-./install.sh --platform opencode
-
-# Manual
-cp -r skill-name/ ~/.config/opencode/skills/skill-name/
-```
-
-**Best for:** OpenCode CLI users.
 
 ### Roo Code
 
 ```bash
-# Using install.sh (auto-generates plain .md)
-./install.sh --platform roo-code
-
-# Manual
-cp -r skill-name/ .roo/rules/skill-name/
+cp -r skill-name/ .roo/skills/skill-name/
 ```
 
-**Best for:** Roo Code extension users in VS Code.
+### Kilo Code
+
+```bash
+cp -r skill-name/ .kilocode/skills/skill-name/
+```
+
+### Goose
+
+```bash
+cp -r skill-name/ ~/.config/goose/skills/skill-name/
+```
+
+### OpenCode
+
+```bash
+cp -r skill-name/ ~/.config/opencode/skills/skill-name/
+```
+
+### Trae
+
+```bash
+./install.sh --platform trae
+# Generates plain .md with type: frontmatter in .trae/rules/
+```
+
+### Junie
+
+```bash
+./install.sh --platform junie
+# Generates guidelines.md in .junie/skills/
+```
+
+### Factory Droid
+
+```bash
+cp -r skill-name/ ~/.factory/skills/skill-name/
+```
 
 ### Antigravity
 
 ```bash
-# Using install.sh
-./install.sh --platform antigravity
-
-# Manual
-cp -r skill-name/ .agents/skills/skill-name/
+cp -r skill-name/ .agent/skills/skill-name/
+# Note: .agent/ (singular), NOT .agents/
 ```
-
-**Best for:** Antigravity CLI users.
 
 ### Universal Path
 
 ```bash
-# Using install.sh
-./install.sh --platform universal
-
-# Manual
 cp -r skill-name/ ~/.agents/skills/skill-name/
 ```
 
-**Best for:** Multi-tool users. One install discoverable by Codex CLI, Gemini CLI, Kiro, Antigravity, and other tools that read `.agents/skills/`.
+Read by: Codex CLI, Gemini CLI (fallback), OpenCode, Goose, Cline (fallback), Roo Code (fallback), Kilo Code (fallback).
 
 ### Install All
 
 ```bash
-# Install to every detected tool at once
 ./install.sh --all
 ```
 
@@ -319,140 +322,53 @@ npx skills add ./local-skill-dir
 
 ### Claude Desktop / claude.ai (Web)
 
-These platforms use .zip upload instead of directory copying:
-
-1. Export: `python scripts/export_utils.py ./skill-name --variant desktop`
-2. Open Claude Desktop or claude.ai
-3. Go to Settings > Skills > Upload skill
-4. Select the .zip file
-
-### Claude API
-
-```python
-import anthropic
-
-client = anthropic.Anthropic()
-
-with open('skill-name-api-v1.0.0.zip', 'rb') as f:
-    skill = client.skills.create(file=f, name="skill-name")
-
-response = client.messages.create(
-    model="claude-sonnet-4",
-    messages=[{"role": "user", "content": "Your query here"}],
-    container={"type": "custom_skill", "skill_id": skill.id},
-    betas=["code-execution-2025-08-25", "skills-2025-10-02"]
-)
+```bash
+python scripts/export_utils.py ./skill-name --variant desktop
+# Upload the .zip via Settings > Skills
 ```
 
 ---
 
 ## Compatibility Matrix
 
-### Core Functionality
+### Format Support
 
-| Feature | Tier 1 Platforms | Tier 2 Platforms | Desktop/Web | Claude API |
-|---------|-----------------|-----------------|-------------|------------|
-| **SKILL.md support** | Native | Via adapter | Full | Full |
+| Feature | Tier 1 | Tier 2 | Desktop/Web | Claude API |
+|---------|--------|--------|-------------|------------|
+| **SKILL.md** | Native | Via adapter | Full | Full |
+| **AGENTS.md** | Most tools | Some tools | N/A | N/A |
 | **Python scripts** | Full | Full | Full | Sandboxed* |
 | **References/docs** | Full | Full | Full | Full |
-| **Assets/templates** | Full | Full | Full | Full |
 | **install.sh** | Full | Full | N/A | N/A |
-| **Format adapters** | N/A | Auto | N/A | N/A |
 
 \* API: No network access, no pip install at runtime
 
-### Technical Specifications
+### Platform Limitations
 
-| Specification | CLI/IDE Platforms | Desktop/Web | Claude API |
-|---------------|-----------------|-------------|------------|
-| **Max skill size** | No limit | ~10MB | 8MB hard limit |
-| **Network access** | Yes | Yes | No |
-| **Package install** | Yes | Yes | No |
-| **File system** | Full | Full | Limited |
-| **Updates** | git pull | Re-upload | API upload |
-
----
-
-## Platform-Specific Notes
-
-### marketplace.json
-
-- **Required by**: Claude Code (for plugin marketplace distribution only)
-- **Not needed by**: All other platforms
-- **Recommendation**: For simple skills, do not include `marketplace.json`. Only add it for complex skill suites that need Claude Code plugin distribution.
-- **Format**: If included, use ONLY official fields: `name`, `plugins[].name`, `plugins[].description`, `plugins[].source`, `plugins[].skills`
-
-### Skill Activation
-
-All platforms that support the SKILL.md standard use the `description` field in frontmatter as the primary activation mechanism. The description should contain:
-
-- Clear explanation of when to use the skill
-- Domain-specific keywords
-- Example trigger phrases
-
-No platform-specific activation configuration is needed.
-
-### File Structure
-
-The standard skill directory works on all platforms:
-
-```
-skill-name/
-├── SKILL.md          # Required - primary skill definition
-├── scripts/          # Optional - executable code
-├── references/       # Optional - detailed documentation
-├── assets/           # Optional - templates, schemas, data
-├── install.sh        # Optional - cross-platform installer
-└── README.md         # Recommended - install instructions
-```
-
----
-
-## Migration Between Platforms
-
-### CLI Platform to CLI Platform
-
-Skills are directly portable. Just copy the directory to the target platform's skill location:
-
-```bash
-# From Claude Code to Codex CLI
-cp -r ~/.claude/skills/my-skill/ ~/.agents/skills/my-skill/
-
-# From Cursor to Cline
-cp -r .cursor/rules/my-skill/ .clinerules/my-skill/
-```
-
-### CLI Platform to Desktop/Web
-
-Export as .zip:
-
-```bash
-python scripts/export_utils.py ./my-skill --variant desktop
-# Output: exports/my-skill-desktop-v1.0.0.zip
-```
-
-### CLI Platform to API
-
-Export as optimized .zip:
-
-```bash
-python scripts/export_utils.py ./my-skill --variant api
-# Output: exports/my-skill-api-v1.0.0.zip (< 8MB)
-```
+| Platform | Key Limitation |
+|----------|---------------|
+| **Cursor** | No global skills path — per-project only |
+| **Windsurf** | 6,000 char per-file limit, 12,000 total combined |
+| **Trae** | Does not read SKILL.md natively; requires format adapter |
+| **Zed** | No SKILL.md support; uses `.rules` file and Rules Library UI |
+| **Augment** | No SKILL.md support; uses `.augment/rules/` with type frontmatter |
+| **Aider** | No SKILL.md or auto-activation; manual CONVENTIONS.md only |
+| **Antigravity** | Uses `.agent/skills/` (singular), NOT `.agents/skills/` (plural) |
 
 ---
 
 ## Best Practices
 
-1. **Develop once, deploy everywhere**: Create and test in your preferred CLI tool, then install on other platforms.
-2. **Use install.sh**: Include the cross-platform installer for easy deployment.
-3. **Use `--all` for multi-tool users**: Install to every detected tool with a single command.
-4. **Keep SKILL.md lean**: Under 500 lines, detailed content in `references/`.
-5. **Test activation**: Verify the `description` triggers correctly on your target platform.
-6. **Include README.md**: Document installation instructions for all platforms.
-7. **No platform hacks**: Avoid platform-specific code or configuration. The standard format works everywhere; adapters handle the rest.
+1. **Use each tool's native path**: Don't install Copilot skills to `~/.claude/`. Use `~/.copilot/skills/` for Copilot, `~/.gemini/skills/` for Gemini, etc.
+2. **Output both SKILL.md and AGENTS.md**: Maximizes reach across the entire ecosystem.
+3. **Use install.sh or `npx skills`**: Handles path detection and format conversion automatically.
+4. **Use `--all` for multi-tool users**: Install to every detected tool with a single command.
+5. **Keep SKILL.md lean**: Under 500 lines. Critical for Windsurf's 6K char limit.
+6. **Test activation on your target platform**: Description-based auto-detect works on ~15 tools. Slash commands on ~12. Manual activation needed for Zed, Aider.
+7. **No platform hacks**: Avoid platform-specific code. The standard format + adapters handle the rest.
 
 ---
 
-**Generated by:** agent-skill-creator v5.0
-**Standard:** Agent Skills Open Standard (agentskills.io/specification)
+**Generated by:** agent-skill-creator v6.0
+**Standards:** SKILL.md (agentskills.io), AGENTS.md (AAIF/Linux Foundation)
+**Data source:** agentic-tool-skill-systems research, 27 tools analyzed, March 2026
