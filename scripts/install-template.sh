@@ -61,7 +61,8 @@ OPTIONS
     --platform PLATFORM   Explicit platform selection. One of:
                           claude-code, copilot, cursor, windsurf,
                           cline, codex, gemini, kiro, trae, goose,
-                          opencode, roo-code, antigravity, universal
+                          opencode, roo-code, kilo-code, factory,
+                          junie, antigravity, universal
     --project             Install at project level (current directory)
     --path PATH           Custom install path (overrides detection)
     --all                 Install to ALL detected tool paths at once
@@ -186,14 +187,15 @@ validate_skill_md() {
 # ---------------------------------------------------------------------------
 # Platform detection
 # ---------------------------------------------------------------------------
-SUPPORTED_PLATFORMS="claude-code, copilot, cursor, windsurf, cline, codex, gemini, kiro, trae, goose, opencode, roo-code, antigravity, universal"
+SUPPORTED_PLATFORMS="claude-code, copilot, cursor, windsurf, cline, codex, gemini, kiro, trae, goose, opencode, roo-code, kilo-code, factory, junie, antigravity, universal"
 
 detect_platform() {
     # If explicitly provided, validate and return it.
     if [ -n "$PLATFORM" ]; then
         case "$PLATFORM" in
             claude-code|copilot|cursor|windsurf|cline|codex|gemini|\
-            kiro|trae|goose|opencode|roo-code|antigravity|universal)
+            kiro|trae|goose|opencode|roo-code|kilo-code|factory|\
+            junie|antigravity|universal)
                 info "Platform explicitly set to: ${PLATFORM}"
                 return 0
                 ;;
@@ -209,6 +211,8 @@ detect_platform() {
     # Order matters — check most specific / least ambiguous first.
     if [ -d "${HOME}/.claude" ]; then
         PLATFORM="claude-code"
+    elif [ -d "${HOME}/.copilot" ] || [ -d ".github" ]; then
+        PLATFORM="copilot"
     elif [ -d "${HOME}/.cursor" ] || [ -d ".cursor" ]; then
         PLATFORM="cursor"
     elif [ -d "${HOME}/.codeium/windsurf" ] || [ -d ".windsurf" ]; then
@@ -217,20 +221,24 @@ detect_platform() {
         PLATFORM="cline"
     elif [ -d "${HOME}/.gemini" ]; then
         PLATFORM="gemini"
-    elif [ -d ".kiro" ]; then
+    elif [ -d "${HOME}/.kiro" ] || [ -d ".kiro" ]; then
         PLATFORM="kiro"
     elif [ -d ".trae" ]; then
         PLATFORM="trae"
-    elif [ -d ".roo" ]; then
+    elif [ -d "${HOME}/.roo" ] || [ -d ".roo" ]; then
         PLATFORM="roo-code"
+    elif [ -d "${HOME}/.kilocode" ] || [ -d ".kilocode" ]; then
+        PLATFORM="kilo-code"
+    elif [ -d "${HOME}/.factory" ] || [ -d ".factory" ]; then
+        PLATFORM="factory"
+    elif [ -d ".junie" ]; then
+        PLATFORM="junie"
     elif [ -d "${HOME}/.config/goose" ]; then
         PLATFORM="goose"
     elif [ -d "${HOME}/.config/opencode" ]; then
         PLATFORM="opencode"
     elif [ -d "${HOME}/.agents" ]; then
         PLATFORM="universal"
-    elif [ -d "${HOME}/.copilot" ] || [ -d ".github" ]; then
-        PLATFORM="copilot"
     else
         error "Could not auto-detect any supported AI coding platform."
         error "Use --platform PLATFORM to specify one explicitly."
@@ -249,6 +257,9 @@ detect_all_platforms() {
     if [ -d "${HOME}/.claude" ]; then
         ALL_PLATFORMS="${ALL_PLATFORMS} claude-code"
     fi
+    if [ -d "${HOME}/.copilot" ] || [ -d ".github" ]; then
+        ALL_PLATFORMS="${ALL_PLATFORMS} copilot"
+    fi
     if [ -d "${HOME}/.cursor" ] || [ -d ".cursor" ]; then
         ALL_PLATFORMS="${ALL_PLATFORMS} cursor"
     fi
@@ -261,23 +272,29 @@ detect_all_platforms() {
     if [ -d "${HOME}/.gemini" ]; then
         ALL_PLATFORMS="${ALL_PLATFORMS} gemini"
     fi
-    if [ -d ".kiro" ]; then
+    if [ -d "${HOME}/.kiro" ] || [ -d ".kiro" ]; then
         ALL_PLATFORMS="${ALL_PLATFORMS} kiro"
     fi
     if [ -d ".trae" ]; then
         ALL_PLATFORMS="${ALL_PLATFORMS} trae"
     fi
-    if [ -d ".roo" ]; then
+    if [ -d "${HOME}/.roo" ] || [ -d ".roo" ]; then
         ALL_PLATFORMS="${ALL_PLATFORMS} roo-code"
+    fi
+    if [ -d "${HOME}/.kilocode" ] || [ -d ".kilocode" ]; then
+        ALL_PLATFORMS="${ALL_PLATFORMS} kilo-code"
+    fi
+    if [ -d "${HOME}/.factory" ] || [ -d ".factory" ]; then
+        ALL_PLATFORMS="${ALL_PLATFORMS} factory"
+    fi
+    if [ -d ".junie" ]; then
+        ALL_PLATFORMS="${ALL_PLATFORMS} junie"
     fi
     if [ -d "${HOME}/.config/goose" ]; then
         ALL_PLATFORMS="${ALL_PLATFORMS} goose"
     fi
     if [ -d "${HOME}/.config/opencode" ]; then
         ALL_PLATFORMS="${ALL_PLATFORMS} opencode"
-    fi
-    if [ -d "${HOME}/.copilot" ] || [ -d ".github" ]; then
-        ALL_PLATFORMS="${ALL_PLATFORMS} copilot"
     fi
     # Always include universal
     ALL_PLATFORMS="${ALL_PLATFORMS} universal"
@@ -311,15 +328,18 @@ resolve_install_path() {
             copilot)       base=".github/skills" ;;
             cursor)        base=".cursor/rules" ;;
             windsurf)      base=".windsurf/rules" ;;
-            cline)         base=".clinerules" ;;
+            cline)         base=".clinerules/skills" ;;
             codex)         base=".agents/skills" ;;
             gemini)        base=".gemini/skills" ;;
             kiro)          base=".kiro/skills" ;;
             trae)          base=".trae/rules" ;;
-            goose)         base=".agents/skills" ;;
-            opencode)      base=".agents/skills" ;;
-            roo-code)      base=".roo/rules" ;;
-            antigravity)   base=".agents/skills" ;;
+            goose)         base=".goose/skills" ;;
+            opencode)      base=".opencode/skills" ;;
+            roo-code)      base=".roo/skills" ;;
+            kilo-code)     base=".kilocode/skills" ;;
+            factory)       base=".factory/skills" ;;
+            junie)         base=".junie/skills" ;;
+            antigravity)   base=".agent/skills" ;;
             universal)     base=".agents/skills" ;;
         esac
         INSTALL_DIR="$(pwd)/${base}/${SKILL_NAME}"
@@ -330,15 +350,18 @@ resolve_install_path() {
             copilot)       base="${HOME}/.copilot/skills" ;;
             cursor)        base="${HOME}/.cursor/rules" ;;
             windsurf)      base="${HOME}/.codeium/windsurf/skills" ;;
-            cline)         base="${HOME}/.cline/rules" ;;
+            cline)         base="${HOME}/.cline/skills" ;;
             codex)         base="${HOME}/.agents/skills" ;;
             gemini)        base="${HOME}/.gemini/skills" ;;
-            kiro)          base="${HOME}/.agents/skills" ;;
-            trae)          base="${HOME}/.agents/skills" ;;
+            kiro)          base="${HOME}/.kiro/skills" ;;
+            trae)          base="${HOME}/.trae/rules" ;;
             goose)         base="${HOME}/.config/goose/skills" ;;
             opencode)      base="${HOME}/.config/opencode/skills" ;;
-            roo-code)      base="${HOME}/.agents/skills" ;;
-            antigravity)   base="${HOME}/.agents/skills" ;;
+            roo-code)      base="${HOME}/.roo/skills" ;;
+            kilo-code)     base="${HOME}/.kilocode/skills" ;;
+            factory)       base="${HOME}/.factory/skills" ;;
+            junie)         base="${HOME}/.junie/skills" ;;
+            antigravity)   base="${HOME}/.gemini/antigravity/skills" ;;
             universal)     base="${HOME}/.agents/skills" ;;
         esac
         INSTALL_DIR="${base}/${SKILL_NAME}"
@@ -447,7 +470,7 @@ WSEOF
     fi
 }
 
-# Generate plain markdown (strip YAML frontmatter) for Cline/Roo/Trae
+# Generate plain markdown (strip YAML frontmatter) for Cline/Roo/Trae/Kilo
 generate_plain_rule() {
     target_dir="$1"
     filename="$2"
@@ -465,13 +488,78 @@ generate_plain_rule() {
     success "Generated plain rule: ${plain_file}"
 }
 
+# Generate Junie guidelines.md (plain body, no frontmatter)
+generate_junie_guideline() {
+    target_dir="$1"
+    skill_md="${SCRIPT_DIR}/SKILL.md"
+
+    guideline_file="${target_dir}/guidelines.md"
+
+    if $DRY_RUN; then
+        info "Would generate Junie guideline: ${guideline_file}"
+        return 0
+    fi
+
+    mkdir -p "$target_dir"
+    awk 'BEGIN{c=0} /^---$/{c++;next} c>=2{print}' "$skill_md" > "$guideline_file"
+    success "Generated Junie guideline: ${guideline_file}"
+}
+
+# ---------------------------------------------------------------------------
+# AGENTS.md companion — generate if not already present in source
+# ---------------------------------------------------------------------------
+generate_agents_md() {
+    agents_md="${INSTALL_DIR}/AGENTS.md"
+
+    # If the skill already ships an AGENTS.md, skip generation
+    if [ -f "${SCRIPT_DIR}/AGENTS.md" ]; then
+        return 0
+    fi
+
+    if $DRY_RUN; then
+        info "Would generate companion AGENTS.md"
+        return 0
+    fi
+
+    # Extract description from SKILL.md frontmatter
+    skill_md="${SCRIPT_DIR}/SKILL.md"
+    desc=""
+    in_fm=false
+    lnum=0
+    while IFS= read -r line; do
+        lnum=$((lnum + 1))
+        if [ "$lnum" -eq 1 ]; then in_fm=true; continue; fi
+        if $in_fm && [ "$line" = "---" ]; then break; fi
+        if $in_fm; then
+            case "$line" in
+                description:*) desc="$(echo "$line" | sed 's/^description:[[:space:]]*//')" ;;
+            esac
+        fi
+    done < "$skill_md"
+
+    cat > "$agents_md" <<AGENTSEOF
+# ${SKILL_NAME}
+
+${desc}
+
+## Usage
+
+Invoke this skill with \`/${SKILL_NAME}\` or by describing a task that matches its description.
+
+## Details
+
+See [SKILL.md](./SKILL.md) for full implementation details, triggers, and configuration.
+AGENTSEOF
+    success "Generated companion AGENTS.md"
+}
+
 # ---------------------------------------------------------------------------
 # Universal .agents/skills/ secondary install (symlink or copy)
 # ---------------------------------------------------------------------------
 install_universal_secondary() {
     # Skip if primary target is already .agents/
     case "$PLATFORM" in
-        codex|antigravity|universal) return 0 ;;
+        codex|universal) return 0 ;;
     esac
 
     universal_dir="${HOME}/.agents/skills/${SKILL_NAME}"
@@ -595,8 +683,14 @@ run_adapters() {
         roo-code)
             generate_plain_rule "$INSTALL_DIR" "${SKILL_NAME}.md"
             ;;
+        kilo-code)
+            generate_plain_rule "$INSTALL_DIR" "${SKILL_NAME}.md"
+            ;;
         trae)
             generate_plain_rule "$INSTALL_DIR" "${SKILL_NAME}.md"
+            ;;
+        junie)
+            generate_junie_guideline "$INSTALL_DIR"
             ;;
     esac
 }
@@ -617,21 +711,21 @@ print_activation_instructions() {
             printf "  1. Start a new Claude Code session.\n"
             printf "  2. The skill will be loaded automatically from:\n"
             printf "     ${BOLD}${INSTALL_DIR}/SKILL.md${NC}\n"
-            printf "  3. Use trigger phrases defined in the skill's description.\n"
+            printf "  3. Invoke with /${SKILL_NAME} or use trigger phrases.\n"
             ;;
         copilot)
             printf "To activate the skill in GitHub Copilot:\n"
             printf "  1. Open your project in VS Code or the GitHub CLI.\n"
             printf "  2. The skill is available at:\n"
             printf "     ${BOLD}${INSTALL_DIR}/SKILL.md${NC}\n"
-            printf "  3. Reference the skill in your Copilot instructions.\n"
+            printf "  3. Invoke with /${SKILL_NAME} or reference in instructions.\n"
             ;;
         cursor)
             printf "To activate the skill in Cursor:\n"
             printf "  1. Open your project in Cursor.\n"
             printf "  2. The rule is loaded automatically from:\n"
             printf "     ${BOLD}${INSTALL_DIR}/${SKILL_NAME}.mdc${NC}\n"
-            printf "  3. Use trigger phrases to invoke the skill.\n"
+            printf "  3. Use trigger phrases or slash menu to invoke.\n"
             ;;
         windsurf)
             printf "To activate the skill in Windsurf:\n"
@@ -656,7 +750,7 @@ print_activation_instructions() {
             printf "  1. Start a new Codex CLI session.\n"
             printf "  2. The skill is available at:\n"
             printf "     ${BOLD}${INSTALL_DIR}/SKILL.md${NC}\n"
-            printf "  3. Codex reads from ~/.agents/skills/ automatically.\n"
+            printf "  3. Invoke with /skills or \$${SKILL_NAME}.\n"
             ;;
         gemini)
             printf "To activate the skill in Gemini CLI:\n"
@@ -670,21 +764,21 @@ print_activation_instructions() {
             printf "  1. Open your project in Kiro.\n"
             printf "  2. The skill is available at:\n"
             printf "     ${BOLD}${INSTALL_DIR}/SKILL.md${NC}\n"
-            printf "  3. Kiro reads from .kiro/skills/ automatically.\n"
+            printf "  3. Invoke with / or use trigger phrases.\n"
             ;;
         trae)
             printf "To activate the skill in Trae:\n"
             printf "  1. Open your project in Trae.\n"
             printf "  2. The rule is loaded from:\n"
             printf "     ${BOLD}${INSTALL_DIR}/${SKILL_NAME}.md${NC}\n"
-            printf "  3. Use trigger phrases to invoke the skill.\n"
+            printf "  3. Use trigger phrases or Intelligent mode.\n"
             ;;
         goose)
             printf "To activate the skill in Goose:\n"
             printf "  1. Start a new Goose session.\n"
             printf "  2. The skill is available at:\n"
             printf "     ${BOLD}${INSTALL_DIR}/SKILL.md${NC}\n"
-            printf "  3. Goose reads from ~/.config/goose/skills/ automatically.\n"
+            printf "  3. Say 'Use the ${SKILL_NAME} skill' or use trigger phrases.\n"
             ;;
         opencode)
             printf "To activate the skill in OpenCode:\n"
@@ -698,20 +792,42 @@ print_activation_instructions() {
             printf "  1. Open your project in VS Code with Roo Code.\n"
             printf "  2. The rule is loaded from:\n"
             printf "     ${BOLD}${INSTALL_DIR}/${SKILL_NAME}.md${NC}\n"
-            printf "  3. Roo Code will pick up the rule automatically.\n"
+            printf "  3. Use /orchestrator, /code, or trigger phrases.\n"
+            ;;
+        kilo-code)
+            printf "To activate the skill in Kilo Code:\n"
+            printf "  1. Open your project in VS Code/JetBrains with Kilo Code.\n"
+            printf "  2. The rule is loaded from:\n"
+            printf "     ${BOLD}${INSTALL_DIR}/${SKILL_NAME}.md${NC}\n"
+            printf "  3. Kilo Code will pick up the rule automatically.\n"
+            ;;
+        factory)
+            printf "To activate the skill in Factory Droid:\n"
+            printf "  1. Start a new Factory Droid session.\n"
+            printf "  2. The skill is available at:\n"
+            printf "     ${BOLD}${INSTALL_DIR}/SKILL.md${NC}\n"
+            printf "  3. Invoke with /${SKILL_NAME} or /droids menu.\n"
+            ;;
+        junie)
+            printf "To activate the skill in Junie:\n"
+            printf "  1. Open your project in JetBrains with Junie.\n"
+            printf "  2. The guideline is loaded from:\n"
+            printf "     ${BOLD}${INSTALL_DIR}/guidelines.md${NC}\n"
+            printf "  3. Junie loads guidelines automatically.\n"
             ;;
         antigravity)
             printf "To activate the skill in Antigravity:\n"
             printf "  1. Open your project.\n"
             printf "  2. The skill is available at:\n"
             printf "     ${BOLD}${INSTALL_DIR}/SKILL.md${NC}\n"
-            printf "  3. Antigravity reads from .agents/skills/ automatically.\n"
+            printf "  3. Antigravity reads from .agent/skills/ automatically.\n"
+            printf "  Note: .agent/ (singular), NOT .agents/ (plural).\n"
             ;;
         universal)
             printf "The skill is installed at the universal path:\n"
             printf "  ${BOLD}${INSTALL_DIR}/SKILL.md${NC}\n\n"
             printf "Tools that read ~/.agents/skills/ (Codex CLI, Gemini CLI,\n"
-            printf "Kiro, Antigravity, and others) will discover it automatically.\n"
+            printf "OpenCode, Goose, Cline, Roo Code, Kilo Code) will discover it.\n"
             ;;
     esac
 
@@ -726,6 +842,7 @@ install_single() {
     resolve_install_path
     install_files
     run_adapters
+    generate_agents_md
     install_universal_secondary
     print_activation_instructions
 
@@ -753,11 +870,12 @@ install_all() {
         resolve_install_path
         install_files
         run_adapters
+        generate_agents_md
         installed_count=$((installed_count + 1))
         # Remember the first non-.agents/ install dir for universal symlink
         if [ -z "$first_non_agents_dir" ]; then
             case "$plat" in
-                codex|antigravity|universal) ;;
+                codex|universal) ;;
                 *) first_non_agents_dir="$INSTALL_DIR" ;;
             esac
         fi

@@ -376,6 +376,15 @@ def validate_skill(skill_path: str) -> dict:
                 "metadata.review_interval_days) for staleness tracking"
             )
 
+    # AGENTS.md companion file
+    agents_md = skill_dir / "AGENTS.md"
+    if not agents_md.exists():
+        warnings.append(
+            "AGENTS.md not found. Adding an AGENTS.md companion file maximizes "
+            "cross-tool discoverability (read by 15+ tools including Codex CLI, "
+            "Cursor, Roo Code, Kilo Code, Kiro, Goose, and others)."
+        )
+
     # Referenced local files
     if body is not None:
         local_links = _extract_local_links(body)

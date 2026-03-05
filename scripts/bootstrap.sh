@@ -42,9 +42,33 @@ detect_global_platforms() {
     if [ -d "$HOME/.claude" ]; then
         platforms="$platforms claude-code"
     fi
+    # GitHub Copilot
+    if [ -d "$HOME/.copilot" ]; then
+        platforms="$platforms copilot"
+    fi
     # Gemini CLI
     if [ -d "$HOME/.gemini" ]; then
         platforms="$platforms gemini"
+    fi
+    # Kiro
+    if [ -d "$HOME/.kiro" ]; then
+        platforms="$platforms kiro"
+    fi
+    # Cline
+    if [ -d "$HOME/.cline" ]; then
+        platforms="$platforms cline"
+    fi
+    # Roo Code
+    if [ -d "$HOME/.roo" ]; then
+        platforms="$platforms roo-code"
+    fi
+    # Kilo Code
+    if [ -d "$HOME/.kilocode" ]; then
+        platforms="$platforms kilo-code"
+    fi
+    # Factory Droid
+    if [ -d "$HOME/.factory" ]; then
+        platforms="$platforms factory"
     fi
     # Goose
     if [ -d "$HOME/.config/goose" ]; then
@@ -53,10 +77,6 @@ detect_global_platforms() {
     # OpenCode
     if [ -d "$HOME/.config/opencode" ]; then
         platforms="$platforms opencode"
-    fi
-    # GitHub Copilot
-    if [ -d "$HOME/.copilot" ]; then
-        platforms="$platforms copilot"
     fi
     echo "$platforms"
 }
@@ -67,10 +87,15 @@ detect_global_platforms() {
 platform_path() {
     case "$1" in
         claude-code) echo "$HOME/.claude/skills/$SKILL_NAME" ;;
+        copilot)     echo "$HOME/.copilot/skills/$SKILL_NAME" ;;
         gemini)      echo "$HOME/.gemini/skills/$SKILL_NAME" ;;
+        kiro)        echo "$HOME/.kiro/skills/$SKILL_NAME" ;;
+        cline)       echo "$HOME/.cline/skills/$SKILL_NAME" ;;
+        roo-code)    echo "$HOME/.roo/skills/$SKILL_NAME" ;;
+        kilo-code)   echo "$HOME/.kilocode/skills/$SKILL_NAME" ;;
+        factory)     echo "$HOME/.factory/skills/$SKILL_NAME" ;;
         goose)       echo "$HOME/.config/goose/skills/$SKILL_NAME" ;;
         opencode)    echo "$HOME/.config/opencode/skills/$SKILL_NAME" ;;
-        copilot)     echo "$HOME/.copilot/skills/$SKILL_NAME" ;;
     esac
 }
 
@@ -80,10 +105,15 @@ platform_path() {
 platform_display() {
     case "$1" in
         claude-code) echo "Claude Code" ;;
+        copilot)     echo "GitHub Copilot" ;;
         gemini)      echo "Gemini CLI" ;;
+        kiro)        echo "Kiro" ;;
+        cline)       echo "Cline" ;;
+        roo-code)    echo "Roo Code" ;;
+        kilo-code)   echo "Kilo Code" ;;
+        factory)     echo "Factory Droid" ;;
         goose)       echo "Goose" ;;
         opencode)    echo "OpenCode" ;;
-        copilot)     echo "GitHub Copilot" ;;
     esac
 }
 
@@ -173,7 +203,7 @@ main() {
 
     if [ $count -eq 0 ]; then
         warn "No global platforms detected. The skill is installed at the universal path."
-        printf "  Tools like Codex CLI, Gemini CLI, Kiro, and Antigravity\n"
+        printf "  Tools like Codex CLI, Gemini CLI, Kiro, and others\n"
         printf "  read from ~/.agents/skills/ automatically.\n\n"
     fi
 }

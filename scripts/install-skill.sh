@@ -191,22 +191,32 @@ validate_source() {
 detect_all_global_platforms() {
     platforms=""
     if [ -d "$HOME/.claude" ]; then platforms="$platforms claude-code"; fi
+    if [ -d "$HOME/.copilot" ]; then platforms="$platforms copilot"; fi
     if [ -d "$HOME/.gemini" ]; then platforms="$platforms gemini"; fi
+    if [ -d "$HOME/.kiro" ]; then platforms="$platforms kiro"; fi
+    if [ -d "$HOME/.roo" ]; then platforms="$platforms roo-code"; fi
+    if [ -d "$HOME/.kilocode" ]; then platforms="$platforms kilo-code"; fi
+    if [ -d "$HOME/.factory" ]; then platforms="$platforms factory"; fi
     if [ -d "$HOME/.config/goose" ]; then platforms="$platforms goose"; fi
     if [ -d "$HOME/.config/opencode" ]; then platforms="$platforms opencode"; fi
-    if [ -d "$HOME/.copilot" ]; then platforms="$platforms copilot"; fi
     echo "$platforms"
 }
 
 detect_all_project_platforms() {
     platforms=""
+    if [ -d ".claude" ]; then platforms="$platforms claude-code"; fi
+    if [ -d ".github" ]; then platforms="$platforms copilot"; fi
     if [ -d ".cursor" ]; then platforms="$platforms cursor"; fi
     if [ -d ".windsurf" ]; then platforms="$platforms windsurf"; fi
     if [ -d ".clinerules" ] || [ -d ".cline" ]; then platforms="$platforms cline"; fi
+    if [ -d ".gemini" ]; then platforms="$platforms gemini"; fi
     if [ -d ".kiro" ]; then platforms="$platforms kiro"; fi
     if [ -d ".trae" ]; then platforms="$platforms trae"; fi
     if [ -d ".roo" ]; then platforms="$platforms roo-code"; fi
-    if [ -d ".github" ]; then platforms="$platforms copilot"; fi
+    if [ -d ".kilocode" ]; then platforms="$platforms kilo-code"; fi
+    if [ -d ".factory" ]; then platforms="$platforms factory"; fi
+    if [ -d ".junie" ]; then platforms="$platforms junie"; fi
+    if [ -d ".agent" ]; then platforms="$platforms antigravity"; fi
     echo "$platforms"
 }
 
@@ -215,51 +225,66 @@ resolve_platform_path() {
     name="$2"
     if [ "$PROJECT_LEVEL" = true ]; then
         case "$plat" in
-            claude-code) echo ".claude/skills/$name" ;;
-            copilot)     echo ".github/skills/$name" ;;
-            cursor)      echo ".cursor/rules/$name" ;;
-            windsurf)    echo ".windsurf/rules/$name" ;;
-            cline)       echo ".clinerules/$name" ;;
-            gemini)      echo ".gemini/skills/$name" ;;
-            kiro)        echo ".kiro/skills/$name" ;;
-            trae)        echo ".trae/rules/$name" ;;
-            roo-code)    echo ".roo/rules/$name" ;;
-            goose)       echo ".agents/skills/$name" ;;
-            opencode)    echo ".agents/skills/$name" ;;
-            *)           echo ".agents/skills/$name" ;;
+            claude-code)   echo ".claude/skills/$name" ;;
+            copilot)       echo ".github/skills/$name" ;;
+            cursor)        echo ".cursor/rules/$name" ;;
+            windsurf)      echo ".windsurf/rules/$name" ;;
+            cline)         echo ".clinerules/skills/$name" ;;
+            codex)         echo ".agents/skills/$name" ;;
+            gemini)        echo ".gemini/skills/$name" ;;
+            kiro)          echo ".kiro/skills/$name" ;;
+            trae)          echo ".trae/rules/$name" ;;
+            roo-code)      echo ".roo/skills/$name" ;;
+            kilo-code)     echo ".kilocode/skills/$name" ;;
+            factory)       echo ".factory/skills/$name" ;;
+            junie)         echo ".junie/skills/$name" ;;
+            goose)         echo ".goose/skills/$name" ;;
+            opencode)      echo ".opencode/skills/$name" ;;
+            antigravity)   echo ".agent/skills/$name" ;;
+            *)             echo ".agents/skills/$name" ;;
         esac
     else
         case "$plat" in
-            claude-code) echo "$HOME/.claude/skills/$name" ;;
-            copilot)     echo "$HOME/.copilot/skills/$name" ;;
-            cursor)      echo "$HOME/.cursor/rules/$name" ;;
-            windsurf)    echo "$HOME/.codeium/windsurf/skills/$name" ;;
-            cline)       echo "$HOME/.cline/rules/$name" ;;
-            gemini)      echo "$HOME/.gemini/skills/$name" ;;
-            goose)       echo "$HOME/.config/goose/skills/$name" ;;
-            opencode)    echo "$HOME/.config/opencode/skills/$name" ;;
-            kiro)        echo "$HOME/.agents/skills/$name" ;;
-            trae)        echo "$HOME/.agents/skills/$name" ;;
-            roo-code)    echo "$HOME/.agents/skills/$name" ;;
-            *)           echo "$HOME/.agents/skills/$name" ;;
+            claude-code)   echo "$HOME/.claude/skills/$name" ;;
+            copilot)       echo "$HOME/.copilot/skills/$name" ;;
+            cursor)        echo "$HOME/.cursor/rules/$name" ;;
+            windsurf)      echo "$HOME/.codeium/windsurf/skills/$name" ;;
+            cline)         echo "$HOME/.cline/skills/$name" ;;
+            codex)         echo "$HOME/.agents/skills/$name" ;;
+            gemini)        echo "$HOME/.gemini/skills/$name" ;;
+            kiro)          echo "$HOME/.kiro/skills/$name" ;;
+            trae)          echo "$HOME/.trae/rules/$name" ;;
+            roo-code)      echo "$HOME/.roo/skills/$name" ;;
+            kilo-code)     echo "$HOME/.kilocode/skills/$name" ;;
+            factory)       echo "$HOME/.factory/skills/$name" ;;
+            junie)         echo "$HOME/.junie/skills/$name" ;;
+            goose)         echo "$HOME/.config/goose/skills/$name" ;;
+            opencode)      echo "$HOME/.config/opencode/skills/$name" ;;
+            antigravity)   echo "$HOME/.gemini/antigravity/skills/$name" ;;
+            *)             echo "$HOME/.agents/skills/$name" ;;
         esac
     fi
 }
 
 platform_display() {
     case "$1" in
-        claude-code) echo "Claude Code" ;;
-        gemini)      echo "Gemini CLI" ;;
-        goose)       echo "Goose" ;;
-        opencode)    echo "OpenCode" ;;
-        copilot)     echo "GitHub Copilot" ;;
-        cursor)      echo "Cursor" ;;
-        windsurf)    echo "Windsurf" ;;
-        cline)       echo "Cline" ;;
-        kiro)        echo "Kiro" ;;
-        trae)        echo "Trae" ;;
-        roo-code)    echo "Roo Code" ;;
-        *)           echo "$1" ;;
+        claude-code)   echo "Claude Code" ;;
+        copilot)       echo "GitHub Copilot" ;;
+        cursor)        echo "Cursor" ;;
+        windsurf)      echo "Windsurf" ;;
+        cline)         echo "Cline" ;;
+        codex)         echo "Codex CLI" ;;
+        gemini)        echo "Gemini CLI" ;;
+        kiro)          echo "Kiro" ;;
+        trae)          echo "Trae" ;;
+        roo-code)      echo "Roo Code" ;;
+        kilo-code)     echo "Kilo Code" ;;
+        factory)       echo "Factory Droid" ;;
+        junie)         echo "Junie" ;;
+        goose)         echo "Goose" ;;
+        opencode)      echo "OpenCode" ;;
+        antigravity)   echo "Antigravity" ;;
+        *)             echo "$1" ;;
     esac
 }
 
@@ -361,6 +386,20 @@ generate_plain_rule() {
     success "Generated plain rule: $plain_file"
 }
 
+generate_junie_guideline() {
+    target_dir="$1"
+    skill_md="$SOURCE_DIR/SKILL.md"
+
+    guideline_file="${target_dir}/guidelines.md"
+    if [ "$DRY_RUN" = true ]; then
+        info "[dry-run] Would generate Junie guideline: $guideline_file"
+        return 0
+    fi
+    mkdir -p "$target_dir"
+    awk 'BEGIN{c=0} /^---$/{c++;next} c>=2{print}' "$skill_md" > "$guideline_file"
+    success "Generated Junie guideline: $guideline_file"
+}
+
 run_adapters() {
     plat="$1"
     dest="$2"
@@ -375,8 +414,11 @@ run_adapters() {
                 generate_windsurf_rule "" "true"
             fi
             ;;
-        cline|roo-code|trae)
+        cline|roo-code|kilo-code|trae)
             generate_plain_rule "$dest" "${SKILL_NAME}.md"
+            ;;
+        junie)
+            generate_junie_guideline "$dest"
             ;;
     esac
 }
@@ -441,7 +483,7 @@ do_uninstall() {
     fi
 
     # Check all global platforms
-    for plat in claude-code gemini goose opencode copilot; do
+    for plat in claude-code copilot gemini kiro roo-code kilo-code factory goose opencode; do
         dest="$(resolve_platform_path "$plat" "$SKILL_NAME")"
         if [ -e "$dest" ] || [ -L "$dest" ]; then
             if [ "$DRY_RUN" = true ]; then
@@ -454,7 +496,7 @@ do_uninstall() {
     done
 
     # Check project-level platforms
-    for plat in cursor windsurf cline kiro trae roo-code copilot; do
+    for plat in claude-code copilot cursor windsurf cline gemini kiro trae roo-code kilo-code factory junie antigravity; do
         PROJECT_LEVEL=true
         dest="$(resolve_platform_path "$plat" "$SKILL_NAME")"
         if [ -e "$dest" ] || [ -L "$dest" ]; then
