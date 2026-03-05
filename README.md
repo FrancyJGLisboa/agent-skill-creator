@@ -1,9 +1,9 @@
 # Agent Skill Creator
 
-**Turn any workflow into reusable AI agent software that installs on 14+ tools — no spec writing, no prompt engineering, no coding required.**
+**Turn any workflow into reusable AI agent software that installs on 20+ tools — no spec writing, no prompt engineering, no coding required.**
 
 [![Agent Skills Open Standard](https://img.shields.io/badge/Agent%20Skills-Open%20Standard-blue)](https://github.com/anthropics/agent-skills-spec)
-[![Version](https://img.shields.io/badge/version-5.0.0-brightgreen)]()
+[![Version](https://img.shields.io/badge/version-6.0.0-brightgreen)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)]()
 
 ![Agent Skill Creator Overview](Dynamous/agentskillimage.png)
@@ -18,7 +18,7 @@ Every AI coding tool — Claude Code, GitHub Copilot, Cursor, Windsurf, Codex, G
 
 **The catch:** building a proper skill requires understanding the spec format, writing clear prompt instructions, designing how information loads progressively, writing functional code, and getting activation keywords right. Even simple skills take [multiple rounds of iteration](https://www.youtube.com/watch?v=izJkgLqlbN8) to get right.
 
-**Agent Skill Creator removes that barrier entirely.** You pass in whatever you have — messy docs, links, code, PDFs, transcripts, vague descriptions — and it produces a validated, security-scanned skill ready to install on 14+ tools and share with your team. You describe what you do; it builds the software.
+**Agent Skill Creator removes that barrier entirely.** You pass in whatever you have — messy docs, links, code, PDFs, transcripts, vague descriptions — and it produces a validated, security-scanned skill ready to install on 20+ tools and share with your team. You describe what you do; it builds the software.
 
 ---
 
@@ -32,7 +32,7 @@ Every AI coding tool — Claude Code, GitHub Copilot, Cursor, Windsurf, Codex, G
 curl -fsSL https://raw.githubusercontent.com/FrancyJGLisboa/agent-skill-creator/main/scripts/bootstrap.sh | sh
 ```
 
-This clones to `~/.agents/skills/agent-skill-creator` and symlinks to every detected global platform (Claude Code, Gemini CLI, Goose, OpenCode, Copilot). Run `git pull` once to update everywhere.
+This clones to `~/.agents/skills/agent-skill-creator` and symlinks to every detected global platform (Claude Code, Copilot, Gemini CLI, Kiro, Cline, Roo Code, Kilo Code, Factory Droid, Goose, OpenCode). Run `git pull` once to update everywhere.
 
 **Option B — Git clone (pick your tool):**
 
@@ -67,7 +67,7 @@ cd agent-skill-creator
 
 Each tool has its own native path. GitHub Copilot reads `~/.copilot/skills/` (global) and `.github/skills/` (per-project). Codex CLI, OpenCode, and Goose read `~/.agents/skills/`. See the full platform table below.
 
-All 14 platforms: [see full list below](#all-platforms).
+All 20+ platforms: [see full list below](#all-platforms).
 
 ### 2. Use it
 
@@ -104,15 +104,16 @@ Installed at: ~/.claude/skills/sales-report-skill
 
 The agent detects your platform, installs the skill to the right location, and tells you exactly how to invoke it. No manual steps.
 
-The generated skill includes a cross-platform installer (`install.sh`) that auto-detects all 14 supported tools, generates format adapters for Cursor (.mdc) and Windsurf (.md rules) automatically, and creates a universal `~/.agents/skills/` symlink so the skill is discoverable by multiple tools at once.
+The generated skill includes a cross-platform installer (`install.sh`) that auto-detects all 20+ supported tools, generates format adapters for Cursor (.mdc), Windsurf (.md rules), and Junie (guidelines.md) automatically, and creates a universal `~/.agents/skills/` symlink so the skill is discoverable by multiple tools at once.
 
 ```
 sales-report-skill/
 ├── SKILL.md          # Skill definition (activates with /sales-report-skill)
+├── AGENTS.md         # Companion file (read by 15+ tools for cross-tool reach)
 ├── scripts/          # Functional Python code
 ├── references/       # Detailed documentation
 ├── assets/           # Templates, configs
-├── install.sh        # Cross-platform installer (14 tools, format adapters, --all flag)
+├── install.sh        # Cross-platform installer (20+ tools, format adapters, --all flag)
 └── README.md         # Installation instructions
 ```
 
@@ -204,7 +205,7 @@ The registry is a git repo on GitHub or GitLab. Clone it once, and every team me
 
 ## All Platforms
 
-14 tools supported. Same skill, same invocation, same results everywhere.
+20+ tools supported. Same skill, same invocation, same results everywhere.
 
 ### How it works
 
@@ -222,23 +223,38 @@ Every generated skill outputs both **SKILL.md** (~15 tools read it natively) and
 # Claude Code
 git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.claude/skills/agent-skill-creator
 
-# GitHub Copilot (Copilot's own native path)
+# GitHub Copilot
 git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.copilot/skills/agent-skill-creator
 
 # Gemini CLI
 git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.gemini/skills/agent-skill-creator
 
-# Codex CLI / OpenCode / Goose (universal path)
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.agents/skills/agent-skill-creator
+# Kiro
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.kiro/skills/agent-skill-creator
 
-# Goose (native path)
+# Cline
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.cline/skills/agent-skill-creator
+
+# Roo Code
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.roo/skills/agent-skill-creator
+
+# Kilo Code
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.kilocode/skills/agent-skill-creator
+
+# Factory Droid
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.factory/skills/agent-skill-creator
+
+# Goose
 git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.config/goose/skills/agent-skill-creator
 
-# OpenCode (native path)
+# OpenCode
 git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.config/opencode/skills/agent-skill-creator
+
+# Codex CLI / universal path (read by 7+ tools as fallback)
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.agents/skills/agent-skill-creator
 ```
 
-GitHub Copilot also reads `~/.claude/skills/` as a fallback, but its native global path is `~/.copilot/skills/`. Use each tool's own path to avoid confusion.
+Use each tool's own native path. The universal `~/.agents/skills/` path works as a fallback for Codex CLI, Gemini CLI, OpenCode, Goose, Cline, Roo Code, and Kilo Code.
 
 ### Per-project install
 
@@ -253,7 +269,7 @@ git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .cursor/skil
 git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .windsurf/rules/agent-skill-creator
 
 # Cline
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .clinerules/agent-skill-creator
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .clinerules/skills/agent-skill-creator
 
 # Kiro
 git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .kiro/skills/agent-skill-creator
@@ -263,6 +279,15 @@ git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .trae/rules/
 
 # Roo Code
 git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .roo/skills/agent-skill-creator
+
+# Kilo Code
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .kilocode/skills/agent-skill-creator
+
+# Junie (JetBrains)
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .junie/skills/agent-skill-creator
+
+# Antigravity (note: .agent/ singular, NOT .agents/)
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .agent/skills/agent-skill-creator
 ```
 
 ### Cursor — global workaround
@@ -297,7 +322,7 @@ Every skill generated by agent-skill-creator includes a cross-platform installer
 ./install.sh --dry-run                # Preview without installing
 ```
 
-The installer is POSIX-compatible (works in bash, dash, zsh, ash), handles all 14 platforms, and creates a universal `~/.agents/skills/` symlink after every install for cross-tool discoverability.
+The installer is POSIX-compatible (works in bash, dash, zsh, ash), handles all 20+ platforms, and creates a universal `~/.agents/skills/` symlink after every install for cross-tool discoverability.
 
 ### Claude Desktop / claude.ai
 
@@ -461,7 +486,7 @@ All commands use exit code `0` for success, `1` for errors. All support `--json`
 
 **SKILL.md too long**: Move detailed content to `references/` files and link from the main SKILL.md.
 
-**Platform not auto-detected**: Use `--platform cursor` (or copilot, windsurf, codex, gemini, kiro, trae, goose, opencode, roo-code, antigravity, universal) to specify explicitly.
+**Platform not auto-detected**: Use `--platform cursor` (or copilot, windsurf, codex, gemini, kiro, trae, goose, opencode, roo-code, kilo-code, factory, junie, cline, antigravity, universal) to specify explicitly.
 
 **Install to all tools at once**: Inside a generated skill, use `./install.sh --all` to install to every detected platform in one command.
 
@@ -477,7 +502,7 @@ agent-skill-creator/
   scripts/
     bootstrap.sh                # Curl one-liner bootstrap (installs everywhere)
     install-skill.sh            # Universal skill installer (any skill, any tool)
-    install-template.sh         # Template for generated installers (14 platforms)
+    install-template.sh         # Template for generated installers (20+ platforms)
     validate.py                 # Spec compliance checker
     security_scan.py            # Security scanner
     staleness_check.py          # Staleness detection (review, deps, drift)
