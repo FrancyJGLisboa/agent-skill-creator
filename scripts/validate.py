@@ -376,6 +376,20 @@ def validate_skill(skill_path: str) -> dict:
                 "metadata.review_interval_days) for staleness tracking"
             )
 
+    # activation field (harness factory v1.1)
+    if not _field_exists_in_frontmatter(frontmatter, "activation"):
+        warnings.append(
+            "'activation' field is missing from frontmatter. "
+            "Add 'activation: /{skill-name}' for namespace enforcement."
+        )
+
+    # provenance field (harness factory v1.1)
+    if not _field_exists_in_frontmatter(frontmatter, "provenance"):
+        warnings.append(
+            "'provenance' field is missing from frontmatter. "
+            "Add provenance metadata (maintainer, version, created, source_references)."
+        )
+
     # Referenced local files
     if body is not None:
         local_links = _extract_local_links(body)
