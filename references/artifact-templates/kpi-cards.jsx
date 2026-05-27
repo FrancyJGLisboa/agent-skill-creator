@@ -1,7 +1,7 @@
 import React from 'react';
 
 /*
- * KPI cards template used by agent-skill-creator v5.
+ * KPI cards template used by agent-skill-creator v6.
  * Phase 2 replaces AGENT_SKILL_DATA with skill-specific data shape
  * instructions for the cards array.
  */

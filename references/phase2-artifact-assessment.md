@@ -9,7 +9,7 @@ and if so, which of the four bundled templates to inline.
 
 - `description` (str) — the user's workflow description (raw or normalized
   by Phase 1 Triage)
-- `domain` (str | None) — the domain Phase 1 identified (unused in v5.0;
+- `domain` (str | None) — the domain Phase 1 identified (unused in v6.0;
   reserved for future heuristics)
 
 ## Step 1 — Call the detector
@@ -103,7 +103,7 @@ When forced, the detector is not called and the named template is used
 directly. Invalid `--artifact` values are rejected with a clear error
 listing the four valid template names.
 
-## Out of scope for v5.0
+## Out of scope for v6.0
 
 - Per-skill artifact customization (changing the JSX beyond the
   substitution marker)

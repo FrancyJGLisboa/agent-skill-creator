@@ -4,7 +4,7 @@
 
 **DEFINE** autonomously which analyses the agent will perform and how.
 
-## Artifact Opportunity Assessment (new in v5.0)
+## Artifact Opportunity Assessment (new in v6.0)
 
 After domain identification and before SKILL.md generation, Phase 2 calls
 the artifact detector to determine whether the skill's output is

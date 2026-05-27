@@ -1,7 +1,7 @@
 """v4 regression suite.
 
-Confirms that v4 skill files still parse cleanly under the v5 validator
-and that the v5 artifact detector does not crash when given v4-era
+Confirms that v4 skill files still parse cleanly under the v6 validator
+and that the v6 artifact detector does not crash when given v4-era
 workflow descriptions.
 
 This is not a behavioral regression test (no LLM invocation). It is a
@@ -75,7 +75,7 @@ class V4RegressionTest(unittest.TestCase):
 
         self.assertEqual(
             failures, [],
-            "Existing v4 skills must still validate under the v5 validator:\n"
+            "Existing v4 skills must still validate under the v6 validator:\n"
             + "\n".join(failures),
         )
         self.assertGreater(
@@ -88,7 +88,7 @@ class V4RegressionTest(unittest.TestCase):
 
         It is acceptable for the detector to return None (no artifact) — most
         v4 skills are workflow-style with no visual output. What is NOT
-        acceptable is an exception, which would break the v5 Phase 2 pipeline
+        acceptable is an exception, which would break the v6 Phase 2 pipeline
         for users upgrading existing v4 forks.
         """
         for skill in self.skills:

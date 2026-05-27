@@ -12,7 +12,7 @@ description: >-
 license: MIT
 metadata:
   author: Francy Lisboa Charuto
-  version: 4.0.0
+  version: 6.0.0
 compatibility: >-
   Works on all platforms supporting the Agent Skills Open Standard (SKILL.md):
   Claude Code, GitHub Copilot CLI, VS Code Copilot, Cursor, Windsurf, Cline,

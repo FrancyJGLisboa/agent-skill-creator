@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Artifact opportunity detector for agent-skill-creator v5.
+"""Artifact opportunity detector for agent-skill-creator v6.
 
 Public API: detect_artifact(description, domain=None)
 
@@ -84,7 +84,7 @@ def detect_artifact(description: str, domain: str | None = None) -> Template:
     bars. Comparative is the most generic positive signal and acts as a
     fallback.
 
-    To add a new template in v5.1+: define KEYWORDS, a _has_X_signal
+    To add a new template in v6.1+: define KEYWORDS, a _has_X_signal
     helper, and insert an `if` branch here at the priority that matches
     the new template's information density relative to the others.
     """

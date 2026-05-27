@@ -1,7 +1,7 @@
 import React from 'react';
 
 /*
- * Data table template used by agent-skill-creator v5 as the baseline
+ * Data table template used by agent-skill-creator v6 as the baseline
  * artifact when data is structured but no chart fits.
  * Phase 2 replaces AGENT_SKILL_DATA with skill-specific column and
  * row instructions.

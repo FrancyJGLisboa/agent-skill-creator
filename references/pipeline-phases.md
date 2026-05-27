@@ -300,7 +300,7 @@ Save everything in `references/api-guide.md` of the skill to be created.
 
 ## Additional Steps
 
-- **(new in v5.0)** Artifact Opportunity Assessment — call
+- **(new in v6.0)** Artifact Opportunity Assessment — call
   `artifact_detector.detect_artifact(description, domain)`. If a template
   is returned, inline it into the SKILL.md body along with emission
   instructions. See `phase2-artifact-assessment.md`.

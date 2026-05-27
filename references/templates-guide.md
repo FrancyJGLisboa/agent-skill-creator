@@ -208,7 +208,7 @@ After creating the template files, register it by adding an entry to `references
 
 Templates are an optimization, not a replacement. The 5-phase pipeline always runs. Templates simply pre-populate the early phases with proven decisions.
 
-## Artifact templates (v5.0+)
+## Artifact templates (v6.0+)
 
 The four React templates under `artifact-templates/` are inlined by
 Phase 2 into generated SKILL.md files when the skill's output is
@@ -231,7 +231,7 @@ the skill will produce.
 
 ### Extending
 
-User-provided templates are not in scope for v5.0. Adding a fifth bundled
+User-provided templates are not in scope for v6.0. Adding a fifth bundled
 template requires:
 
 1. Add the `.jsx` file under `references/artifact-templates/`

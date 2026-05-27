@@ -1,4 +1,4 @@
-# agent-skill-creator v5.0 Artifacts-First Implementation Plan
+# agent-skill-creator v6.0 Artifacts-First Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -49,7 +49,7 @@ SKILL.md                                 # Reference Phase 2 artifact step
 references/phase2-design.md              # Document the new step
 references/pipeline-phases.md            # Update pipeline diagram and narrative
 references/templates-guide.md            # Document the four JSX templates
-README.md                                # v5 announcement section
+README.md                                # v6 announcement section
 ```
 
 ### Responsibilities
@@ -220,7 +220,7 @@ import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 /*
- * Line chart template used by agent-skill-creator v5.
+ * Line chart template used by agent-skill-creator v6.
  *
  * Phase 2 inlines this file into a generated SKILL.md and replaces the
  * AGENT_SKILL_DATA marker with skill-specific instructions describing
@@ -319,7 +319,7 @@ import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 /*
- * Bar chart template used by agent-skill-creator v5.
+ * Bar chart template used by agent-skill-creator v6.
  * Phase 2 replaces AGENT_SKILL_DATA with skill-specific data shape
  * instructions describing the category and value columns.
  */
@@ -405,7 +405,7 @@ Create `references/artifact-templates/kpi-cards.jsx`:
 import React from 'react';
 
 /*
- * KPI cards template used by agent-skill-creator v5.
+ * KPI cards template used by agent-skill-creator v6.
  * Phase 2 replaces AGENT_SKILL_DATA with skill-specific data shape
  * instructions for the cards array.
  */
@@ -488,7 +488,7 @@ Create `references/artifact-templates/data-table.jsx`:
 import React from 'react';
 
 /*
- * Data table template used by agent-skill-creator v5 as the baseline
+ * Data table template used by agent-skill-creator v6 as the baseline
  * artifact when data is structured but no chart fits.
  * Phase 2 replaces AGENT_SKILL_DATA with skill-specific column and
  * row instructions.
@@ -550,7 +550,7 @@ Expected: PASS — all four template test classes pass.
 git add references/artifact-templates/data-table.jsx scripts/tests/test_template_structure.py
 git commit -m "feat: add data-table artifact template
 
-Completes the four templates required for v5.0. All four pass
+Completes the four templates required for v6.0. All four pass
 structural tests (substitution marker present, default export,
 required libraries referenced)."
 ```
@@ -729,7 +729,7 @@ Create `scripts/artifact_detector.py`:
 
 ```python
 #!/usr/bin/env python3
-"""Artifact opportunity detector for agent-skill-creator v5.
+"""Artifact opportunity detector for agent-skill-creator v6.
 
 Public API: detect_artifact(description, domain=None)
 
@@ -750,7 +750,7 @@ def detect_artifact(description: str, domain: str | None = None) -> Template:
 
     Args:
         description: The user's workflow description (natural language).
-        domain: Optional domain hint from Phase 1 Discovery (unused in v5.0).
+        domain: Optional domain hint from Phase 1 Discovery (unused in v6.0).
 
     Returns:
         One of {"line-chart", "bar-chart", "kpi-cards", "data-table"} or None.
@@ -1184,7 +1184,7 @@ Expected: PASS — all targeted tests AND the accuracy gate.
 git add scripts/artifact_detector.py scripts/tests/test_artifact_detector.py
 git commit -m "test: enforce ≥85% accuracy gate on labeled examples
 
-Detector achieves the threshold required by the v5 design spec
+Detector achieves the threshold required by the v6 design spec
 (Success Criterion #5)."
 ```
 
@@ -1213,7 +1213,7 @@ and if so, which of the four bundled templates to inline.
 
 - `description` (str) — the user's workflow description (raw or normalized
   by Phase 1 Triage)
-- `domain` (str | None) — the domain Phase 1 identified (unused in v5.0;
+- `domain` (str | None) — the domain Phase 1 identified (unused in v6.0;
   reserved for future heuristics)
 
 ## Step 1 — Call the detector
@@ -1307,7 +1307,7 @@ When forced, the detector is not called and the named template is used
 directly. Invalid `--artifact` values are rejected with a clear error
 listing the four valid template names.
 
-## Out of scope for v5.0
+## Out of scope for v6.0
 
 - Per-skill artifact customization (changing the JSX beyond the
   substitution marker)
@@ -1367,7 +1367,7 @@ The user can override with `--no-artifact` or `--artifact <template>`.
 Add a new section near the top of Phase 2 design titled "Artifact Opportunity Assessment" with content pointing at the new reference:
 
 ```markdown
-## Artifact Opportunity Assessment (new in v5.0)
+## Artifact Opportunity Assessment (new in v6.0)
 
 After domain identification and before SKILL.md generation, Phase 2 calls
 the artifact detector to determine whether the skill's output is
@@ -1389,7 +1389,7 @@ they use is documented in `references/claude-artifact-format.md`.
 In `pipeline-phases.md`, find the section describing Phase 2. Add a bullet to the Phase 2 step list:
 
 ```markdown
-- **(new in v5.0)** Artifact Opportunity Assessment — call
+- **(new in v6.0)** Artifact Opportunity Assessment — call
   `artifact_detector.detect_artifact(description, domain)`. If a template
   is returned, inline it into the SKILL.md body along with emission
   instructions. See `phase2-artifact-assessment.md`.
@@ -1566,7 +1566,7 @@ Synthetic entries flagged where the repo lacks concrete examples."
 
 ## Task 17: Write v4 regression test
 
-The regression test confirms that v4 skills already in the repo install and parse under v5 without modification. It does NOT invoke an LLM; it operates on the SKILL.md files directly.
+The regression test confirms that v4 skills already in the repo install and parse under v6 without modification. It does NOT invoke an LLM; it operates on the SKILL.md files directly.
 
 **Files:**
 - Create: `scripts/tests/test_v4_regression.py`
@@ -1579,7 +1579,7 @@ Create `scripts/tests/test_v4_regression.py`:
 """v4 regression suite.
 
 Confirms v4 skill files (a) parse with the existing validator after the
-v5 changes and (b) the artifact detector does not crash when given
+v6 changes and (b) the artifact detector does not crash when given
 their original descriptions.
 
 This is not a behavioral regression test (no LLM invocation). It is a
@@ -1652,7 +1652,7 @@ Expected: PASS. If `validate_skill` has a different signature, adapt the test bo
 git add scripts/tests/test_v4_regression.py
 git commit -m "test: v4 regression suite — validator + detector safety
 
-Confirms v4 skills still validate after v5 changes and the detector
+Confirms v4 skills still validate after v6 changes and the detector
 handles v4-era descriptions without crashing."
 ```
 
@@ -1696,7 +1696,7 @@ This is a manual verification task. The agent records the outcome; a human runs 
 **Files:**
 - Create: `docs/superpowers/verification/2026-05-27-claude-code-artifact-render.md`
 
-- [ ] **Step 1: Generate a fresh skill using the v5 pipeline**
+- [ ] **Step 1: Generate a fresh skill using the v6 pipeline**
 
 Open Claude Code in a fresh session. Invoke:
 ```
@@ -1730,7 +1730,7 @@ mkdir -p docs/superpowers/verification
 git add docs/superpowers/verification/
 git commit -m "verify: Claude Code artifact render works end-to-end
 
-Manual verification of Success Criterion #3 from the v5 spec."
+Manual verification of Success Criterion #3 from the v6 spec."
 ```
 
 ---
@@ -1742,7 +1742,7 @@ Manual verification of Success Criterion #3 from the v5 spec."
 
 - [ ] **Step 1: Take the skill generated in Task 19 to a non-Claude host**
 
-Open Cursor, Cline, or Codex CLI. Install the skill manually using the same install script v5 provides. Invoke the skill with the same canned data.
+Open Cursor, Cline, or Codex CLI. Install the skill manually using the same install script v6 provides. Invoke the skill with the same canned data.
 
 - [ ] **Step 2: Confirm the output is still useful**
 
@@ -1770,7 +1770,7 @@ Append to `docs/superpowers/verification/2026-05-27-claude-code-artifact-render.
 git add docs/superpowers/verification/2026-05-27-claude-code-artifact-render.md
 git commit -m "verify: honest degradation confirmed in non-Claude host
 
-Manual verification of Success Criterion #4 from the v5 spec."
+Manual verification of Success Criterion #4 from the v6 spec."
 ```
 
 ---
@@ -1793,7 +1793,7 @@ The existing guide covers the README activation template. Add a new section for 
 Append to `references/templates-guide.md`:
 
 ```markdown
-## Artifact templates (v5.0+)
+## Artifact templates (v6.0+)
 
 The four React templates under `artifact-templates/` are inlined by
 Phase 2 into generated SKILL.md files when the skill's output is
@@ -1816,7 +1816,7 @@ the skill will produce.
 
 ### Extending
 
-User-provided templates are not in scope for v5.0. Adding a fifth bundled
+User-provided templates are not in scope for v6.0. Adding a fifth bundled
 template requires:
 
 1. Add the `.jsx` file under `references/artifact-templates/`
@@ -1835,7 +1835,7 @@ git commit -m "docs: document the four bundled artifact templates"
 
 ---
 
-## Task 22: Update README with v5 announcement section
+## Task 22: Update README with v6 announcement section
 
 **Files:**
 - Modify: `README.md`
@@ -1846,16 +1846,16 @@ git commit -m "docs: document the four bundled artifact templates"
 head -80 /Users/francylisboacharuto/agent-skill-creator/README.md
 ```
 
-The README starts with a project description. Add a "v5.0 — Artifacts" section near the top, after the headline but before usage instructions.
+The README starts with a project description. Add a "v6.0 — Artifacts" section near the top, after the headline but before usage instructions.
 
-- [ ] **Step 2: Add the v5 announcement section**
+- [ ] **Step 2: Add the v6 announcement section**
 
 Insert into README.md right after the project tagline:
 
 ```markdown
-## v5.0 — Artifacts (new)
+## v6.0 — Artifacts (new)
 
-Skills generated by agent-skill-creator v5 can produce **interactive
+Skills generated by agent-skill-creator v6 can produce **interactive
 React artifacts** when invoked in Claude Code (and Claude.ai). When a
 skill's output is visualizable — time series, categorical comparisons,
 KPIs, structured rows — Phase 2 automatically inlines one of four
@@ -1883,7 +1883,7 @@ See [`docs/superpowers/specs/2026-05-27-agent-skill-creator-v5-artifacts-first-d
 
 ```bash
 git add README.md
-git commit -m "docs: announce v5.0 — artifact-emitting skills in README"
+git commit -m "docs: announce v6.0 — artifact-emitting skills in README"
 ```
 
 ---
@@ -1914,7 +1914,7 @@ For each spec section in `docs/superpowers/specs/2026-05-27-agent-skill-creator-
 | §8 Success criteria 1-7 | See breakdown below |
 | §9 Non-goals | Plan honors by omission |
 | §10 Risks | Task 1 mitigates the Claude protocol risk |
-| §11 Open questions Q1-Q4 | Task 1 (Q1, Q2, Q3); Q4 deferred to v5.1 |
+| §11 Open questions Q1-Q4 | Task 1 (Q1, Q2, Q3); Q4 deferred to v6.1 |
 | §12 Milestones M1-M7 | All covered |
 
 Success criteria mapping:
@@ -1935,7 +1935,7 @@ Add tasks inline at the appropriate place in the plan if any spec coverage gap i
 ```bash
 echo "Spec coverage audit completed 2026-05-27" >> docs/superpowers/verification/2026-05-27-claude-code-artifact-render.md
 git add docs/superpowers/verification/2026-05-27-claude-code-artifact-render.md
-git commit -m "verify: spec coverage audit complete — all v5 spec sections covered by plan"
+git commit -m "verify: spec coverage audit complete — all v6 spec sections covered by plan"
 ```
 
 ---
@@ -1959,14 +1959,14 @@ Expected: ALL PASS.
 git status
 ```
 
-Expected: working tree clean OR only files that the user staged independently (pre-existing M/?? from before v5 work started). v5 files should all be committed.
+Expected: working tree clean OR only files that the user staged independently (pre-existing M/?? from before v6 work started). v6 files should all be committed.
 
 - [ ] **Step 3: Tag the release (DO NOT push without user confirmation)**
 
 ```bash
-git tag -a v5.0.0 -m "v5.0 — artifacts-first release
+git tag -a v6.0.0 -m "v6.0 — artifacts-first release
 
-Skills generated by agent-skill-creator v5 produce interactive React
+Skills generated by agent-skill-creator v6 produce interactive React
 artifacts in Claude environments and degrade honestly elsewhere.
 
 See docs/superpowers/specs/2026-05-27-agent-skill-creator-v5-artifacts-first-design.md
@@ -1983,7 +1983,7 @@ Report to the user:
 - Test suite: ALL PASS
 - Manual verifications: Tasks 19, 20 documented
 - Accuracy gate: actual % recorded
-- Tag created locally as `v5.0.0` (not pushed)
+- Tag created locally as `v6.0.0` (not pushed)
 - Ready for review and release decision
 
 ---

@@ -1,4 +1,4 @@
-# v5.0 Test Suite Summary — 2026-05-27
+# v6.0 Test Suite Summary — 2026-05-27
 
 ## Final test counts
 
@@ -18,7 +18,7 @@
 ## v4 regression
 
 - v4 skills tested: 10 fixture entries (1 real + 9 synthetic)
-- Real-path skills validated: 1/1 — `references/examples/stock-analyzer/SKILL.md` validates with `valid=True` under the v5 validator. (Warnings on missing `-skill` suffix, `license`, `metadata`, and `AGENTS.md` are non-blocking and expected for v4-era skills.)
+- Real-path skills validated: 1/1 — `references/examples/stock-analyzer/SKILL.md` validates with `valid=True` under the v6 validator. (Warnings on missing `-skill` suffix, `license`, `metadata`, and `AGENTS.md` are non-blocking and expected for v4-era skills.)
 - Detector did not crash on any v4 description; all 10 returned a value in the allowed set `{line-chart, bar-chart, kpi-cards, data-table, None}`.
 
 ## Notes
@@ -32,7 +32,7 @@ All spec sections traced to a plan task. No gaps found.
 
 | Spec section | Covered by | Notes |
 |---|---|---|
-| §1 Mission and positioning | Task 22 | README v5 announcement section |
+| §1 Mission and positioning | Task 22 | README v6 announcement section |
 | §2 UX invariants | Tasks 14, 17 | Phase 2 wire preserves UX; v4 regression confirms no breakage |
 | §3.1 No new abstractions | Covered by omission | Plan introduces zero new abstractions; verified by file inventory |
 | §3.2 One new pipeline step | Tasks 13, 14 | `phase2-artifact-assessment.md` written; Phase 2 wired in SKILL.md + phase2-design.md + pipeline-phases.md |
@@ -55,7 +55,7 @@ All spec sections traced to a plan task. No gaps found.
 | §8 SC3 (artifact e2e Claude Code) | Task 19 (MANUAL) | Pending human action |
 | §8 SC4 (honest degradation) | Task 20 (MANUAL) | Pending human action |
 | §8 SC5 (detector ≥85%) | Task 12 | Achieved 92% (46/50) |
-| §8 SC6 (cross-platform install) | Task 17 | install.sh/install.ps1 untouched by v5; 20+ platform claim preserved |
+| §8 SC6 (cross-platform install) | Task 17 | install.sh/install.ps1 untouched by v6; 20+ platform claim preserved |
 | §8 SC7 (verification task completed) | Task 1 (MANUAL) | Pending human action |
 | §9 Non-goals | Covered by omission | No new files for capability registry, axis prefixes, custom protocols, etc. — verified by inventory |
 | §10.1 Claude protocol risk | Task 1 (MANUAL) | Empirical pinning happens during the manual M1 capture |

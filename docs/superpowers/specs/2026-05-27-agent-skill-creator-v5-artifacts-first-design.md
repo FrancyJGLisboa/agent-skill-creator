@@ -1,21 +1,21 @@
-# agent-skill-creator v5.0 — Artifacts-First Design
+# agent-skill-creator v6.0 — Artifacts-First Design
 
 **Status:** Draft for review
 **Date:** 2026-05-27
 **Author:** Francy Lisboa Charuto (brainstormed with Claude)
-**Supersedes:** Prior v5 spec drafts focused on five-axis composability
+**Supersedes:** Prior v6 spec drafts focused on five-axis composability
 
 ---
 
 ## 1. Mission and positioning
 
-v5 is the first agent skill creator that generates skills which emit
+v6 is the first agent skill creator that generates skills which emit
 interactive React artifacts in Claude Code (with Claude.ai web as a stretch
 target if the same emission format works there — to be verified). Outside
 Claude (Cursor, Cline, Codex CLI, Gemini CLI, etc.), skills degrade honestly
 to formatted markdown.
 
-This is a deliberate scope reduction from the prior v5 drafts. The earlier
+This is a deliberate scope reduction from the prior v6 drafts. The earlier
 spec proposed a five-axis composability model with capability registry,
 contracts, and a custom handoff protocol. Two issues forced a redesign:
 
@@ -26,13 +26,13 @@ contracts, and a custom handoff protocol. Two issues forced a redesign:
    consumer of the abstraction is the creator's own internals. That is code
    organization, not a product feature.
 
-The honest scope of v5 is: **v4 plus a new Phase 2 step that detects when a
+The honest scope of v6 is: **v4 plus a new Phase 2 step that detects when a
 skill's output is visualizable and inlines a React artifact emission template
 into the generated skill.**
 
 ### Headline
 
-"v5 — agent-skill-creator now generates skills that render dashboards in
+"v6 — agent-skill-creator now generates skills that render dashboards in
 Claude. Other hosts receive formatted markdown."
 
 Specific. Verifiable. Defensible against Anthropic Skills (markdown-only),
@@ -43,7 +43,7 @@ code required from the user).
 
 ## 2. UX invariants
 
-These cannot break, or v5.0 does not ship.
+These cannot break, or v6.0 does not ship.
 
 - **Same command, same UX as v4.** `/agent-skill-creator <description>`
   produces an installed skill, with no JSON manifest editing, no axis prefix,
@@ -52,9 +52,9 @@ These cannot break, or v5.0 does not ship.
   continue working on macOS, Linux, Windows; the supported hosts list stays
   at 20+.
 - **v4 skills keep working.** Skills authored under v4 install and execute
-  under v5 without modification. There is no migration tool because there is
+  under v6 without modification. There is no migration tool because there is
   no capability registry to migrate.
-- **Time to install does not regress.** A v5 skill creation from prompt to
+- **Time to install does not regress.** A v6 skill creation from prompt to
   installed-and-ready is ≤110% of the equivalent v4 timing.
 
 ### What the user sees that is new
@@ -77,7 +77,7 @@ naming convention. Any new frontmatter fields exposed in the install summary.
 
 ### 3.1 No new abstractions
 
-v5 deliberately does not introduce:
+v6 deliberately does not introduce:
 
 - A capability skill registry separate from the existing skill registry
 - An axis prefix system (no `dom/`, `cap/`, `fmt/`)
@@ -85,7 +85,7 @@ v5 deliberately does not introduce:
 - A composition manifest
 - Per-skill input/output schemas as a first-class concept
 
-If any of these become necessary later, they can be added in v6. For v5.0,
+If any of these become necessary later, they can be added in v6. For v6.0,
 the simplest design that delivers artifact output is the design.
 
 ### 3.2 One new pipeline step
@@ -98,7 +98,7 @@ The step answers two questions:
 
 1. Is this skill's expected output visualizable? (heuristic, see §3.4)
 2. If yes, which artifact template fits? (line chart, bar chart, table, KPI
-   cards, or none for v5.0)
+   cards, or none for v6.0)
 
 If the answer to (1) is yes, the chosen template is inlined into the
 SKILL.md being generated. The skill's body gets instructions like: "When
@@ -110,7 +110,7 @@ generated it.
 
 ### 3.3 Artifact emission target
 
-v5.0 targets exactly one rendering environment: **Claude Code in-chat
+v6.0 targets exactly one rendering environment: **Claude Code in-chat
 artifact rendering.** The implementation plan must include an explicit
 verification task to confirm the exact emission format Claude Code expects.
 This is non-negotiable — the previous spec was blocked on having invented a
@@ -143,12 +143,12 @@ a baseline when nothing else fits but data is structured).
 
 Implementation: a Python script in `scripts/artifact_detector.py` that takes
 the parsed Phase 1 Discovery output as input and returns either `None` or a
-template name. Heuristic is keyword-and-pattern-based for v5.0. A learned
+template name. Heuristic is keyword-and-pattern-based for v6.0. A learned
 classifier is not in scope.
 
 ### 3.5 Artifact templates
 
-Four templates ship in v5.0:
+Four templates ship in v6.0:
 
 - `references/artifact-templates/line-chart.jsx` — time series
 - `references/artifact-templates/bar-chart.jsx` — categorical comparisons
@@ -161,7 +161,7 @@ arrays that the Phase 2 generator replaces with skill-specific instructions
 on how to populate them.
 
 Templates are inlined into the generated SKILL.md. They do not live as
-separate installable units. If a user inspects a generated v5 skill, the
+separate installable units. If a user inspects a generated v6 skill, the
 React template is visible inside the SKILL.md alongside the domain
 instructions.
 
@@ -260,7 +260,7 @@ references/cross-platform-guide.md    # No new platforms
 registry/registry.json                # No schema changes
 ```
 
-The diff between v4 and v5 is intentionally small.
+The diff between v4 and v6 is intentionally small.
 
 ---
 
@@ -319,17 +319,17 @@ outputs).
 
 Critical for the 180+ forks. Select 10 representative v4 skills (the
 implementation plan picks the specific 10, preferring those exercised in
-existing examples or referenced in README), install them via v5's install
+existing examples or referenced in README), install them via v6's install
 flow, invoke them with canned data, and verify output matches the v4
 baseline byte-for-byte (excluding timestamps).
 
-If any v4 skill fails to install under v5, the release blocks.
+If any v4 skill fails to install under v6, the release blocks.
 
 ### 7.4 Manual verification
 
-Two manual checks required before tagging v5.0:
+Two manual checks required before tagging v6.0:
 
-1. Generate a skill in v5, install it, invoke it in Claude Code, and confirm
+1. Generate a skill in v6, install it, invoke it in Claude Code, and confirm
    the artifact renders visually. Capture the screenshot for release notes.
 2. Generate the same skill, install it, invoke it in Cursor (or another
    non-Claude host), and confirm the markdown analysis is useful even
@@ -339,15 +339,15 @@ Two manual checks required before tagging v5.0:
 
 ## 8. Success criteria (binary)
 
-All seven must be yes, or v5.0 does not ship.
+All seven must be yes, or v6.0 does not ship.
 
 1. **UX preserved.** Time from `/agent-skill-creator <input>` to installed
    skill is ≤110% of v4 on 20 sample inputs. ✓/✗
 2. **v4 forks not broken.** Suite of 10 popular v4 skills installs and
-   produces the same output under v5. ✓/✗
-3. **Artifact end-to-end works in Claude Code.** A v5-generated skill
+   produces the same output under v6. ✓/✗
+3. **Artifact end-to-end works in Claude Code.** A v6-generated skill
    visibly renders a React artifact when invoked. (Manual verification.) ✓/✗
-4. **Honest degradation in non-Claude hosts.** A v5-generated skill produces
+4. **Honest degradation in non-Claude hosts.** A v6-generated skill produces
    useful markdown output in Cursor or Cline. (Manual verification.) ✓/✗
 5. **Detector accuracy ≥85%.** On 50+ labeled examples. ✓/✗
 6. **Cross-platform install works.** install.sh on macOS and Linux,
@@ -358,7 +358,7 @@ All seven must be yes, or v5.0 does not ship.
 
 ---
 
-## 9. Non-goals for v5.0
+## 9. Non-goals for v6.0
 
 Each of these has been considered and explicitly excluded:
 
@@ -380,11 +380,11 @@ Each of these has been considered and explicitly excluded:
 - **Auto-observation.** No proactive skill suggestion. User invokes the
   creator explicitly.
 - **Marketplace for third-party templates.** Only the four bundled templates
-  in v5.0. Community templates can be considered in v5.1+.
+  in v6.0. Community templates can be considered in v6.1+.
 - **Telemetry to refine detection heuristics.** Optional follow-up, opt-in,
-  not blocking v5.0.
+  not blocking v6.0.
 
-If any of these are added later, they become explicit v5.x or v6 work.
+If any of these are added later, they become explicit v6.x or v6 work.
 
 ---
 
@@ -401,7 +401,7 @@ in compatibility notes, and treat template maintenance as ongoing work.
 
 A skill that should not have a chart gets one anyway. Mitigation: the
 `--no-artifact` flag lets the user override. Telemetry-based refinement is a
-v5.1 concern.
+v6.1 concern.
 
 ### 10.3 Marketing claim disputed
 
@@ -413,7 +413,7 @@ demo, not a feature comparison table.
 ### 10.4 Scope creep during implementation
 
 The temptation to bring back the capability registry "while we're at it"
-will be real. The non-goals list is the answer. v5.0 is deliberately small.
+will be real. The non-goals list is the answer. v6.0 is deliberately small.
 
 ---
 
@@ -429,7 +429,7 @@ implementation planning:
 - **Q3.** How are the four templates kept in sync if Anthropic changes the
   artifact stack (e.g., adds a new sandbox library)? Versioning policy
   needed.
-- **Q4.** Should v5 emit an artifact when the skill's input data is missing
+- **Q4.** Should v6 emit an artifact when the skill's input data is missing
   (the user invokes the skill without data)? Proposal: yes, with placeholder
   data clearly labeled — the artifact teaches the user what the skill
   produces. To be confirmed.
@@ -464,7 +464,7 @@ is sequential (M1 blocks M2, M3 is independent of M2 but blocks M4, etc.).
 
 ## 13. What this design does NOT promise
 
-To be explicit, lest implementation drift back into the prior v5 ambition:
+To be explicit, lest implementation drift back into the prior v6 ambition:
 
 - It does not promise composability as a user-visible feature.
 - It does not promise runtime validation.
@@ -475,8 +475,8 @@ To be explicit, lest implementation drift back into the prior v5 ambition:
 - It does not promise rendering in non-Claude hosts beyond honest text
   degradation.
 
-These were discussed, judged out of scope for v5.0, and intentionally
-excluded. If any of them become urgent, they become v5.1, v6, or a separate
+These were discussed, judged out of scope for v6.0, and intentionally
+excluded. If any of them become urgent, they become v6.1, v6, or a separate
 project.
 
 ---
@@ -512,23 +512,23 @@ verification.
 
 ---
 
-## Appendix B: Why "v5" and not "v4.1"
+## Appendix B: Why "v6" and not "v4.1"
 
 This change introduces a new category of output (artifacts) and a new
-pipeline step. It is larger than a patch but smaller than the prior v5
-draft. v5.0 still makes sense as a version name because:
+pipeline step. It is larger than a patch but smaller than the prior v6
+draft. v6.0 still makes sense as a version name because:
 
 - The pipeline gains a new phase step (architectural addition).
 - Users see a qualitatively new behavior (rendered charts vs. text only).
 - The marketing story is coherent at a major-version level.
 
 If the scope grows during implementation to include any of the deferred
-non-goals, the version remains v5; if scope shrinks to something less than
+non-goals, the version remains v6; if scope shrinks to something less than
 this design, it becomes v4.1.
 
 ---
 
-## Appendix C: Decisions explicitly reversed from prior v5 drafts
+## Appendix C: Decisions explicitly reversed from prior v6 drafts
 
 For audit clarity, these decisions changed during this brainstorm:
 

@@ -1,6 +1,6 @@
 # Claude Code Artifact Emission Format
 
-**Status:** PENDING — Task 1 (M1) of the v5 plan has not yet been
+**Status:** PENDING — Task 1 (M1) of the v6 plan has not yet been
 executed. This file exists as a stub so other docs that cite it do not
 dereference a missing path.
 
