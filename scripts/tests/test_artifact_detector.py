@@ -99,5 +99,30 @@ class NegativeSignalTest(unittest.TestCase):
         self.assertIsNone(detect_artifact("translate korean technical doc to english"))
 
 
+class LabeledAccuracyGate(unittest.TestCase):
+    ACCURACY_THRESHOLD = 0.85
+
+    def setUp(self) -> None:
+        self.examples = json.loads(FIXTURES.read_text())
+
+    def test_accuracy_meets_threshold(self) -> None:
+        correct = 0
+        misses: list[tuple[str, str | None, str | None]] = []
+        for example in self.examples:
+            actual = detect_artifact(example["description"])
+            if actual == example["expected"]:
+                correct += 1
+            else:
+                misses.append((example["description"], example["expected"], actual))
+
+        accuracy = correct / len(self.examples)
+        message = (
+            f"Accuracy {accuracy:.2%} below threshold "
+            f"{self.ACCURACY_THRESHOLD:.0%}. Misses:\n"
+            + "\n".join(f"  - {d!r}: expected={e!r} got={a!r}" for d, e, a in misses)
+        )
+        self.assertGreaterEqual(accuracy, self.ACCURACY_THRESHOLD, message)
+
+
 if __name__ == "__main__":
     unittest.main()

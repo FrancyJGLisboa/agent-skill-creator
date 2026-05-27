@@ -17,8 +17,9 @@ Template = str | None
 
 
 TEMPORAL_KEYWORDS = (
-    "trend", "over time", "over the last", "monthly", "weekly", "daily",
-    "hourly", "year over year", "month over month", "history", "historical",
+    "trend", "over time", "over the last", "over the past", "monthly",
+    "weekly", "daily", "hourly", "year over year", "year-over-year",
+    "month over month", "month-over-month", "history", "historical",
     "past week", "past month", "past quarter", "past year",
 )
 
@@ -55,9 +56,9 @@ def _has_kpi_signal(text: str) -> bool:
 # short common substrings (e.g. "log" inside "apology", "table" inside
 # "vegetable", "grid" inside "frigid").
 TABULAR_KEYWORDS = (
-    "listing", "log", "table", "grid", "status", "ticket", "invoice",
-    "invoices", "inventory", "shipment", "shipments", "fleet", "snapshot",
-    "audit results", "line items", "findings",
+    "listing", "log", "table", "grid", "status", "ticket", "tickets",
+    "invoice", "invoices", "inventory", "shipment", "shipments", "fleet",
+    "snapshot", "audit results", "line items", "findings",
 )
 
 _TABULAR_PATTERN = re.compile(
