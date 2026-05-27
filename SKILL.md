@@ -182,7 +182,12 @@ into the generated SKILL.md along with Claude's artifact emission
 protocol. The artifact renders in Claude environments; in other hosts the
 component source appears as fenced code and the markdown analysis is
 unchanged. See `references/phase2-artifact-assessment.md` for details.
-The user can override with `--no-artifact` or `--artifact <template>`.
+
+**Override flags** — parse the user's prompt for these tokens BEFORE calling the detector:
+- `--no-artifact` anywhere in the user's prompt: skip the assessment entirely and generate the skill without any artifact template, exactly as v4 did. Strip the token from the prompt before passing it to Phase 1.
+- `--artifact <name>` (where `<name>` is `line-chart`, `bar-chart`, `kpi-cards`, or `data-table`): skip the detector and inline the named template directly. If `<name>` is not one of the four valid names, reject with an error listing the four valid values and stop. Strip the flag and value from the prompt before passing it to Phase 1.
+
+When neither flag is present, call the detector and let it decide.
 
 ### Phase 3: Architecture
 
