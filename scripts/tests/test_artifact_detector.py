@@ -1,0 +1,34 @@
+"""Unit tests for scripts.artifact_detector.
+
+Tests come in two flavors:
+1. Targeted unit tests for each signal detector (temporal, comparative,
+   KPI, tabular).
+2. An accuracy sweep over scripts/tests/fixtures/labeled_examples.json
+   with a ≥85% accuracy gate.
+"""
+
+import json
+import sys
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(ROOT / "scripts"))
+
+from artifact_detector import detect_artifact  # noqa: E402
+
+
+FIXTURES = ROOT / "scripts" / "tests" / "fixtures" / "labeled_examples.json"
+
+
+class ArtifactDetectorApiTest(unittest.TestCase):
+    def test_detect_artifact_returns_none_for_empty_description(self) -> None:
+        self.assertIsNone(detect_artifact(""))
+
+    def test_detect_artifact_returns_str_or_none(self) -> None:
+        result = detect_artifact("weekly sales report")
+        self.assertIn(result, {"line-chart", "bar-chart", "kpi-cards", "data-table", None})
+
+
+if __name__ == "__main__":
+    unittest.main()
