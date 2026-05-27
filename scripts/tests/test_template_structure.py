@@ -64,5 +64,19 @@ class KpiCardsTemplateTest(unittest.TestCase):
         self.assertIn("export default", self.path.read_text())
 
 
+class DataTableTemplateTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.path = TEMPLATES_DIR / "data-table.jsx"
+
+    def test_template_file_exists(self) -> None:
+        self.assertTrue(self.path.exists(), f"Missing: {self.path}")
+
+    def test_template_has_substitution_marker(self) -> None:
+        self.assertIn(SUBSTITUTION_MARKER, self.path.read_text())
+
+    def test_template_exports_default_component(self) -> None:
+        self.assertIn("export default", self.path.read_text())
+
+
 if __name__ == "__main__":
     unittest.main()
