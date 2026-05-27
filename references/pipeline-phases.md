@@ -298,6 +298,13 @@ Save everything in `references/api-guide.md` of the skill to be created.
 
 **DEFINE** autonomously which analyses the skill will perform and how.
 
+## Additional Steps
+
+- **(new in v5.0)** Artifact Opportunity Assessment — call
+  `artifact_detector.detect_artifact(description, domain)`. If a template
+  is returned, inline it into the SKILL.md body along with emission
+  instructions. See `phase2-artifact-assessment.md`.
+
 ## Detailed Process
 
 ### Step 1: Brainstorm Use Cases

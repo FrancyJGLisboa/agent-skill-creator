@@ -174,6 +174,16 @@ Define 4-6 priority analyses covering 80% of use cases. For each: name, objectiv
 
 See `references/pipeline-phases.md` for detailed Phase 2 instructions.
 
+**Phase 2 includes an Artifact Opportunity Assessment step.** After the
+domain is identified, the creator runs `scripts/artifact_detector.py` on
+the description. If the output is visualizable (time series, comparison,
+KPIs, or structured rows), one of four bundled React templates is inlined
+into the generated SKILL.md along with Claude's artifact emission
+protocol. The artifact renders in Claude environments; in other hosts the
+component source appears as fenced code and the markdown analysis is
+unchanged. See `references/phase2-artifact-assessment.md` for details.
+The user can override with `--no-artifact` or `--artifact <template>`.
+
 ### Phase 3: Architecture
 
 Structure the skill using the Agent Skills Open Standard:

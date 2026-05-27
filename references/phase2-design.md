@@ -4,6 +4,22 @@
 
 **DEFINE** autonomously which analyses the agent will perform and how.
 
+## Artifact Opportunity Assessment (new in v5.0)
+
+After domain identification and before SKILL.md generation, Phase 2 calls
+the artifact detector to determine whether the skill's output is
+visualizable. If yes, one of four bundled React templates is inlined into
+the generated SKILL.md.
+
+The four templates: line-chart (temporal), bar-chart (comparative),
+kpi-cards (headline numbers), data-table (structured rows baseline).
+
+See `references/phase2-artifact-assessment.md` for the detector contract,
+inlining mechanics, and override flags.
+
+Templates live in `references/artifact-templates/`. The emission protocol
+they use is documented in `references/claude-artifact-format.md`.
+
 ## Detailed Process
 
 ### Step 1: Brainstorm Use Cases
