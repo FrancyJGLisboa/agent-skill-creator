@@ -26,6 +26,17 @@ def _has_temporal_signal(text: str) -> bool:
     return any(keyword in lowered for keyword in TEMPORAL_KEYWORDS)
 
 
+COMPARATIVE_KEYWORDS = (
+    " by ", "compare", "comparison", "across ", "per ", "breakdown",
+    "ranked", "ranking",
+)
+
+
+def _has_comparative_signal(text: str) -> bool:
+    lowered = " " + text.lower() + " "
+    return any(keyword in lowered for keyword in COMPARATIVE_KEYWORDS)
+
+
 def detect_artifact(description: str, domain: str | None = None) -> Template:
     """Return the artifact template name for the given skill description, or
     None if no artifact is appropriate.
@@ -34,4 +45,6 @@ def detect_artifact(description: str, domain: str | None = None) -> Template:
         return None
     if _has_temporal_signal(description):
         return "line-chart"
+    if _has_comparative_signal(description):
+        return "bar-chart"
     return None

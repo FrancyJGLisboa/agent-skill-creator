@@ -44,5 +44,21 @@ class TemporalSignalTest(unittest.TestCase):
         self.assertEqual(detect_artifact("hourly api latency for the past week"), "line-chart")
 
 
+class ComparativeSignalTest(unittest.TestCase):
+    def test_by_region_returns_bar_chart(self) -> None:
+        self.assertEqual(detect_artifact("revenue by region"), "bar-chart")
+
+    def test_by_category_returns_bar_chart(self) -> None:
+        self.assertEqual(detect_artifact("sales by product category"), "bar-chart")
+
+    def test_compare_returns_bar_chart(self) -> None:
+        self.assertEqual(detect_artifact("compare deployment success rate by environment"), "bar-chart")
+
+    def test_temporal_takes_precedence_over_comparative(self) -> None:
+        # "weekly ... by region" is both temporal and comparative.
+        # Temporal precedence is intentional (line is more informative for trends).
+        self.assertEqual(detect_artifact("weekly sales by region"), "line-chart")
+
+
 if __name__ == "__main__":
     unittest.main()
