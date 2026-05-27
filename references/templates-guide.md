@@ -207,3 +207,35 @@ After creating the template files, register it by adding an entry to `references
 | User provides a transcript of their workflow | Full pipeline with transcript processing |
 
 Templates are an optimization, not a replacement. The 5-phase pipeline always runs. Templates simply pre-populate the early phases with proven decisions.
+
+## Artifact templates (v5.0+)
+
+The four React templates under `artifact-templates/` are inlined by
+Phase 2 into generated SKILL.md files when the skill's output is
+visualizable.
+
+| Template | Use case | Library |
+|---|---|---|
+| `line-chart.jsx` | Time series (trends, history) | recharts |
+| `bar-chart.jsx` | Categorical comparisons | recharts |
+| `kpi-cards.jsx` | Headline numbers | none (plain JSX) |
+| `data-table.jsx` | Structured rows baseline | none (plain JSX) |
+
+### Substitution marker
+
+Every template contains a single marker `/* AGENT_SKILL_DATA */` where
+Phase 2 injects skill-specific data shape instructions. The placeholder
+data block immediately following the marker is intentionally rendered
+even when no real data is provided -- the artifact shows the user what
+the skill will produce.
+
+### Extending
+
+User-provided templates are not in scope for v5.0. Adding a fifth bundled
+template requires:
+
+1. Add the `.jsx` file under `references/artifact-templates/`
+2. Add a structural test class in `scripts/tests/test_template_structure.py`
+3. Add a signal in `scripts/artifact_detector.py` that maps to it
+4. Add labeled examples to `scripts/tests/fixtures/labeled_examples.json`
+5. Re-run the accuracy gate
