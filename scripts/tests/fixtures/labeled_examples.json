@@ -1,5 +1,5 @@
 [
-  {"description": "weekly sales report by region", "expected": "bar-chart"},
+  {"description": "weekly sales report by region", "expected": "line-chart"},
   {"description": "monthly revenue trend", "expected": "line-chart"},
   {"description": "executive KPI dashboard", "expected": "kpi-cards"},
   {"description": "inventory snapshot by warehouse", "expected": "data-table"},

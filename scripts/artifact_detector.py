@@ -74,15 +74,32 @@ def _has_tabular_signal(text: str) -> bool:
 def detect_artifact(description: str, domain: str | None = None) -> Template:
     """Return the artifact template name for the given skill description, or
     None if no artifact is appropriate.
+
+    Precedence (load-bearing, not accidental): temporal > KPI > tabular >
+    comparative > none. Rationale: time series carry the most information
+    per pixel, so they win when a temporal cadence is mentioned even if
+    other signals also fire. KPI cards convey headline numbers that
+    summarize rather than itemize. Tabular beats comparative because
+    structured rows of records read more naturally as a table than as
+    bars. Comparative is the most generic positive signal and acts as a
+    fallback.
+
+    To add a new template in v5.1+: define KEYWORDS, a _has_X_signal
+    helper, and insert an `if` branch here at the priority that matches
+    the new template's information density relative to the others.
     """
     if not description or not description.strip():
         return None
+    # Time series outranks all other signals.
     if _has_temporal_signal(description):
         return "line-chart"
+    # Headline numbers outrank categorical or tabular framings.
     if _has_kpi_signal(description):
         return "kpi-cards"
+    # Structured rows of records prefer a table over bars.
     if _has_tabular_signal(description):
         return "data-table"
+    # Generic comparison fallback.
     if _has_comparative_signal(description):
         return "bar-chart"
     return None
