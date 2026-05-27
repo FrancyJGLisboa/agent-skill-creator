@@ -74,5 +74,30 @@ class KpiSignalTest(unittest.TestCase):
         self.assertEqual(detect_artifact("top-level product north star metrics"), "kpi-cards")
 
 
+class TabularSignalTest(unittest.TestCase):
+    def test_listing_returns_data_table(self) -> None:
+        self.assertEqual(detect_artifact("outstanding invoices listing"), "data-table")
+
+    def test_inventory_levels_returns_data_table(self) -> None:
+        self.assertEqual(detect_artifact("current inventory levels by sku"), "data-table")
+
+    def test_status_table_returns_data_table(self) -> None:
+        self.assertEqual(detect_artifact("regulatory filings status grid"), "data-table")
+
+    def test_log_returns_data_table(self) -> None:
+        self.assertEqual(detect_artifact("customer escalation log"), "data-table")
+
+
+class NegativeSignalTest(unittest.TestCase):
+    def test_runbook_returns_none(self) -> None:
+        self.assertIsNone(detect_artifact("deploy runbook for the payments service"))
+
+    def test_email_returns_none(self) -> None:
+        self.assertIsNone(detect_artifact("draft an apology email to a client"))
+
+    def test_translation_returns_none(self) -> None:
+        self.assertIsNone(detect_artifact("translate korean technical doc to english"))
+
+
 if __name__ == "__main__":
     unittest.main()

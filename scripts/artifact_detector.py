@@ -10,6 +10,8 @@ Heuristic is keyword/pattern based. No external dependencies.
 
 from __future__ import annotations
 
+import re
+
 
 Template = str | None
 
@@ -49,6 +51,25 @@ def _has_kpi_signal(text: str) -> bool:
     return any(keyword in lowered for keyword in KPI_KEYWORDS)
 
 
+# Tabular keywords use word-boundary matching to avoid false positives on
+# short common substrings (e.g. "log" inside "apology", "table" inside
+# "vegetable", "grid" inside "frigid").
+TABULAR_KEYWORDS = (
+    "listing", "log", "table", "grid", "status", "ticket", "invoice",
+    "invoices", "inventory", "shipment", "shipments", "fleet", "snapshot",
+    "audit results", "line items", "findings",
+)
+
+_TABULAR_PATTERN = re.compile(
+    r"\b(" + "|".join(re.escape(k) for k in TABULAR_KEYWORDS) + r")\b",
+    re.IGNORECASE,
+)
+
+
+def _has_tabular_signal(text: str) -> bool:
+    return bool(_TABULAR_PATTERN.search(text))
+
+
 def detect_artifact(description: str, domain: str | None = None) -> Template:
     """Return the artifact template name for the given skill description, or
     None if no artifact is appropriate.
@@ -59,6 +80,8 @@ def detect_artifact(description: str, domain: str | None = None) -> Template:
         return "line-chart"
     if _has_kpi_signal(description):
         return "kpi-cards"
+    if _has_tabular_signal(description):
+        return "data-table"
     if _has_comparative_signal(description):
         return "bar-chart"
     return None
