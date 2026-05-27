@@ -60,5 +60,19 @@ class ComparativeSignalTest(unittest.TestCase):
         self.assertEqual(detect_artifact("weekly sales by region"), "line-chart")
 
 
+class KpiSignalTest(unittest.TestCase):
+    def test_kpi_returns_cards(self) -> None:
+        self.assertEqual(detect_artifact("executive KPI dashboard"), "kpi-cards")
+
+    def test_key_metrics_returns_cards(self) -> None:
+        self.assertEqual(detect_artifact("key metrics summary for finance team"), "kpi-cards")
+
+    def test_scorecard_returns_cards(self) -> None:
+        self.assertEqual(detect_artifact("operational health scorecard"), "kpi-cards")
+
+    def test_north_star_metrics_returns_cards(self) -> None:
+        self.assertEqual(detect_artifact("top-level product north star metrics"), "kpi-cards")
+
+
 if __name__ == "__main__":
     unittest.main()

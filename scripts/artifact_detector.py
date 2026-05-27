@@ -37,6 +37,18 @@ def _has_comparative_signal(text: str) -> bool:
     return any(keyword in lowered for keyword in COMPARATIVE_KEYWORDS)
 
 
+KPI_KEYWORDS = (
+    "kpi", "key metric", "key metrics", "scorecard", "headline number",
+    "north star", "top-level", "executive summary numbers", "highlights",
+    "sla scorecard",
+)
+
+
+def _has_kpi_signal(text: str) -> bool:
+    lowered = text.lower()
+    return any(keyword in lowered for keyword in KPI_KEYWORDS)
+
+
 def detect_artifact(description: str, domain: str | None = None) -> Template:
     """Return the artifact template name for the given skill description, or
     None if no artifact is appropriate.
@@ -45,6 +57,8 @@ def detect_artifact(description: str, domain: str | None = None) -> Template:
         return None
     if _has_temporal_signal(description):
         return "line-chart"
+    if _has_kpi_signal(description):
+        return "kpi-cards"
     if _has_comparative_signal(description):
         return "bar-chart"
     return None
