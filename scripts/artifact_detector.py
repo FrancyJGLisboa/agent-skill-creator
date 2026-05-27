@@ -14,17 +14,24 @@ from __future__ import annotations
 Template = str | None
 
 
+TEMPORAL_KEYWORDS = (
+    "trend", "over time", "over the last", "monthly", "weekly", "daily",
+    "hourly", "year over year", "month over month", "history", "historical",
+    "past week", "past month", "past quarter", "past year",
+)
+
+
+def _has_temporal_signal(text: str) -> bool:
+    lowered = text.lower()
+    return any(keyword in lowered for keyword in TEMPORAL_KEYWORDS)
+
+
 def detect_artifact(description: str, domain: str | None = None) -> Template:
     """Return the artifact template name for the given skill description, or
     None if no artifact is appropriate.
-
-    Args:
-        description: The user's workflow description (natural language).
-        domain: Optional domain hint from Phase 1 Discovery (unused in v5.0).
-
-    Returns:
-        One of {"line-chart", "bar-chart", "kpi-cards", "data-table"} or None.
     """
     if not description or not description.strip():
         return None
-    return None  # Stub: subsequent tasks implement signals.
+    if _has_temporal_signal(description):
+        return "line-chart"
+    return None

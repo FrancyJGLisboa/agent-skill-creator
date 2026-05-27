@@ -30,5 +30,19 @@ class ArtifactDetectorApiTest(unittest.TestCase):
         self.assertIn(result, {"line-chart", "bar-chart", "kpi-cards", "data-table", None})
 
 
+class TemporalSignalTest(unittest.TestCase):
+    def test_monthly_trend_returns_line_chart(self) -> None:
+        self.assertEqual(detect_artifact("monthly revenue trend"), "line-chart")
+
+    def test_weekly_over_time_returns_line_chart(self) -> None:
+        self.assertEqual(detect_artifact("weekly active users over the last quarter"), "line-chart")
+
+    def test_year_over_year_returns_line_chart(self) -> None:
+        self.assertEqual(detect_artifact("year over year revenue growth"), "line-chart")
+
+    def test_hourly_latency_returns_line_chart(self) -> None:
+        self.assertEqual(detect_artifact("hourly api latency for the past week"), "line-chart")
+
+
 if __name__ == "__main__":
     unittest.main()
