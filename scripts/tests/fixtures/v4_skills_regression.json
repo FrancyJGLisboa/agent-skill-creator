@@ -1,0 +1,72 @@
+[
+  {
+    "id": "stock-analyzer",
+    "description": "Analyze stocks and ETFs using RSI, MACD, and Bollinger Bands to generate buy/sell signals and compare ticker symbols",
+    "path": "references/examples/stock-analyzer/SKILL.md",
+    "expected_no_artifact": true,
+    "synthetic": false
+  },
+  {
+    "id": "sales-report-skill",
+    "description": "Generate the weekly sales report for the West region by pulling data from our CRM, cleaning it, and emailing a PDF summary",
+    "path": null,
+    "expected_no_artifact": true,
+    "synthetic": true
+  },
+  {
+    "id": "deploy-checklist-skill",
+    "description": "Walk an engineer through the production deployment runbook, asking about migrations, feature flags, rollback plan, and on-call coverage before approval",
+    "path": null,
+    "expected_no_artifact": true,
+    "synthetic": true
+  },
+  {
+    "id": "quarterly-compliance-skill",
+    "description": "Compile the quarterly compliance documentation pack — policy attestations, audit log exports, access reviews — and produce a signed PDF for legal",
+    "path": null,
+    "expected_no_artifact": true,
+    "synthetic": true
+  },
+  {
+    "id": "customer-churn-skill",
+    "description": "Score account churn risk from CRM activity, support ticket volume, and product usage signals; flag accounts needing intervention",
+    "path": null,
+    "expected_no_artifact": true,
+    "synthetic": true
+  },
+  {
+    "id": "incident-runbook-skill",
+    "description": "Drive an on-call engineer through the incident response runbook — triage, comms, mitigation steps, post-incident writeup",
+    "path": null,
+    "expected_no_artifact": true,
+    "synthetic": true
+  },
+  {
+    "id": "invoice-processor-skill",
+    "description": "Process invoices from email attachments, extract line items via OCR, and post entries into the accounting ledger",
+    "path": null,
+    "expected_no_artifact": true,
+    "synthetic": true
+  },
+  {
+    "id": "meeting-notes-skill",
+    "description": "Take meeting transcripts and produce structured notes with decisions, action items, and owners assigned",
+    "path": null,
+    "expected_no_artifact": true,
+    "synthetic": true
+  },
+  {
+    "id": "api-doc-generator-skill",
+    "description": "Generate developer-facing API documentation from OpenAPI specs and codebase annotations, formatted as markdown for the docs site",
+    "path": null,
+    "expected_no_artifact": true,
+    "synthetic": true
+  },
+  {
+    "id": "data-cleaner-skill",
+    "description": "Clean a raw CSV export — normalize column names, parse dates, deduplicate by primary key, and write a cleaned file plus a row-level quality report",
+    "path": null,
+    "expected_no_artifact": true,
+    "synthetic": true
+  }
+]
