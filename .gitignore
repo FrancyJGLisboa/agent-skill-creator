@@ -43,6 +43,12 @@ agentdb.db
 test_*.py
 !test_agentdb_learning.py
 tests/
+# Whitelist v5 artifact assessment test suite (scripts/tests/)
+!scripts/tests/
+!scripts/tests/__init__.py
+!scripts/tests/test_*.py
+!scripts/tests/fixtures/
+!scripts/tests/fixtures/*.json
 
 # Generated format adapter files
 *.mdc
