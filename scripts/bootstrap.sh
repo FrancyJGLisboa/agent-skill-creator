@@ -70,6 +70,10 @@ detect_global_platforms() {
     if [ -d "$HOME/.factory" ]; then
         platforms="$platforms factory"
     fi
+    # Cursor
+    if [ -d "$HOME/.cursor" ]; then
+        platforms="$platforms cursor"
+    fi
     # Goose
     if [ -d "$HOME/.config/goose" ]; then
         platforms="$platforms goose"
@@ -94,6 +98,7 @@ platform_path() {
         roo-code)    echo "$HOME/.roo/skills/$SKILL_NAME" ;;
         kilo-code)   echo "$HOME/.kilocode/skills/$SKILL_NAME" ;;
         factory)     echo "$HOME/.factory/skills/$SKILL_NAME" ;;
+        cursor)      echo "$HOME/.cursor/rules/$SKILL_NAME" ;;
         goose)       echo "$HOME/.config/goose/skills/$SKILL_NAME" ;;
         opencode)    echo "$HOME/.config/opencode/skills/$SKILL_NAME" ;;
     esac
@@ -112,6 +117,7 @@ platform_display() {
         roo-code)    echo "Roo Code" ;;
         kilo-code)   echo "Kilo Code" ;;
         factory)     echo "Factory Droid" ;;
+        cursor)      echo "Cursor" ;;
         goose)       echo "Goose" ;;
         opencode)    echo "OpenCode" ;;
     esac

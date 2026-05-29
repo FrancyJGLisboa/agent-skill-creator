@@ -201,15 +201,9 @@ class BootstrapParityTest(unittest.TestCase):
             (ROOT / "scripts" / "bootstrap.ps1").read_text(encoding="utf-8")
         )
 
-    @unittest.expectedFailure
     def test_detected_platforms_match(self) -> None:
-        """Known finding: bootstrap.sh is missing Cursor detection (present in
-        bootstrap.ps1). Tracked here so that when bootstrap.sh adds it, this
-        test will UNEXPECTEDLY pass and prompt removal of the xfail marker.
-        Any *other* divergence between the two will cause the unexpectedFailure
-        machinery to still surface it (expectedFailure only suppresses the
-        specific failure documented here). Filter `_BOOTSTRAP_OS_SPECIFIC`
-        covers Windows-only entries (claude-desktop AppData detection)."""
+        """Hard parity gate. Filter `_BOOTSTRAP_OS_SPECIFIC` covers Windows-only
+        entries (claude-desktop AppData detection)."""
         self.assertEqual(self.sh_plats, self.ps1_plats)
 
     def test_bootstrap_sh_subset_of_ps1(self) -> None:
