@@ -37,6 +37,32 @@ See [`docs/superpowers/specs/2026-05-27-agent-skill-creator-v5-artifacts-first-d
 
 ---
 
+## Evals — every skill ships its own metric (new)
+
+Every generated skill now carries its own **eval spec** — the skill's loss
+function — at `evals/<name>.eval.md`, plus a `scripts/run_evals.py` runner.
+During Phase 2 the creator derives 3–6 **binary** (yes/no) checks — each graded
+by a shell command or flagged for an LLM judge — and at least 3 golden cases
+(seeded from your own files when you provide them). You give a one-word
+thumbs-up; the creator writes the rest. No metric engineering required.
+
+This is an instant **regression test**: run `python3 scripts/run_evals.py` any
+time to confirm the skill still holds against its golden baseline. It exits
+non-zero on failure, so it drops straight into CI.
+
+The spec is also formatted so the `autoresearch-universal` skill can optimize
+the skill against that metric with no reformatting — it consumes the criteria
+and validation cases directly. The creator prints a ready-to-run one-liner.
+
+**Honest limits:** the runner executes the deterministic `command` checks and
+scores an output you hand it; it does not yet run the skill itself end-to-end
+(no rollout harness), and it does not auto-grade `llm-judge` checks — those
+print as a checklist.
+
+On by default. To skip: `/agent-skill-creator --no-eval <description>`.
+
+---
+
 ## The Problem
 
 Every AI coding tool — Claude Code, GitHub Copilot, Cursor, Windsurf, Codex, Gemini, Kiro, and more — starts from zero. It doesn't know your company's processes, data sources, or compliance requirements. So every person re-explains the same workflows in every conversation. Knowledge stays in individual chat histories. New hires start from scratch.
@@ -53,48 +79,29 @@ Every AI coding tool — Claude Code, GitHub Copilot, Cursor, Windsurf, Codex, G
 
 ### 1. Install
 
-**Option A — One-liner (installs to all detected tools):**
+Pick your operating system, paste one line, done. It installs to every AI tool it finds on your machine.
+
+**macOS / Linux** — open Terminal and paste:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/FrancyJGLisboa/agent-skill-creator/main/scripts/bootstrap.sh | sh
 ```
 
-This clones to `~/.agents/skills/agent-skill-creator` and symlinks to every detected global platform (Claude Code, Copilot, Gemini CLI, Kiro, Cline, Roo Code, Kilo Code, Factory Droid, Goose, OpenCode). Run `git pull` once to update everywhere.
+**Windows (PowerShell)** — open PowerShell and paste:
 
-**Option B — Git clone (pick your tool):**
-
-```bash
-# Claude Code (global)
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.claude/skills/agent-skill-creator
-
-# GitHub Copilot (global — Copilot's native path)
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.copilot/skills/agent-skill-creator
-
-# GitHub Copilot (per-project)
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .github/skills/agent-skill-creator
-
-# Gemini CLI (native path)
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.gemini/skills/agent-skill-creator
-
-# Cursor (per-project only — no global path exists)
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .cursor/skills/agent-skill-creator
-
-# Codex CLI / OpenCode / Goose (universal path)
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.agents/skills/agent-skill-creator
+```powershell
+irm https://raw.githubusercontent.com/FrancyJGLisboa/agent-skill-creator/main/scripts/bootstrap.ps1 | iex
 ```
 
-**Option C — Already cloned? Symlink to all tools:**
+**Windows (Command Prompt)** — open CMD and paste:
 
-```bash
-cd agent-skill-creator
-./install.sh              # Symlink to all detected platforms
-./install.sh --dry-run    # Preview without changes
-./install.sh --uninstall  # Remove all symlinks
+```cmd
+powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/FrancyJGLisboa/agent-skill-creator/main/scripts/bootstrap.ps1 | iex"
 ```
 
-Each tool has its own native path. GitHub Copilot reads `~/.copilot/skills/` (global) and `.github/skills/` (per-project). Codex CLI, OpenCode, and Goose read `~/.agents/skills/`. See the full platform table below.
+That's it. The installer clones to `~/.agents/skills/agent-skill-creator` and links to every detected platform (Claude Code, Copilot, Gemini CLI, Kiro, Cline, Roo Code, Kilo Code, Factory Droid, Cursor, Goose, OpenCode). To update later, run `cd ~/.agents/skills/agent-skill-creator && git pull`.
 
-All 20+ platforms: [see full list below](#all-platforms).
+> **Advanced:** Want to install to a single tool, or already have a local clone? See [Advanced Install](#advanced-install) below.
 
 ### 2. Use it
 
@@ -230,6 +237,51 @@ The registry is a git repo on GitHub or GitLab. Clone it once, and every team me
 
 ---
 
+## Advanced Install
+
+If you prefer to install to a single tool, or you already cloned the repo:
+
+**Clone to a specific tool:**
+
+```bash
+# Claude Code
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.claude/skills/agent-skill-creator
+
+# GitHub Copilot
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.copilot/skills/agent-skill-creator
+
+# Gemini CLI
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.gemini/skills/agent-skill-creator
+
+# Cursor (per-project — no global path)
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .cursor/skills/agent-skill-creator
+
+# Universal path (Codex CLI, OpenCode, Goose, and others)
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.agents/skills/agent-skill-creator
+```
+
+**Already cloned? Link to all tools:**
+
+macOS / Linux:
+```bash
+cd agent-skill-creator
+./install.sh              # Link to all detected platforms
+./install.sh --dry-run    # Preview without changes
+./install.sh --uninstall  # Remove all links
+```
+
+Windows (PowerShell):
+```powershell
+cd agent-skill-creator
+.\install.ps1              # Link to all detected platforms
+.\install.ps1 -DryRun     # Preview without changes
+.\install.ps1 -Uninstall  # Remove all links
+```
+
+See the full platform table below for every supported tool and path.
+
+---
+
 ## All Platforms
 
 20+ tools supported. Same skill, same invocation, same results everywhere.
@@ -337,19 +389,29 @@ alias install-skills='mkdir -p .cursor/rules && ln -s ~/agent-skills/agent-skill
 
 Then in any project: `install-skills`. Updates propagate automatically via the symlink.
 
-### Using install.sh (for generated skills)
+### Using the installer (for generated skills)
 
-Every skill generated by agent-skill-creator includes a cross-platform installer:
+Every skill generated by agent-skill-creator includes a cross-platform installer — both `install.sh` (macOS/Linux) and `install.ps1` (Windows):
+
+**macOS / Linux:**
 
 ```bash
 ./install.sh                          # Auto-detect platform
 ./install.sh --platform cursor        # Force specific platform (auto-generates .mdc)
-./install.sh --platform windsurf      # Force Windsurf (auto-generates .md rule)
 ./install.sh --all                    # Install to every detected tool at once
 ./install.sh --dry-run                # Preview without installing
 ```
 
-The installer is POSIX-compatible (works in bash, dash, zsh, ash), handles all 20+ platforms, and creates a universal `~/.agents/skills/` symlink after every install for cross-tool discoverability.
+**Windows (PowerShell):**
+
+```powershell
+.\install.ps1                          # Auto-detect platform
+.\install.ps1 -Platform cursor         # Force specific platform
+.\install.ps1 -All                     # Install to every detected tool at once
+.\install.ps1 -DryRun                  # Preview without installing
+```
+
+Both installers handle all 20+ platforms and create a universal `~/.agents/skills/` link after every install for cross-tool discoverability.
 
 ### Claude Desktop / claude.ai
 
@@ -479,11 +541,13 @@ python3 scripts/staleness_check.py ./skill/ --json               # Machine-reada
 
 ### Install Any Skill (Universal Installer)
 
+**macOS / Linux:**
+
 ```bash
-# From git URL — clones and symlinks to all detected platforms
+# From git URL
 ./scripts/install-skill.sh https://github.com/someone/sales-report-skill.git
 
-# From local path — copies and symlinks to all detected platforms
+# From local path
 ./scripts/install-skill.sh ./sales-report-skill
 
 # To a specific platform only
@@ -492,6 +556,23 @@ python3 scripts/staleness_check.py ./skill/ --json               # Machine-reada
 # Preview / remove
 ./scripts/install-skill.sh ./sales-report-skill --dry-run
 ./scripts/install-skill.sh ./sales-report-skill --uninstall
+```
+
+**Windows (PowerShell):**
+
+```powershell
+# From git URL
+.\scripts\install-skill.ps1 https://github.com/someone/sales-report-skill.git
+
+# From local path
+.\scripts\install-skill.ps1 .\sales-report-skill
+
+# To a specific platform only
+.\scripts\install-skill.ps1 .\sales-report-skill -Platform cursor -Project
+
+# Preview / remove
+.\scripts\install-skill.ps1 .\sales-report-skill -DryRun
+.\scripts\install-skill.ps1 .\sales-report-skill -Uninstall
 ```
 
 ### Export
@@ -515,7 +596,7 @@ All commands use exit code `0` for success, `1` for errors. All support `--json`
 
 **Platform not auto-detected**: Use `--platform cursor` (or copilot, windsurf, codex, gemini, kiro, trae, goose, opencode, roo-code, kilo-code, factory, junie, cline, antigravity, universal) to specify explicitly.
 
-**Install to all tools at once**: Inside a generated skill, use `./install.sh --all` to install to every detected platform in one command.
+**Install to all tools at once**: Inside a generated skill, use `./install.sh --all` (macOS/Linux) or `.\install.ps1 -All` (Windows) to install to every detected platform in one command.
 
 ---
 
@@ -525,11 +606,16 @@ All commands use exit code `0` for success, `1` for errors. All support `--json`
 agent-skill-creator/
   SKILL.md                      # The skill definition (what the agent reads)
   README.md                     # This file
-  install.sh                    # Symlink self-installer (for cloned repos)
+  install.sh                    # Self-installer, macOS/Linux (for cloned repos)
+  install.ps1                   # Self-installer, Windows (for cloned repos)
   scripts/
-    bootstrap.sh                # Curl one-liner bootstrap (installs everywhere)
-    install-skill.sh            # Universal skill installer (any skill, any tool)
-    install-template.sh         # Template for generated installers (20+ platforms)
+    bootstrap.sh                # One-liner bootstrap, macOS/Linux
+    bootstrap.ps1               # One-liner bootstrap, Windows (PowerShell)
+    bootstrap.bat               # One-liner bootstrap, Windows (Command Prompt)
+    install-skill.sh            # Universal skill installer, macOS/Linux
+    install-skill.ps1           # Universal skill installer, Windows
+    install-template.sh         # Template for generated installers, macOS/Linux
+    install-template.ps1        # Template for generated installers, Windows
     validate.py                 # Spec compliance checker
     security_scan.py            # Security scanner
     staleness_check.py          # Staleness detection (review, deps, drift)
@@ -545,11 +631,7 @@ agent-skill-creator/
     templates-guide.md          # Template system
     interactive-mode.md         # Interactive wizard
     agentdb-integration.md      # Learning system
-    phase1-discovery.md         # Phase 1 deep dive
-    phase2-design.md            # Phase 2 deep dive
-    phase3-architecture.md      # Phase 3 deep dive
-    phase4-detection.md         # Phase 4 deep dive
-    phase5-implementation.md    # Phase 5 deep dive
+    phase4-detection.md         # Detection & keyword-design craft reference
     templates/                  # Skill templates
     examples/stock-analyzer/    # Example skill
   registry/                     # Shared skill catalog

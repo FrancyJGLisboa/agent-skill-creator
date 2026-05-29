@@ -151,9 +151,10 @@ The human removes the cognitive constraint by providing the raw material. The fa
 skill-name/
 ├── SKILL.md          # Starts with "# /skill-name" — the invocation trigger (~15 tools)
 ├── AGENTS.md         # Companion instruction file — AAIF format (~15 tools)
-├── scripts/          # Functional Python code (no placeholders)
+├── scripts/          # Functional code + run_pipeline.py (multi-script) + run_evals.py
 ├── references/       # Detailed documentation (loaded on demand)
 ├── assets/           # Templates, schemas, data files
+├── evals/            # Bundled eval spec: binary checks + golden cases
 ├── install.sh        # Cross-platform auto-detect installer
 └── README.md         # Multi-platform installation instructions
 ```
@@ -186,8 +187,21 @@ unchanged. See `references/phase2-artifact-assessment.md` for details.
 **Override flags** — parse the user's prompt for these tokens BEFORE calling the detector:
 - `--no-artifact` anywhere in the user's prompt: skip the assessment entirely and generate the skill without any artifact template, exactly as v4 did. Strip the token from the prompt before passing it to Phase 1.
 - `--artifact <name>` (where `<name>` is `line-chart`, `bar-chart`, `kpi-cards`, or `data-table`): skip the detector and inline the named template directly. If `<name>` is not one of the four valid names, reject with an error listing the four valid values and stop. Strip the flag and value from the prompt before passing it to Phase 1.
+- `--no-eval` anywhere in the user's prompt: skip the Eval Criteria Definition step (below); the generated skill carries no `evals/` directory and no `run_evals.py`. Strip the token from the prompt before passing it to Phase 1.
 
 When neither flag is present, call the detector and let it decide.
+
+**Phase 2 also includes an Eval Criteria Definition step.** After the use
+cases are defined, derive the skill's loss function: 3–6 binary checks (each
+graded by a shell `command` or flagged `llm-judge`) plus at least 3 golden
+cases — seeded from the user's artifacts when available, otherwise synthesized
+as input-only `pending-first-green` cases. Present them for a one-word
+thumbs-up. The spec is written in Phase 5 to `evals/<name>.eval.md` and ships
+with the skill as an instant regression test, formatted so
+`autoresearch-universal` consumes it directly (its rule 18). Eval generation is
+**on by default**; `--no-eval` opts out. See
+`references/phase2-eval-assessment.md` for criteria rules, the golden-case
+strategy, the JSON spec format, and the optimize handoff.
 
 ### Phase 3: Architecture
 
@@ -213,15 +227,15 @@ Create all files in this order:
 1. Create directory structure
 2. Write **SKILL.md** — starts with `# /skill-name`, includes trigger section with invocation examples, spec-compliant frontmatter
 3. Write **AGENTS.md** — companion instruction file for maximum cross-tool reach (~15 tools read AGENTS.md). Contains skill purpose, activation triggers, usage instructions, and a reference to SKILL.md for full details. Follows the AAIF-governed AGENTS.md format
-4. Implement Python scripts (functional, no placeholders, no TODOs)
+4. Implement Python scripts (functional, no placeholders, no TODOs). **For a multi-script pipeline**, also emit a single `scripts/run_pipeline.py` orchestrator that runs the steps in order and wires output→input **in code** — so the agent runs one command instead of sequencing steps from prose. Skip for genuinely interactive/branching skills. See `references/phase5-orchestration.md`
 5. Write references (detailed documentation the skill loads on demand)
 6. Write assets (templates, configs)
-7. Generate `install.sh` from `scripts/install-template.sh` (replace `{{SKILL_NAME}}` with actual name, `chmod +x`)
-8. Write `README.md` (multi-platform install instructions showing `git clone` to each tool's **native** path)
-9. Run **validation** against the official spec
-10. Run **security scan** for hardcoded keys and injection patterns
+7. **Emit the eval spec** (skip if `--no-eval`): write `evals/<name>.eval.md` (the binary checks + golden cases derived in Phase 2) and copy `scripts/run_evals_template.py` → the generated skill's `scripts/run_evals.py`. See `references/phase2-eval-assessment.md`
+8. Generate `install.sh` from `scripts/install-template.sh` (replace `{{SKILL_NAME}}` with actual name, `chmod +x`)
+9. Write `README.md` (multi-platform install instructions showing `git clone` to each tool's **native** path)
+10. Run **validation** against the official spec, **security scan** for hardcoded keys and injection patterns, **`python3 <skill>/scripts/check_pipeline.py <skill>`** (no compile or undeclared-dependency errors), and — if an eval spec was emitted — `python3 <skill>/scripts/run_evals.py --validate` (must report `VALID`)
 11. **Auto-install on the current platform** (see below)
-12. Report results to user with clear next steps
+12. Report results to user with clear next steps, including the eval/optimize one-liner from `references/phase2-eval-assessment.md`
 
 ### Auto-Install After Creation
 
@@ -736,7 +750,6 @@ The `-skill` suffix also serves as a signal to the agent: when it sees a repo or
 | `references/cross-platform-guide.md` | Platform compatibility matrix |
 | `references/export-guide.md` | Cross-platform export system |
 | `references/quality-standards.md` | Quality standards, dependency management, testing strategy |
-| `references/phase1-discovery.md` | Phase 1 deep-dive |
-| `references/phase2-design.md` | Phase 2 deep-dive |
-| `references/phase3-architecture.md` | Phase 3 deep-dive |
-| `references/phase4-detection.md` | Phase 4 deep-dive |
+| `references/phase4-detection.md` | Detection & keyword-design craft reference |
+| `references/phase2-eval-assessment.md` | Phase 2 eval-criteria step, golden-case strategy, spec format, autoresearch handoff |
+| `references/phase5-orchestration.md` | Phase 5 pipeline orchestration: single run_pipeline.py entry-point, deterministic sequencing, check_pipeline.py |

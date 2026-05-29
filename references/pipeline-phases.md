@@ -1,9 +1,9 @@
 # Pipeline Phases: Complete 5-Phase Skill Creation Reference
 
-**Version:** 4.0
-**Purpose:** Consolidated reference for the autonomous 5-phase skill creation pipeline used by agent-skill-creator v4.0.
+**Version:** 6.0
+**Purpose:** Consolidated reference for the autonomous 5-phase skill creation pipeline used by agent-skill-creator v6.0.
 
-This document contains the detailed instructions for each phase of skill creation, updated for the Agent Skills Open Standard (SKILL.md-first, no `-cskill` suffix, spec-compliant frontmatter, cross-platform support).
+This document contains the detailed instructions for each phase of skill creation, following the Agent Skills Open Standard (SKILL.md-first, `-skill` suffix on generated names, spec-compliant frontmatter, cross-platform support).
 
 ---
 
@@ -17,10 +17,10 @@ Phase 4: DETECTION       -> Generate description + keywords for activation
 Phase 5: IMPLEMENTATION  -> Create all files, validate, security scan
 ```
 
-**Key v4.0 principles:**
+**Key v6.0 principles:**
 
 - SKILL.md is the **primary file**, created first in Phase 5
-- Generated names use **kebab-case** (no `-cskill` suffix)
+- Generated names use **kebab-case** and **must end with `-skill`**
 - Name: 1-64 chars, lowercase letters, numbers, hyphens; must match directory
 - Description: 1-1024 chars; this IS the activation mechanism
 - Generated SKILL.md must be **<500 lines** (move detail to `references/`)
@@ -279,6 +279,89 @@ After deciding, dive deep into documentation via WebFetch:
 
 Save everything in `references/api-guide.md` of the skill to be created.
 
+## Discovery Examples
+
+### Example 1: US Agriculture
+
+**Input**: "US crop data"
+
+**Research**:
+```
+WebSearch: "USDA API agricultural data"
+→ Found: NASS QuickStats, ERS, FAS
+
+WebFetch: https://quickstats.nass.usda.gov/api
+→ Free, data since 1866, 1000/day rate limit
+
+WebFetch: https://www.ers.usda.gov/developer/
+→ Free, economic focus, less granular
+
+WebFetch: https://apps.fas.usda.gov/api
+→ International focus, not domestic
+```
+
+**Comparison**:
+| API | Coverage (US domestic) | Cost | Production Data | Score |
+|-----|---------------------------|-------|-------------------|-------|
+| NASS | ⭐⭐⭐⭐⭐ (excellent) | Free | ⭐⭐⭐⭐⭐ | 9.5/10 |
+| ERS | ⭐⭐⭐⭐ (good) | Free | ⭐⭐⭐ (economic) | 7.0/10 |
+| FAS | ⭐⭐ (international) | Free | ⭐⭐ (global) | 4.0/10 |
+
+**DECISION**: NASS QuickStats API
+- Best coverage for US domestic agriculture
+- Free with reasonable rate limit
+- Complete production, area, yield data
+
+### Example 2: Stock Market
+
+**Input**: "technical stock analysis"
+
+**Research**:
+```
+WebSearch: "stock market API free historical data"
+→ Alpha Vantage, Yahoo Finance, IEX Cloud, Polygon.io
+
+WebFetch: Alpha Vantage docs
+→ Free, 5 requests/min, 500/day
+
+WebFetch: Yahoo Finance (yfinance)
+→ Free, unlimited but unofficial
+
+WebFetch: IEX Cloud
+→ Freemium, good docs, 50k free credits/month
+```
+
+**Comparison**:
+| API | Data | Cost | Rate Limit | Official | Score |
+|-----|-------|-------|------------|---------|-------|
+| Alpha Vantage | Complete | Free | 500/day | ⭐⭐⭐ | 8.0/10 |
+| Yahoo Finance | Complete | Free | Unlimited | ❌ Unofficial | 7.5/10 |
+| IEX Cloud | Excellent | Freemium | 50k/month | ⭐⭐⭐⭐ | 8.5/10 |
+
+**DECISION**: IEX Cloud (free tier)
+- Official and reliable
+- 50k requests/month sufficient
+- Excellent documentation
+- Complete data (OHLCV + volume)
+
+### Example 3: Global Climate
+
+**Input**: "global climate data"
+
+**Research**:
+```
+WebSearch: "weather API historical data global"
+→ NOAA, OpenWeather, Weather.gov, Meteostat
+
+[Research each one...]
+```
+
+**DECISION**: NOAA Climate Data Online (CDO) API
+- Official (US government)
+- Free
+- Global and historical coverage (1900+)
+- Rate limit: 1000/day
+
 ## Phase 1 Checklist
 
 - [ ] Research completed (WebSearch + WebFetch)
@@ -304,6 +387,10 @@ Save everything in `references/api-guide.md` of the skill to be created.
   `artifact_detector.detect_artifact(description, domain)`. If a template
   is returned, inline it into the SKILL.md body along with emission
   instructions. See `phase2-artifact-assessment.md`.
+- **(new)** Eval Criteria Definition — derive 3–6 binary checks (each graded
+  by a shell `command` or flagged `llm-judge`) plus ≥3 golden cases that define
+  the skill's loss function. Written to `evals/<name>.eval.md` in Phase 5; on by
+  default, `--no-eval` opts out. See `phase2-eval-assessment.md`.
 
 ## Detailed Process
 
@@ -465,7 +552,7 @@ Save all specifications in `references/analysis-methods.md` of the skill.
 
 ### Step 1: Define Skill Name
 
-**Format:** Standard kebab-case per the Agent Skills Open Standard.
+**Format:** `{domain}-{objective}-skill` — kebab-case per the Agent Skills Open Standard.
 
 **Rules:**
 - 1-64 characters
@@ -473,14 +560,14 @@ Save all specifications in `references/analysis-methods.md` of the skill.
 - Must not start or end with hyphen
 - Must not contain consecutive hyphens
 - Must match parent directory name
-- **NO `-cskill` suffix**
+- **Must end with `-skill`**
 
 **Examples:**
-- `stock-analyzer`
-- `csv-data-cleaner`
-- `weekly-report-generator`
-- `nass-agriculture-monitor`
-- `noaa-climate-analysis`
+- `stock-analyzer-skill`
+- `csv-data-cleaner-skill`
+- `weekly-report-generator-skill`
+- `nass-agriculture-monitor-skill`
+- `noaa-climate-analysis-skill`
 
 ### Step 2: Directory Structure
 
@@ -640,7 +727,7 @@ Prepare content for `DECISIONS.md`:
 
 ## Phase 3 Checklist
 
-- [ ] Skill name defined (kebab-case, no `-cskill`, 1-64 chars)
+- [ ] Skill name defined (kebab-case, ends with `-skill`, 1-64 chars)
 - [ ] Directory structure chosen
 - [ ] Responsibilities of each script defined
 - [ ] References planned (which files, content)
@@ -995,9 +1082,10 @@ Full skill definition, scripts, and references are in the SKILL.md file and acco
 ## Files
 
 - `SKILL.md` — Full skill definition (agentskills.io format)
-- `scripts/` — Executable Python code
+- `scripts/` — Executable code (`run_pipeline.py` orchestrator for multi-script skills, `run_evals.py` eval runner)
 - `references/` — Detailed documentation
 - `assets/` — Templates, configs
+- `evals/` — Bundled eval spec: binary checks + golden cases
 - `install.sh` — Cross-platform installer
 ```
 
@@ -1156,6 +1244,12 @@ if __name__ == "__main__":
 - Comprehensive report function
 - Each function: validate inputs, compute, interpret, return structured result
 
+**run_pipeline.py** (orchestrator — required when 2+ scripts run in sequence):
+- Single entry-point that imports each step's function and calls them in order
+- Wires each step's output into the next step's input **in code** (never via the agent)
+- Lets the SKILL.md give the agent ONE happy-path command instead of N prose steps
+- Skip for genuinely interactive/branching skills. See `phase5-orchestration.md`
+
 ### Step 4: Write References
 
 Detailed documentation files. Each must be self-contained with real content.
@@ -1185,6 +1279,27 @@ Detailed documentation files. Each must be self-contained with real content.
 **config.json**: Real API URLs, env var names for keys, rate limits, cache TTLs, default parameters. Always include `_instructions` or `_note` fields explaining user-provided values.
 
 **metadata.json** (if needed): Domain-specific mappings, aliases, conversions, groupings.
+
+### Step 5.5: Emit Eval Spec (skip if `--no-eval`)
+
+Write the skill's loss function so it ships with the skill and doubles as a
+regression test:
+
+1. Write `evals/<skill-name>.eval.md` — prose plus a fenced ` ```json ` block
+   carrying the `criteria` (binary; each `command` with a `cmd`, or `llm-judge`)
+   and the `golden` cases derived in Phase 2. Place golden inputs/expected files
+   under `evals/golden/<case-id>/`.
+2. Copy the runner verbatim:
+   ```bash
+   cp scripts/run_evals_template.py <skill>/scripts/run_evals.py
+   chmod +x <skill>/scripts/run_evals.py
+   ```
+3. Golden cases: seed from the user's artifacts when available; otherwise
+   synthesize input-only cases marked `expected_status: "pending-first-green"`.
+
+See `phase2-eval-assessment.md` for the full format, criteria rules, and the
+`autoresearch-universal` handoff (its rule 18 consumes this spec directly). On
+by default; `--no-eval` skips this step and emits no `evals/` directory.
 
 ### Step 6: Generate install.sh
 
@@ -1281,6 +1396,22 @@ After creating all files, run the validation script:
 python3 scripts/validate.py path/to/skill/
 ```
 
+Confirm the scripts run reliably (compile cleanly, deps declared, pipeline wired):
+
+```bash
+python3 scripts/check_pipeline.py path/to/skill/
+```
+
+It must report no errors. See `phase5-orchestration.md`.
+
+If an eval spec was emitted (Step 5.5), also confirm it is well-formed:
+
+```bash
+python3 path/to/skill/scripts/run_evals.py --validate
+```
+
+It must report `VALID` (exit 0). Fix the spec and re-run if not.
+
 **What it checks:**
 - Frontmatter fields present and valid (name, description, license, metadata)
 - Name matches directory name
@@ -1322,6 +1453,8 @@ Statistics:
 
 Validation: PASSED
 Security Scan: PASSED
+Pipeline: PASSED (scripts compile, deps declared)
+Evals: PASSED ([N] command checks, [M] golden cases)   # or SKIPPED (--no-eval)
 
 Main Decisions:
 - API: [name] ([short justification])
@@ -1334,6 +1467,10 @@ Next Steps:
 3. Install: ./install.sh
 4. Test: "[example query 1]"
 
+Evals:
+- Check the skill against its golden baseline anytime: python3 scripts/run_evals.py
+- Optimize it against its metric: /autoresearch-universal optimize . using evals/[skill-name].eval.md
+
 See README.md for complete multi-platform installation instructions.
 ```
 
@@ -1343,12 +1480,13 @@ See README.md for complete multi-platform installation instructions.
 |---|---|---|
 | 1 | Directory structure | `mkdir -p skill-name/{scripts,references,assets}` |
 | 2 | `SKILL.md` | PRIMARY file, <500 lines, spec-compliant frontmatter |
-| 3 | `scripts/*.py` | Functional Python code, no placeholders |
+| 3 | `scripts/*.py` | Functional code; `run_pipeline.py` orchestrator for multi-script skills |
 | 4 | `references/*.md` | Detailed documentation, self-contained |
 | 5 | `assets/*.json` | Real values, validated JSON |
+| 5.5 | `evals/*.eval.md` + `scripts/run_evals.py` | Bundled loss function; skip if `--no-eval` |
 | 6 | `install.sh` | Cross-platform installer, `chmod +x` |
 | 7 | `README.md` | Multi-platform install instructions |
-| 8 | Run `validate.py` | Must pass before delivery |
+| 8 | Run `validate.py` + `check_pipeline.py` | Must pass before delivery |
 | 9 | Run `security_scan.py` | Must pass before delivery |
 | 10 | Report results | Summary to user |
 
@@ -1359,12 +1497,16 @@ See README.md for complete multi-platform installation instructions.
 - [ ] SKILL.md is <500 lines
 - [ ] Frontmatter has: name, description (<=1024 chars), license, metadata (author, version)
 - [ ] Temporal metadata included (metadata.created, metadata.last_reviewed, metadata.review_interval_days)
-- [ ] Name is kebab-case, no `-cskill`, matches directory
+- [ ] Name is kebab-case, ends with `-skill`, matches directory
 - [ ] All Python scripts implemented with functional code
 - [ ] No TODO, no `pass`, no `NotImplementedError`, no placeholders
 - [ ] All scripts have: shebang, docstrings, type hints, error handling
+- [ ] Multi-script skill has one `scripts/run_pipeline.py` orchestrator (steps wired in code, one happy-path command)
+- [ ] `check_pipeline.py` reports no errors (scripts compile, third-party deps declared)
 - [ ] References written with real, self-contained content
 - [ ] Assets created with valid JSON and real values
+- [ ] Eval spec emitted (`evals/<name>.eval.md` + `scripts/run_evals.py`) unless `--no-eval`
+- [ ] Eval spec validates (`python3 scripts/run_evals.py --validate` → VALID)
 - [ ] `install.sh` generated with cross-platform support
 - [ ] `README.md` written with multi-platform install instructions
 - [ ] `requirements.txt` created (if third-party dependencies used)
@@ -1419,7 +1561,7 @@ These standards apply across ALL phases and ALL generated files.
 
 ## Naming Quality
 
-- Skill names: kebab-case, 1-64 chars, no `-cskill` suffix
+- Skill names: kebab-case, 1-64 chars, must end with `-skill`
 - Python files: snake_case
 - Classes: PascalCase
 - Functions/methods: snake_case
@@ -1435,5 +1577,5 @@ These standards apply across ALL phases and ALL generated files.
 | `See official docs at [link]` | Include the relevant information directly |
 | SKILL.md over 500 lines | Move detail to `references/` |
 | marketplace.json as step 0 | SKILL.md is the primary file, created first |
-| `-cskill` suffix in names | Standard kebab-case: `stock-analyzer` |
+| Name missing `-skill` suffix | End every skill name with `-skill`: `stock-analyzer-skill` |
 | Description over 1024 chars | Trim to essential keywords within limit |
