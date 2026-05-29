@@ -10,10 +10,11 @@ import sys
 import zipfile
 import subprocess
 from datetime import datetime
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from skill_document import SkillDoc  # noqa: E402
+from validate import validate_skill  # noqa: E402
 
 # Directories and files to exclude from exports
 EXCLUDE_DIRS = {
@@ -30,11 +31,6 @@ EXCLUDE_FILES = {
 # API package size limit (8MB per Claude API requirements)
 MAX_API_SIZE_MB = 8
 MAX_API_SIZE_BYTES = MAX_API_SIZE_MB * 1024 * 1024
-
-# SKILL.md validation limits
-MAX_NAME_LENGTH = 64
-MAX_DESCRIPTION_LENGTH = 1024
-
 
 def get_skill_version(skill_path: str, override_version: str = None) -> str:
     """
@@ -77,63 +73,6 @@ def get_skill_version(skill_path: str, override_version: str = None) -> str:
 
     # Default version
     return 'v1.0.0'
-
-
-def validate_skill_structure(skill_path: str) -> Tuple[bool, List[str]]:
-    """
-    Validate that skill has required structure for export.
-
-    Args:
-        skill_path: Path to skill directory
-
-    Returns:
-        Tuple of (is_valid, list_of_issues)
-    """
-    issues = []
-
-    # Check if path exists and is directory
-    if not os.path.exists(skill_path):
-        issues.append(f"Path does not exist: {skill_path}")
-        return False, issues
-
-    if not os.path.isdir(skill_path):
-        issues.append(f"Path is not a directory: {skill_path}")
-        return False, issues
-
-    # Check for SKILL.md
-    skill_md_path = os.path.join(skill_path, 'SKILL.md')
-    if not os.path.exists(skill_md_path):
-        issues.append("SKILL.md not found (required)")
-        return False, issues
-
-    # Validate SKILL.md frontmatter
-    try:
-        with open(skill_md_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-
-        doc = SkillDoc.from_text(content)
-        if doc.frontmatter is None:
-            if not content.startswith('---'):
-                issues.append("SKILL.md missing frontmatter (must start with ---)")
-            else:
-                issues.append("SKILL.md frontmatter not closed (missing second ---)")
-        else:
-            name = doc.name
-            if name is None:
-                issues.append("SKILL.md missing 'name:' field in frontmatter")
-            elif len(name) > MAX_NAME_LENGTH:
-                issues.append(f"name too long: {len(name)} chars (max {MAX_NAME_LENGTH})")
-
-            description = doc.description
-            if description is None:
-                issues.append("SKILL.md missing 'description:' field in frontmatter")
-            elif len(description) > MAX_DESCRIPTION_LENGTH:
-                issues.append(f"description too long: {len(description)} chars (max {MAX_DESCRIPTION_LENGTH})")
-
-    except Exception as e:
-        issues.append(f"Error reading SKILL.md: {str(e)}")
-
-    return len(issues) == 0, issues
 
 
 def should_include_file(file_path: str, filename: str) -> bool:
@@ -635,40 +574,20 @@ def export_skill(
     # Create output directory if needed
     os.makedirs(output_dir, exist_ok=True)
 
-    # Validate skill structure
-    print("🔍 Validating skill structure...")
-    valid, issues = validate_skill_structure(skill_path)
-    if not valid:
+    # Validate the skill in one in-process call (single source of truth = validate.validate_skill)
+    print("🔍 Validating skill...")
+    val_result = validate_skill(skill_path)
+    if val_result.get('errors'):
         return {
             'success': False,
             'message': 'Skill validation failed',
-            'issues': issues
+            'issues': val_result['errors'],
         }
-    print("✅ Skill structure valid")
-
-    # Run spec validation if validate.py is available
-    validate_script = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'validate.py')
-    if os.path.exists(validate_script):
-        print("🔍 Running spec validation...")
-        try:
-            result = subprocess.run(
-                [sys.executable, validate_script, skill_path, '--json'],
-                capture_output=True, text=True, timeout=30
-            )
-            if result.returncode != 0:
-                import json as _json
-                try:
-                    val_result = _json.loads(result.stdout)
-                    if val_result.get('errors'):
-                        print(f"⚠️  Spec validation warnings: {len(val_result['errors'])} errors")
-                        for err in val_result['errors']:
-                            print(f"   - {err}")
-                except (ValueError, KeyError):
-                    pass
-            else:
-                print("✅ Spec validation passed")
-        except (subprocess.TimeoutExpired, Exception):
-            print("⚠️  Spec validation skipped (script error)")
+    print("✅ Skill validation passed")
+    if val_result.get('warnings'):
+        print(f"⚠️  Validation warnings: {len(val_result['warnings'])}")
+        for w in val_result['warnings']:
+            print(f"   - {w}")
 
     # Run security scan if security_scan.py is available
     security_script = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'security_scan.py')
