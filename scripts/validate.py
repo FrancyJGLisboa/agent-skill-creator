@@ -18,7 +18,8 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import Optional
+
+from skill_document import SkillDoc
 
 
 # --- Constants ---
@@ -38,144 +39,6 @@ DATE_FORMAT_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 LOCAL_LINK_PATTERN = re.compile(
     r"\[([^\]]*)\]\(([^)]+)\)"
 )
-
-
-def _parse_frontmatter(content: str) -> tuple[Optional[str], Optional[str]]:
-    """
-    Extract frontmatter and body from SKILL.md content.
-
-    Args:
-        content: Full text content of SKILL.md.
-
-    Returns:
-        Tuple of (frontmatter_text, body_text). Either may be None if
-        frontmatter is missing or malformed.
-    """
-    if not content.startswith("---"):
-        return None, None
-
-    # Find the closing --- (skip the opening one at position 0)
-    closing_index = content.find("---", 3)
-    if closing_index == -1:
-        return None, None
-
-    frontmatter = content[3:closing_index].strip()
-    body = content[closing_index + 3:].strip()
-    return frontmatter, body
-
-
-def _parse_yaml_field(frontmatter: str, field: str) -> Optional[str]:
-    """
-    Extract a top-level scalar field value from YAML frontmatter using simple parsing.
-
-    Handles both inline values (``name: value``) and YAML block scalars
-    (``description: >-`` followed by indented continuation lines).
-
-    Args:
-        frontmatter: The frontmatter text (without ``---`` delimiters).
-        field: The field name to look for.
-
-    Returns:
-        The field value as a string, or None if the field is not present.
-    """
-    lines = frontmatter.split("\n")
-    for i, line in enumerate(lines):
-        stripped = line.strip()
-        if stripped.startswith(f"{field}:"):
-            value = stripped[len(field) + 1:].strip()
-
-            # Check for YAML block scalar indicators (>- , |-, >, |)
-            if value in (">-", "|-", ">", "|", ">+", "|+"):
-                # Collect indented continuation lines
-                parts: list[str] = []
-                for j in range(i + 1, len(lines)):
-                    continuation = lines[j]
-                    # Continuation lines must be indented
-                    if continuation and (continuation[0] == " " or continuation[0] == "\t"):
-                        parts.append(continuation.strip())
-                    else:
-                        break
-                return " ".join(parts) if parts else ""
-
-            return value
-    return None
-
-
-def _field_exists_in_frontmatter(frontmatter: str, field: str) -> bool:
-    """
-    Check whether a field name appears as a top-level key in frontmatter.
-
-    Args:
-        frontmatter: The frontmatter text.
-        field: The field name to look for.
-
-    Returns:
-        True if the field is present.
-    """
-    for line in frontmatter.split("\n"):
-        stripped = line.strip()
-        if stripped.startswith(f"{field}:"):
-            return True
-    return False
-
-
-def _subfield_exists(frontmatter: str, parent: str, child: str) -> bool:
-    """
-    Check whether a sub-field exists under a parent field in YAML frontmatter.
-
-    Args:
-        frontmatter: The frontmatter text.
-        parent: The parent field name (e.g., ``metadata``).
-        child: The child field name (e.g., ``author``).
-
-    Returns:
-        True if the sub-field is found under the parent.
-    """
-    lines = frontmatter.split("\n")
-    in_parent = False
-    for line in lines:
-        stripped = line.strip()
-        # Detect the parent field
-        if stripped.startswith(f"{parent}:"):
-            in_parent = True
-            continue
-        if in_parent:
-            # Still inside the parent block if line is indented
-            if line and (line[0] == " " or line[0] == "\t"):
-                if stripped.startswith(f"{child}:"):
-                    return True
-            else:
-                # Left the parent block
-                in_parent = False
-    return False
-
-
-def _parse_subfield_value(frontmatter: str, parent: str, child: str) -> Optional[str]:
-    """
-    Extract a sub-field value from under a parent field in YAML frontmatter.
-
-    Args:
-        frontmatter: The frontmatter text.
-        parent: The parent field name (e.g., ``metadata``).
-        child: The child field name (e.g., ``author``).
-
-    Returns:
-        The sub-field value as a string, or None if not found.
-    """
-    lines = frontmatter.split("\n")
-    in_parent = False
-    for line in lines:
-        stripped = line.strip()
-        if stripped.startswith(f"{parent}:"):
-            in_parent = True
-            continue
-        if in_parent:
-            if line and (line[0] == " " or line[0] == "\t"):
-                if stripped.startswith(f"{child}:"):
-                    return stripped[len(child) + 1:].strip()
-            else:
-                in_parent = False
-    return None
 
 
 def _extract_local_links(body: str) -> list[str]:
@@ -251,14 +114,15 @@ def validate_skill(skill_path: str) -> dict:
         errors.append("SKILL.md must start with '---' frontmatter delimiter")
         return {"valid": False, "errors": errors, "warnings": warnings}
 
-    frontmatter, body = _parse_frontmatter(content)
+    doc = SkillDoc.from_text(content)
+    body = doc.body
 
-    if frontmatter is None:
+    if doc.frontmatter is None:
         errors.append("SKILL.md frontmatter is not properly closed (missing closing '---')")
         return {"valid": False, "errors": errors, "warnings": warnings}
 
     # --- Check: name field ---
-    name_value = _parse_yaml_field(frontmatter, "name")
+    name_value = doc.name
     if name_value is None:
         errors.append("'name' field is missing from frontmatter")
     else:
@@ -295,7 +159,7 @@ def validate_skill(skill_path: str) -> dict:
                 )
 
     # --- Check: description field ---
-    description_value = _parse_yaml_field(frontmatter, "description")
+    description_value = doc.description
     if description_value is None:
         errors.append("'description' field is missing from frontmatter")
     else:
@@ -336,22 +200,22 @@ def validate_skill(skill_path: str) -> dict:
             )
 
     # license field
-    if not _field_exists_in_frontmatter(frontmatter, "license"):
+    if not doc.has_field("license"):
         warnings.append("'license' field is missing from frontmatter")
 
     # metadata field
-    if not _field_exists_in_frontmatter(frontmatter, "metadata"):
+    if not doc.has_field("metadata"):
         warnings.append("'metadata' field is missing from frontmatter")
     else:
-        if not _subfield_exists(frontmatter, "metadata", "author"):
+        if not doc.has_subfield("metadata", "author"):
             warnings.append("'metadata.author' sub-field is missing")
-        if not _subfield_exists(frontmatter, "metadata", "version"):
+        if not doc.has_subfield("metadata", "version"):
             warnings.append("'metadata.version' sub-field is missing")
 
         # Temporal metadata validation (optional, warnings only)
-        created_val = _parse_subfield_value(frontmatter, "metadata", "created")
-        reviewed_val = _parse_subfield_value(frontmatter, "metadata", "last_reviewed")
-        interval_val = _parse_subfield_value(frontmatter, "metadata", "review_interval_days")
+        created_val = doc.subfield("metadata", "created")
+        reviewed_val = doc.subfield("metadata", "last_reviewed")
+        interval_val = doc.subfield("metadata", "review_interval_days")
 
         if created_val and not DATE_FORMAT_PATTERN.match(created_val.strip()):
             warnings.append(

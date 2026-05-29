@@ -31,7 +31,7 @@ _SCRIPTS_DIR = Path(__file__).resolve().parent
 if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
-from validate import _parse_frontmatter, _parse_subfield_value  # noqa: E402
+from skill_document import SkillDoc  # noqa: E402
 
 
 # --- Constants ---
@@ -104,7 +104,7 @@ def _get_git_last_modified(skill_path: str) -> Optional[date]:
         return None
 
 
-def _check_review_staleness(frontmatter: str, git_last_modified: Optional[date]) -> list[dict]:
+def _check_review_staleness(doc: SkillDoc, git_last_modified: Optional[date]) -> list[dict]:
     """
     Check whether a skill is overdue for review.
 
@@ -112,7 +112,7 @@ def _check_review_staleness(frontmatter: str, git_last_modified: Optional[date])
     Falls back to the git commit date when explicit review dates are absent.
 
     Args:
-        frontmatter: The frontmatter text (without delimiters).
+        doc: The parsed skill document.
         git_last_modified: Fallback date from git log.
 
     Returns:
@@ -122,9 +122,9 @@ def _check_review_staleness(frontmatter: str, git_last_modified: Optional[date])
     today = date.today()
 
     # Extract temporal fields
-    created_str = _parse_subfield_value(frontmatter, "metadata", "created")
-    last_reviewed_str = _parse_subfield_value(frontmatter, "metadata", "last_reviewed")
-    interval_str = _parse_subfield_value(frontmatter, "metadata", "review_interval_days")
+    created_str = doc.subfield("metadata", "created")
+    last_reviewed_str = doc.subfield("metadata", "last_reviewed")
+    interval_str = doc.subfield("metadata", "review_interval_days")
 
     # Validate formats if present
     if created_str and not _parse_date(created_str):
@@ -221,89 +221,6 @@ def _check_review_staleness(frontmatter: str, git_last_modified: Optional[date])
     return issues, review_status, days_since, date_source
 
 
-def _parse_yaml_list(frontmatter: str, parent: str, child: str) -> list[dict]:
-    """
-    Parse a YAML list-of-objects under a parent.child path in frontmatter.
-
-    Handles the pattern::
-
-        metadata:
-          dependencies:
-            - url: https://example.com
-              name: Example
-              type: api
-
-    Args:
-        frontmatter: The frontmatter text.
-        parent: Top-level field (e.g. ``metadata``).
-        child: Second-level field (e.g. ``dependencies``).
-
-    Returns:
-        List of dicts, each representing one list item.
-    """
-    lines = frontmatter.split("\n")
-    items: list[dict] = []
-
-    # Find the parent block
-    in_parent = False
-    in_child = False
-    current_item: Optional[dict] = None
-    child_indent = -1
-
-    for line in lines:
-        stripped = line.strip()
-
-        if not in_parent:
-            if stripped.startswith(f"{parent}:"):
-                in_parent = True
-            continue
-
-        # Inside parent -- check if we've left it
-        if line and line[0] != " " and line[0] != "\t" and stripped:
-            break
-
-        if not in_child:
-            if stripped.startswith(f"{child}:"):
-                in_child = True
-            continue
-
-        # Inside child list
-        if not stripped:
-            continue
-
-        # Detect indent level of list items
-        raw_indent = len(line) - len(line.lstrip())
-
-        if child_indent == -1 and stripped.startswith("- "):
-            child_indent = raw_indent
-
-        # Check if we've left the child block
-        if raw_indent <= child_indent and not stripped.startswith("- "):
-            # Check if this is a sibling of child (another metadata key)
-            if ":" in stripped:
-                break
-
-        if stripped.startswith("- "):
-            # New list item
-            if current_item is not None:
-                items.append(current_item)
-            current_item = {}
-            # Parse "- key: value" on the same line
-            rest = stripped[2:].strip()
-            if ":" in rest:
-                key, _, val = rest.partition(":")
-                current_item[key.strip()] = val.strip()
-        elif current_item is not None and ":" in stripped:
-            # Continuation key-value in the same list item
-            key, _, val = stripped.partition(":")
-            current_item[key.strip()] = val.strip()
-
-    if current_item is not None:
-        items.append(current_item)
-
-    return items
-
-
 def _check_dependency_health(dependencies: list[dict]) -> list[dict]:
     """
     HTTP HEAD each declared dependency URL and report health status.
@@ -376,19 +293,19 @@ def _check_dependency_health(dependencies: list[dict]) -> list[dict]:
     return issues
 
 
-def _parse_schema_expectations(frontmatter: str) -> list[dict]:
+def _parse_schema_expectations(doc: SkillDoc) -> list[dict]:
     """
-    Extract ``metadata.schema_expectations`` list from frontmatter.
+    Extract ``metadata.schema_expectations`` list from the skill document.
 
     Each expectation has: url, method (default GET), expected_keys (list).
 
     Args:
-        frontmatter: The frontmatter text.
+        doc: The parsed skill document.
 
     Returns:
         List of schema expectation dicts.
     """
-    raw_items = _parse_yaml_list(frontmatter, "metadata", "schema_expectations")
+    raw_items = doc.list_of_objects("metadata", "schema_expectations")
     expectations: list[dict] = []
 
     for item in raw_items:
@@ -403,7 +320,7 @@ def _parse_schema_expectations(frontmatter: str) -> list[dict]:
         })
 
     # Deeper parse for expected_keys (list items under each schema_expectations entry)
-    expectations = _parse_schema_expectations_deep(frontmatter)
+    expectations = _parse_schema_expectations_deep(doc.frontmatter)
     return expectations
 
 
@@ -643,8 +560,8 @@ def staleness_check(
             "issues": [{"level": "error", "message": f"Could not read SKILL.md: {exc}", "detail": ""}],
         }
 
-    frontmatter, _ = _parse_frontmatter(content)
-    if frontmatter is None:
+    doc = SkillDoc.from_text(content)
+    if doc.frontmatter is None:
         return {
             "fresh": False,
             "review_status": "unknown",
@@ -656,13 +573,13 @@ def staleness_check(
     # --- Phase 1: Review staleness ---
     git_date = _get_git_last_modified(skill_path)
     review_issues, review_status, days_since, date_source = _check_review_staleness(
-        frontmatter, git_date
+        doc, git_date
     )
     all_issues.extend(review_issues)
 
     # --- Phase 2: Dependency health ---
     if check_deps:
-        deps = _parse_yaml_list(frontmatter, "metadata", "dependencies")
+        deps = doc.list_of_objects("metadata", "dependencies")
         if deps:
             dep_issues = _check_dependency_health(deps)
             all_issues.extend(dep_issues)
@@ -675,7 +592,7 @@ def staleness_check(
 
     # --- Phase 3: Schema drift ---
     if check_drift:
-        expectations = _parse_schema_expectations(frontmatter)
+        expectations = _parse_schema_expectations(doc)
         if expectations:
             drift_issues = _check_schema_drift(expectations)
             all_issues.extend(drift_issues)

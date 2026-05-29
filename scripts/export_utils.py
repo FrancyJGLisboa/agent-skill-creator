@@ -12,6 +12,9 @@ import subprocess
 from datetime import datetime
 from typing import Dict, List, Tuple
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from skill_document import SkillDoc  # noqa: E402
+
 # Directories and files to exclude from exports
 EXCLUDE_DIRS = {
     '.git', '__pycache__', 'node_modules', '.claude-plugin',
@@ -66,17 +69,9 @@ def get_skill_version(skill_path: str, override_version: str = None) -> str:
     skill_md_path = os.path.join(skill_path, 'SKILL.md')
     if os.path.exists(skill_md_path):
         try:
-            with open(skill_md_path, 'r', encoding='utf-8') as f:
-                content = f.read()
-                # Look for version: in frontmatter
-                if content.startswith('---'):
-                    frontmatter_end = content.find('---', 3)
-                    if frontmatter_end > 0:
-                        frontmatter = content[3:frontmatter_end]
-                        for line in frontmatter.split('\n'):
-                            if line.strip().startswith('version:'):
-                                version = line.split(':', 1)[1].strip()
-                                return version if version.startswith('v') else f'v{version}'
+            version = SkillDoc.from_path(skill_md_path).field("version")
+            if version:
+                return version if version.startswith('v') else f'v{version}'
         except Exception:
             pass
 
@@ -116,41 +111,24 @@ def validate_skill_structure(skill_path: str) -> Tuple[bool, List[str]]:
         with open(skill_md_path, 'r', encoding='utf-8') as f:
             content = f.read()
 
+        doc = SkillDoc.from_text(content)
+        if doc.frontmatter is None:
             if not content.startswith('---'):
                 issues.append("SKILL.md missing frontmatter (must start with ---)")
             else:
-                # Extract frontmatter
-                frontmatter_end = content.find('---', 3)
-                if frontmatter_end == -1:
-                    issues.append("SKILL.md frontmatter not closed (missing second ---)")
-                else:
-                    frontmatter = content[3:frontmatter_end]
+                issues.append("SKILL.md frontmatter not closed (missing second ---)")
+        else:
+            name = doc.name
+            if name is None:
+                issues.append("SKILL.md missing 'name:' field in frontmatter")
+            elif len(name) > MAX_NAME_LENGTH:
+                issues.append(f"name too long: {len(name)} chars (max {MAX_NAME_LENGTH})")
 
-                    # Check for required fields
-                    has_name = False
-                    has_description = False
-                    name_length = 0
-                    desc_length = 0
-
-                    for line in frontmatter.split('\n'):
-                        line = line.strip()
-                        if line.startswith('name:'):
-                            has_name = True
-                            name = line.split(':', 1)[1].strip()
-                            name_length = len(name)
-                            if name_length > MAX_NAME_LENGTH:
-                                issues.append(f"name too long: {name_length} chars (max {MAX_NAME_LENGTH})")
-                        elif line.startswith('description:'):
-                            has_description = True
-                            desc = line.split(':', 1)[1].strip()
-                            desc_length = len(desc)
-                            if desc_length > MAX_DESCRIPTION_LENGTH:
-                                issues.append(f"description too long: {desc_length} chars (max {MAX_DESCRIPTION_LENGTH})")
-
-                    if not has_name:
-                        issues.append("SKILL.md missing 'name:' field in frontmatter")
-                    if not has_description:
-                        issues.append("SKILL.md missing 'description:' field in frontmatter")
+            description = doc.description
+            if description is None:
+                issues.append("SKILL.md missing 'description:' field in frontmatter")
+            elif len(description) > MAX_DESCRIPTION_LENGTH:
+                issues.append(f"description too long: {len(description)} chars (max {MAX_DESCRIPTION_LENGTH})")
 
     except Exception as e:
         issues.append(f"Error reading SKILL.md: {str(e)}")

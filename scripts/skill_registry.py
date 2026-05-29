@@ -22,13 +22,11 @@ Exit codes:
 
 import argparse
 import json
-import os
 import re
 import shutil
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
 
 # --- Import sibling scripts ---
 
@@ -36,9 +34,10 @@ _SCRIPTS_DIR = Path(__file__).resolve().parent
 if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
-from validate import validate_skill, _parse_frontmatter, _parse_yaml_field, _parse_subfield_value
-from security_scan import security_scan
-from staleness_check import DEFAULT_REVIEW_INTERVAL_DAYS
+from validate import validate_skill  # noqa: E402
+from skill_document import SkillDoc  # noqa: E402
+from security_scan import security_scan  # noqa: E402
+from staleness_check import DEFAULT_REVIEW_INTERVAL_DAYS  # noqa: E402
 
 
 # --- Constants ---
@@ -133,36 +132,23 @@ def extract_skill_metadata(skill_path: Path) -> dict:
         return {"name": "", "description": "", "version": "", "author": "", "license": ""}
 
     content = skill_md.read_text(encoding="utf-8")
-    frontmatter, _ = _parse_frontmatter(content)
-    if frontmatter is None:
+    doc = SkillDoc.from_text(content)
+    if doc.frontmatter is None:
         return {"name": "", "description": "", "version": "", "author": "", "license": ""}
 
-    name = _parse_yaml_field(frontmatter, "name") or ""
-    description = _parse_yaml_field(frontmatter, "description") or ""
-    license_val = _parse_yaml_field(frontmatter, "license") or ""
-
+    meta = doc.metadata
     # Version: try metadata.version first, then top-level version
-    version = _parse_subfield_value(frontmatter, "metadata", "version")
-    if not version:
-        version = _parse_yaml_field(frontmatter, "version") or ""
-
-    # Author: try metadata.author first
-    author = _parse_subfield_value(frontmatter, "metadata", "author") or ""
-
-    # Temporal metadata for staleness tracking
-    created = _parse_subfield_value(frontmatter, "metadata", "created") or ""
-    last_reviewed = _parse_subfield_value(frontmatter, "metadata", "last_reviewed") or ""
-    interval = _parse_subfield_value(frontmatter, "metadata", "review_interval_days") or ""
+    version = meta.get("version") or doc.field("version") or ""
 
     return {
-        "name": name.strip(),
-        "description": description.strip(),
+        "name": (doc.name or "").strip(),
+        "description": (doc.description or "").strip(),
         "version": version.strip(),
-        "author": author.strip(),
-        "license": license_val.strip(),
-        "created": created.strip(),
-        "last_reviewed": last_reviewed.strip(),
-        "review_interval_days": interval.strip(),
+        "author": meta.get("author", "").strip(),
+        "license": (doc.license or "").strip(),
+        "created": meta.get("created", "").strip(),
+        "last_reviewed": meta.get("last_reviewed", "").strip(),
+        "review_interval_days": meta.get("review_interval_days", "").strip(),
     }
 
 
