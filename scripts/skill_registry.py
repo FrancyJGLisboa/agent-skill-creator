@@ -38,31 +38,16 @@ from validate import validate_skill  # noqa: E402
 from skill_document import SkillDoc  # noqa: E402
 from security_scan import security_scan  # noqa: E402
 from staleness_check import DEFAULT_REVIEW_INTERVAL_DAYS  # noqa: E402
+from platforms import PLATFORMS, list_supported_platforms, project_paths, user_paths  # noqa: E402
 
 
 # --- Constants ---
 
-ALL_PLATFORMS = ["claude-code", "copilot", "cursor", "windsurf", "cline", "codex", "gemini"]
-
-PLATFORM_PATHS_USER = {
-    "claude-code": "~/.claude/skills",
-    "copilot":     "~/.copilot/skills",
-    "cursor":      "~/.cursor/rules",
-    "windsurf":    "~/.windsurf/skills",
-    "cline":       "~/.cline/rules",
-    "codex":       "~/.codex/skills",
-    "gemini":      "~/.gemini/skills",
-}
-
-PLATFORM_PATHS_PROJECT = {
-    "claude-code": ".claude/skills",
-    "copilot":     ".github/skills",
-    "cursor":      ".cursor/rules",
-    "windsurf":    ".windsurf/skills",
-    "cline":       ".clinerules",
-    "codex":       ".codex/skills",
-    "gemini":      ".gemini/skills",
-}
+# Platform tables derive from the canonical scripts/platforms.py registry
+# (single source of truth, covers all 17 supported platforms with correct paths).
+ALL_PLATFORMS = list_supported_platforms()
+PLATFORM_PATHS_USER = user_paths()
+PLATFORM_PATHS_PROJECT = project_paths()
 
 # Directories/files to exclude when copying skills
 COPY_IGNORE_PATTERNS = shutil.ignore_patterns(
@@ -186,15 +171,7 @@ def detect_platform() -> str:
 
     Returns the platform name or "claude-code" as default.
     """
-    checks = [
-        ("claude-code", "~/.claude"),
-        ("copilot",     "~/.copilot"),
-        ("cursor",      "~/.cursor"),
-        ("windsurf",    "~/.windsurf"),
-        ("cline",       "~/.cline"),
-        ("codex",       "~/.codex"),
-        ("gemini",      "~/.gemini"),
-    ]
+    checks = [(p.name, p.detect_dir) for p in PLATFORMS if p.detect_dir]
     for platform, path in checks:
         if Path(path).expanduser().exists():
             return platform
