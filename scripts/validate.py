@@ -250,14 +250,14 @@ def validate_skill(skill_path: str) -> dict:
         )
 
     # activation field (harness factory v1.1)
-    if not _field_exists_in_frontmatter(frontmatter, "activation"):
+    if not doc.has_field("activation"):
         warnings.append(
             "'activation' field is missing from frontmatter. "
             "Add 'activation: /{skill-name}' for namespace enforcement."
         )
 
     # provenance field (harness factory v1.1)
-    if not _field_exists_in_frontmatter(frontmatter, "provenance"):
+    if not doc.has_field("provenance"):
         warnings.append(
             "'provenance' field is missing from frontmatter. "
             "Add provenance metadata (maintainer, version, created, source_references)."
