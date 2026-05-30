@@ -194,6 +194,7 @@ detect_all_global_platforms() {
     if [ -d "$HOME/.copilot" ]; then platforms="$platforms copilot"; fi
     if [ -d "$HOME/.gemini" ]; then platforms="$platforms gemini"; fi
     if [ -d "$HOME/.kiro" ]; then platforms="$platforms kiro"; fi
+    if [ -d "$HOME/.cline" ]; then platforms="$platforms cline"; fi
     if [ -d "$HOME/.roo" ]; then platforms="$platforms roo-code"; fi
     if [ -d "$HOME/.kilocode" ]; then platforms="$platforms kilo-code"; fi
     if [ -d "$HOME/.factory" ]; then platforms="$platforms factory"; fi
@@ -483,7 +484,7 @@ do_uninstall() {
     fi
 
     # Check all global platforms
-    for plat in claude-code copilot gemini kiro roo-code kilo-code factory goose opencode; do
+    for plat in claude-code copilot gemini kiro cline roo-code kilo-code factory goose opencode; do
         dest="$(resolve_platform_path "$plat" "$SKILL_NAME")"
         if [ -e "$dest" ] || [ -L "$dest" ]; then
             if [ "$DRY_RUN" = true ]; then

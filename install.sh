@@ -71,10 +71,15 @@ all_platform_entries() {
     # Format: <detection_dir>|<install_path>|<display_name>
     cat <<'PLATFORMS'
 $HOME/.claude|$HOME/.claude/skills/$SKILL_NAME|Claude Code
+$HOME/.copilot|$HOME/.copilot/skills/$SKILL_NAME|GitHub Copilot
 $HOME/.gemini|$HOME/.gemini/skills/$SKILL_NAME|Gemini CLI
+$HOME/.kiro|$HOME/.kiro/skills/$SKILL_NAME|Kiro
+$HOME/.cline|$HOME/.cline/skills/$SKILL_NAME|Cline
+$HOME/.roo|$HOME/.roo/skills/$SKILL_NAME|Roo Code
+$HOME/.kilocode|$HOME/.kilocode/skills/$SKILL_NAME|Kilo Code
+$HOME/.factory|$HOME/.factory/skills/$SKILL_NAME|Factory Droid
 $HOME/.config/goose|$HOME/.config/goose/skills/$SKILL_NAME|Goose
 $HOME/.config/opencode|$HOME/.config/opencode/skills/$SKILL_NAME|OpenCode
-$HOME/.copilot|$HOME/.copilot/skills/$SKILL_NAME|GitHub Copilot
 PLATFORMS
 }
 
