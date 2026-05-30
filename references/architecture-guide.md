@@ -1,6 +1,6 @@
 # Architecture Decision Guide
 
-**Version:** 4.0
+**Version:** 6.0
 **Purpose:** Comprehensive guide for choosing the right architecture when creating agent skills, including directory structures, naming conventions, sizing patterns, and performance strategies.
 
 ---

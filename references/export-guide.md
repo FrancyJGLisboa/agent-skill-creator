@@ -1,6 +1,6 @@
 # Cross-Platform Export Guide
 
-**Version:** 4.0
+**Version:** 6.0
 **Purpose:** Complete guide to exporting agent-skill-creator skills for use across all Claude platforms
 
 ---
