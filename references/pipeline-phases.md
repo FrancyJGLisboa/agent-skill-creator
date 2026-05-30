@@ -1388,6 +1388,43 @@ npx skills add <repo-url>
 [Common issues and solutions]
 ```
 
+### Step 7b: Generate Harness Patterns (mandatory)
+
+Every skill must include these harness patterns as executable code, not as markdown instructions.
+
+**a. Self-bootstrapping wrappers at the repo root:**
+- `./skill-name` (bash) — auto-creates venv, installs uv if missing, installs deps on first run. Bootstrap messages to stderr.
+- `.\skill-name.ps1` (PowerShell) — same behavior for Windows users.
+
+**b. Input validation module (`scripts/validate_inputs.py` or integrated into main script):**
+- Validate all user-facing inputs before computation: reject negatives where nonsensical, reject out-of-bounds values, validate enum inputs against known values
+- On validation failure: print JSON to stderr with `{"error": "...", "error_type": "validation", "details": [{"field": "...", "error": "..."}]}` and exit 1
+- If the skill brief contains `harness_requirements.input_validation`, implement those specific rules
+
+**c. Output sanity checks:**
+- After computation, check results against domain-specific bounds
+- Attach `_warnings` array to JSON output when values are unusual but not invalid
+- If the skill brief contains `harness_requirements.output_sanity`, implement those specific bounds
+
+**d. `--check-prereqs` command (or flag on the main command):**
+- Check Python version, required packages (try import), API keys (check env vars exist without printing values), network access (optional, with timeout)
+- Output: `{"ready": true/false, "checks": [{"check": "...", "required": "...", "found": "...", "ok": true/false}]}`
+
+**e. `--diagnostics` command (or flag):**
+- Output: `{"skill": "...", "version": "...", "harness_level": "...", "commands": [...], "harness_features": {"input_validation": true, ...}}`
+
+**f. SKILL.md frontmatter must include:**
+- `activation: /{skill-name}` — unique namespace prefix
+- `provenance:` block — if cliskill provides provenance metadata in the skill brief, pass it through. If standalone, generate minimal: `maintainer: unknown, version: 1.0.0, created: {today}`
+
+**g. SKILL.md body must include:**
+- `## Prerequisites` section listing runtime, deps, API keys, network requirements
+- Anti-activation in anti-goals: "Do NOT activate on general queries — wait for explicit `/{skill-name}` invocation"
+
+**h. Structured error handling throughout:**
+- All errors as JSON to stderr: `{"error": "message", "error_type": "validation|runtime|network", "hint": "..."}`
+- Exit code 1 on all errors. Never expose stack traces.
+
 ### Step 8: Run Spec Validation
 
 After creating all files, run the validation script:
@@ -1496,13 +1533,23 @@ See README.md for complete multi-platform installation instructions.
 - [ ] SKILL.md created FIRST with spec-compliant frontmatter
 - [ ] SKILL.md is <500 lines
 - [ ] Frontmatter has: name, description (<=1024 chars), license, metadata (author, version)
+- [ ] Frontmatter has: `activation: /{skill-name}`
+- [ ] Frontmatter has: `provenance:` block (full if from cliskill, minimal if standalone)
 - [ ] Temporal metadata included (metadata.created, metadata.last_reviewed, metadata.review_interval_days)
 - [ ] Name is kebab-case, ends with `-skill`, matches directory
+- [ ] SKILL.md body has `## Prerequisites` section
+- [ ] SKILL.md anti-goals include anti-activation instruction
 - [ ] All Python scripts implemented with functional code
 - [ ] No TODO, no `pass`, no `NotImplementedError`, no placeholders
 - [ ] All scripts have: shebang, docstrings, type hints, error handling
 - [ ] Multi-script skill has one `scripts/run_pipeline.py` orchestrator (steps wired in code, one happy-path command)
 - [ ] `check_pipeline.py` reports no errors (scripts compile, third-party deps declared)
+- [ ] Input validation implemented (reject bad inputs with structured JSON errors)
+- [ ] Output sanity checks implemented (warn on extreme values)
+- [ ] `--check-prereqs` command returns structured JSON
+- [ ] `--diagnostics` command returns skill metadata
+- [ ] Self-bootstrapping wrappers: `./skill-name` (bash) + `.\skill-name.ps1` (PowerShell)
+- [ ] All errors as JSON to stderr with error_type classification
 - [ ] References written with real, self-contained content
 - [ ] Assets created with valid JSON and real values
 - [ ] Eval spec emitted (`evals/<name>.eval.md` + `scripts/run_evals.py`) unless `--no-eval`
