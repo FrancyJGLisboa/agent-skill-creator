@@ -1296,10 +1296,16 @@ regression test:
    ```
 3. Golden cases: seed from the user's artifacts when available; otherwise
    synthesize input-only cases marked `expected_status: "pending-first-green"`.
+4. If the skill runs from one command, add a `run` field
+   (`"run": "python3 scripts/run_pipeline.py --input {input} --output {output}"`)
+   so `run_evals.py --rollout` can execute the skill end-to-end on each golden
+   input and score the real output (post-delivery; not a gate). Omit `run` for
+   interactive/branching skills.
 
-See `phase2-eval-assessment.md` for the full format, criteria rules, and the
-`autoresearch-universal` handoff (its rule 18 consumes this spec directly). On
-by default; `--no-eval` skips this step and emits no `evals/` directory.
+See `phase2-eval-assessment.md` for the full format, criteria rules, the rollout
+`run` field, and the `autoresearch-universal` handoff (its rule 18 consumes this
+spec directly). On by default; `--no-eval` skips this step and emits no `evals/`
+directory.
 
 ### Step 6: Generate install.sh
 
@@ -1506,6 +1512,7 @@ Next Steps:
 
 Evals:
 - Check the skill against its golden baseline anytime: python3 scripts/run_evals.py
+- Run it end-to-end and score the real output: python3 scripts/run_evals.py --rollout
 - Optimize it against its metric: /autoresearch-universal optimize . using evals/[skill-name].eval.md
 
 See README.md for complete multi-platform installation instructions.

@@ -19,6 +19,7 @@ from run_evals_template import (  # noqa: E402
     main,
     parse_spec,
     run_command_checks,
+    run_rollout,
     validate_spec,
 )
 
@@ -33,8 +34,19 @@ WELL_FORMED_CRITERIA = [
 ]
 
 
-def _make_skill(tmp: Path, criteria: list[dict], golden: list[dict]) -> Path:
-    """Create a minimal skill dir with an eval spec + golden files; return it."""
+def _make_skill(
+    tmp: Path,
+    criteria: list[dict],
+    golden: list[dict],
+    run: str | None = None,
+    pipeline_body: str | None = None,
+) -> Path:
+    """Create a minimal skill dir with an eval spec + golden files; return it.
+
+    When `run` is given it is written into the spec as the rollout command. When
+    `pipeline_body` is given it is written to scripts/run_pipeline.py (the script
+    a `run` command typically invokes) so rollout has a real program to execute.
+    """
     skill = tmp / "demo-skill"
     (skill / "scripts").mkdir(parents=True)
     evals = skill / "evals"
@@ -46,10 +58,34 @@ def _make_skill(tmp: Path, criteria: list[dict], golden: list[dict]) -> Path:
             (evals / case["input"]).write_text("col\n1\n", encoding="utf-8")
         if case.get("expected"):
             (evals / case["expected"]).write_text('{"ok": true}\n', encoding="utf-8")
-    spec = {"skill": "demo-skill", "criteria": criteria, "golden": golden}
+    if pipeline_body is not None:
+        (skill / "scripts" / "run_pipeline.py").write_text(pipeline_body, encoding="utf-8")
+    spec: dict = {"skill": "demo-skill", "criteria": criteria, "golden": golden}
+    if run is not None:
+        spec["run"] = run
     body = "# Eval Spec: demo-skill\n\nprose\n\n```json\n" + json.dumps(spec, indent=2) + "\n```\n"
     (evals / "demo-skill.eval.md").write_text(body, encoding="utf-8")
     return skill
+
+
+# A trivial real skill: read --input, write the canonical baseline to --output.
+# Used by rollout tests so the produced output matches the golden expected file.
+_PIPELINE_COPIES_BASELINE = (
+    "import argparse, pathlib\n"
+    "ap = argparse.ArgumentParser()\n"
+    "ap.add_argument('--input'); ap.add_argument('--output', required=True)\n"
+    "a = ap.parse_args()\n"
+    "pathlib.Path(a.output).write_text('{\"ok\": true}\\n')\n"
+)
+# A skill that writes an output the command criterion will reject as wrong.
+_PIPELINE_WRONG_OUTPUT = (
+    "import argparse, pathlib\n"
+    "ap = argparse.ArgumentParser()\n"
+    "ap.add_argument('--input'); ap.add_argument('--output', required=True)\n"
+    "a = ap.parse_args()\n"
+    "pathlib.Path(a.output).write_text('WRONG\\n')\n"
+)
+_RUN_CMD = "python3 scripts/run_pipeline.py --input {input} --output {output}"
 
 
 def _three_golden(with_expected: bool = True) -> list[dict]:
@@ -178,6 +214,143 @@ class MainExitCodeTest(unittest.TestCase):
         empty = self.tmp / "no-evals-skill"
         empty.mkdir()
         self.assertEqual(main([str(empty)]), 2)
+
+
+class RunFieldValidationTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def test_absent_run_field_still_valid(self) -> None:
+        skill = _make_skill(self.tmp, WELL_FORMED_CRITERIA, _three_golden())
+        spec = parse_spec(find_spec(skill))
+        self.assertEqual(validate_spec(spec, skill), [])
+
+    def test_run_without_output_placeholder_is_rejected(self) -> None:
+        skill = _make_skill(
+            self.tmp, WELL_FORMED_CRITERIA, _three_golden(), run="python3 scripts/run_pipeline.py"
+        )
+        spec = parse_spec(find_spec(skill))
+        self.assertTrue(any("{output}" in e for e in validate_spec(spec, skill)))
+
+    def test_empty_run_string_is_rejected(self) -> None:
+        skill = _make_skill(self.tmp, WELL_FORMED_CRITERIA, _three_golden(), run="   ")
+        spec = parse_spec(find_spec(skill))
+        self.assertTrue(any("'run'" in e for e in validate_spec(spec, skill)))
+
+    def test_well_formed_run_field_is_valid(self) -> None:
+        skill = _make_skill(self.tmp, WELL_FORMED_CRITERIA, _three_golden(), run=_RUN_CMD)
+        spec = parse_spec(find_spec(skill))
+        self.assertEqual(validate_spec(spec, skill), [])
+
+
+# In rollout mode {output} binds to the PRODUCED output; this passes when the
+# skill wrote the baseline content and fails when it wrote WRONG.
+ROLLOUT_CRITERIA = [
+    {"id": "has-ok", "text": "Output contains ok", "type": "command", "cmd": "grep -q ok {output}"},
+]
+
+
+class RunRolloutTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def test_happy_path_passes(self) -> None:
+        skill = _make_skill(
+            self.tmp, ROLLOUT_CRITERIA, _three_golden(), run=_RUN_CMD,
+            pipeline_body=_PIPELINE_COPIES_BASELINE,
+        )
+        spec = parse_spec(find_spec(skill))
+        result = run_rollout(spec, skill)
+        self.assertEqual(result["errors"], 0)
+        self.assertEqual(result["failed"], 0)
+        self.assertEqual(result["passed"], 3)  # one criterion x 3 cases
+
+    def test_wrong_output_fails_not_errors(self) -> None:
+        skill = _make_skill(
+            self.tmp, ROLLOUT_CRITERIA, _three_golden(), run=_RUN_CMD,
+            pipeline_body=_PIPELINE_WRONG_OUTPUT,
+        )
+        spec = parse_spec(find_spec(skill))
+        result = run_rollout(spec, skill)
+        self.assertEqual(result["errors"], 0)   # the run itself succeeded
+        self.assertEqual(result["failed"], 3)   # but the output was wrong
+
+    def test_failing_run_command_counts_as_error(self) -> None:
+        skill = _make_skill(
+            self.tmp, ROLLOUT_CRITERIA, _three_golden(),
+            run="this_binary_does_not_exist_xyz --output {output}",
+        )
+        spec = parse_spec(find_spec(skill))
+        result = run_rollout(spec, skill)
+        self.assertEqual(result["errors"], 3)
+        self.assertEqual(result["passed"], 0)
+
+    def test_timeout_counts_as_error(self) -> None:
+        skill = _make_skill(
+            self.tmp, ROLLOUT_CRITERIA, _three_golden(),
+            run="sleep 5; echo {output}",
+        )
+        spec = parse_spec(find_spec(skill))
+        result = run_rollout(spec, skill, timeout=1)
+        self.assertEqual(result["errors"], 3)
+
+    def test_promote_captures_baseline_for_pending_case(self) -> None:
+        skill = _make_skill(
+            self.tmp, ROLLOUT_CRITERIA, _three_golden(with_expected=False), run=_RUN_CMD,
+            pipeline_body=_PIPELINE_COPIES_BASELINE,
+        )
+        spec = parse_spec(find_spec(skill))
+        result = run_rollout(spec, skill, promote=True)
+        self.assertEqual(result["failed"], 0)
+        self.assertEqual(sorted(result["promoted"]), ["case-1", "case-2", "case-3"])
+        # The captured baseline now exists on disk.
+        captured = skill / "evals" / "golden" / "case-1" / "expected.json"
+        self.assertTrue(captured.exists())
+        self.assertIn("ok", captured.read_text())
+
+    def test_only_case_restricts_rollout(self) -> None:
+        skill = _make_skill(
+            self.tmp, ROLLOUT_CRITERIA, _three_golden(), run=_RUN_CMD,
+            pipeline_body=_PIPELINE_COPIES_BASELINE,
+        )
+        spec = parse_spec(find_spec(skill))
+        result = run_rollout(spec, skill, only_case="case-2")
+        self.assertEqual(result["passed"], 1)
+
+
+class RolloutMainExitCodeTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def test_rollout_all_pass_exits_zero(self) -> None:
+        skill = _make_skill(
+            self.tmp, ROLLOUT_CRITERIA, _three_golden(), run=_RUN_CMD,
+            pipeline_body=_PIPELINE_COPIES_BASELINE,
+        )
+        self.assertEqual(main([str(skill), "--rollout"]), 0)
+
+    def test_rollout_wrong_output_exits_one(self) -> None:
+        skill = _make_skill(
+            self.tmp, ROLLOUT_CRITERIA, _three_golden(), run=_RUN_CMD,
+            pipeline_body=_PIPELINE_WRONG_OUTPUT,
+        )
+        self.assertEqual(main([str(skill), "--rollout"]), 1)
+
+    def test_rollout_without_run_field_exits_zero(self) -> None:
+        skill = _make_skill(self.tmp, WELL_FORMED_CRITERIA, _three_golden())
+        self.assertEqual(main([str(skill), "--rollout"]), 0)
 
 
 if __name__ == "__main__":

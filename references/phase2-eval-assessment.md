@@ -92,6 +92,7 @@ words) **plus** one fenced ` ```json ` block the runner and autoresearch parse:
 ```json
 {
   "skill": "weekly-sales-report-skill",
+  "run": "python3 scripts/run_pipeline.py --input {input} --output {output}",
   "criteria": [
     {"id": "valid-json", "text": "Output is valid JSON", "type": "command", "cmd": "jq -e . {output}"},
     {"id": "has-region-totals", "text": "Every region has a numeric total", "type": "llm-judge"}
@@ -122,17 +123,41 @@ python3 <skill>/scripts/run_evals.py --validate
 
 It must report `VALID` (exit 0). Fix and re-run if not.
 
+## Step 3.5 — Declare a `run` command (enables end-to-end rollout)
+
+If the skill is runnable from one command (it has a `scripts/run_pipeline.py`
+orchestrator, or a single entry script), add a `run` field to the spec: a command
+template binding `{input}` (the golden case input) and `{output}` (where the skill
+writes its result). Then `run_evals.py --rollout` executes the skill on each golden
+input and scores the **real** produced output through the same `command` criteria.
+
+```json
+"run": "python3 scripts/run_pipeline.py --input {input} --output {output}"
+```
+
+Rules:
+- `{output}` is **required** in `run`; `{input}` is optional (omit for skills that
+  take no input file). `--validate` enforces this.
+- The `run` field is **optional**. A spec without it still validates and scores the
+  golden baseline exactly as before — `--rollout` then prints "rollout unavailable"
+  and exits 0 (nothing to run is not a failure).
+- For genuinely interactive/branching skills (no single deterministic command),
+  omit `run` — the rollout harness is for the deterministic happy path, same
+  boundary as the `run_pipeline.py` orchestrator (see `phase5-orchestration.md`).
+
 ## Step 4 — Tell the user how to use it
 
 After creation, alongside the install/share messaging, print:
 
 > This skill ships an eval spec at `evals/<skill-name>.eval.md`.
 > Check it against the golden baseline anytime: `python3 scripts/run_evals.py`
+> Run it end-to-end and score the real output: `python3 scripts/run_evals.py --rollout`
+> Capture the first passing output as the baseline for pending cases:
+> `python3 scripts/run_evals.py --rollout --promote`
 > To optimize the skill against its metric:
 > `/autoresearch-universal optimize . using evals/<skill-name>.eval.md`
-> (Full optimization of skills that run scripts/tools needs a rollout harness,
-> which this version does not provide — the command checks and the
-> autoresearch handoff work today.)
+> (`--rollout` runs the skill's `run` command; `llm-judge` checks are still a
+> printed checklist, not auto-graded.)
 
 ## Handoff to autoresearch-universal (rule 18)
 
@@ -168,9 +193,13 @@ Eval emission is never allowed to block or fail skill creation (mirrors the
 
 ## Out of scope for this version
 
-- A **rollout harness** that executes the generated skill on each golden input
-  to produce real output for scoring. The runner checks the golden baseline and
-  scores a `--output` you supply; it does not run the skill itself.
 - Automated grading of `llm-judge` criteria (printed as a checklist).
 - A held-out `test` split distinct from `val` (all golden cases are `val`).
 - Multiple eval specs per skill.
+- Making `--rollout` a hard pre-delivery gate: it runs arbitrary skill code and
+  `pending-first-green` cases have no baseline to score, so it stays opt-in.
+  `--validate` remains the delivery gate.
+
+Now supported (previously out of scope): an end-to-end **rollout harness** —
+`run_evals.py --rollout` runs the skill's declared `run` command on each golden
+input and scores the real output (see Step 3.5).
