@@ -1,0 +1,17 @@
+{
+  "width": 84,
+  "height": 26,
+  "events": [
+    {"line": "{green}${reset} {bold}python3 scripts/validate.py{reset} references/examples/weekly-crm-report", "delay": 0.4},
+    {"lines_from": "/tmp/out_validate.txt", "start": 1, "end": 5, "first_delay": 0.5, "delay": 0.22},
+    {"line": "{dim}  … (5 non-blocking warnings){reset}", "delay": 0.3},
+    {"lines_from": "/tmp/out_validate.txt", "start": 11, "end": 11, "first_delay": 0.3, "delay": 0.2},
+    {"pause": 0.9},
+    {"line": "{green}${reset} {bold}python3 scripts/security_scan.py{reset} references/examples/weekly-crm-report", "delay": 0.4},
+    {"lines_from": "/tmp/out_scan.txt", "start": 1, "end": 6, "first_delay": 0.5, "delay": 0.22},
+    {"pause": 0.9},
+    {"line": "{green}${reset} {bold}python3{reset} references/examples/weekly-crm-report/scripts/run_evals.py --rollout", "delay": 0.4},
+    {"lines_from": "/tmp/out_rollout.txt", "start": 1, "end": 11, "first_delay": 0.5, "delay": 0.22},
+    {"pause": 1.4}
+  ]
+}

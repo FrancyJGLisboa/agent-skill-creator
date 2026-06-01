@@ -3,10 +3,20 @@
 This folder holds the README's visual demo. Two pieces:
 
 - **`hero.svg`** — a static flow diagram (workflow description → 5-phase pipeline →
-  17 platforms). Committed, renders on GitHub immediately, used as the fallback.
-- **`demo.cast`** — an [asciinema](https://asciinema.org) v2 cast of the end-to-end
-  flow (install → `/agent-skill-creator` → generated skill → run it). Render it to a
-  GIF so the README shows motion.
+  17 platforms). Committed, renders on GitHub immediately, linked under the GIF as the
+  conceptual overview / fallback.
+- **`demo.cast`** — an [asciinema](https://asciinema.org) v2 cast that re-paces the
+  **genuine output** of a generated skill's quality gates (`validate` → `security_scan`
+  → eval `--rollout`). Rendered to `demo.gif`, the README's top visual.
+
+## The honesty rule
+
+Every line of output in `demo.cast` is **verbatim** real output captured from running the
+commands below against the bundled example skill (`references/examples/weekly-crm-report`).
+Nothing is hand-written or embellished. Only the `$ …` command prompts and an honest
+`… (5 non-blocking warnings)` truncation marker are authored; the timing is paced for
+readability (these are fast scripts that dump output near-instantly on a real TTY, so a
+raw real-time capture would just flash). Re-running the commands reproduces the same output.
 
 ## Render the GIF (one step — needs `agg`)
 
@@ -17,34 +27,39 @@ This folder holds the README's visual demo. Two pieces:
 brew install agg            # macOS
 cargo install --git https://github.com/asciinema/agg
 
-# render the committed cast to a GIF
-agg --theme github-dark --font-size 22 assets/demo.cast assets/demo.gif
+# render the committed cast to a GIF (README defaults: small font, idle trimmed)
+~/.claude/skills/readme-terminal-gif/scripts/render.sh assets/demo.cast assets/demo.gif
+# or, plain agg:
+agg --font-size 14 --idle-time-limit 2 --theme asciinema assets/demo.cast assets/demo.gif
 ```
 
-Commit `assets/demo.gif`, and the README's top visual will switch from the static
-SVG to the animated GIF automatically (the README already points at `assets/demo.gif`
-with the SVG as the `<img>` fallback).
+## Re-build the cast from real output (reproducible)
 
-## Re-record from scratch (optional)
-
-The cast is hand-authored so it stays reproducible and small. To capture a **real**
-session instead:
+The cast is built from the verbatim output of three real commands via the
+`readme-terminal-gif` skill's replay path:
 
 ```bash
-asciinema rec assets/demo.cast --overwrite --cols 90 --rows 26
-# run: the bootstrap one-liner, then /agent-skill-creator "<your workflow>",
-# then invoke the generated skill. Exit the shell to stop recording.
-```
+# 1. capture genuine output
+python3 scripts/validate.py references/examples/weekly-crm-report          > /tmp/out_validate.txt 2>&1
+python3 scripts/security_scan.py references/examples/weekly-crm-report      > /tmp/out_scan.txt 2>&1
+python3 references/examples/weekly-crm-report/scripts/run_evals.py --rollout > /tmp/out_rollout.txt 2>&1
 
-Keep it under ~15 seconds and end on the generated artifact — that beat is what
-makes a cold visitor "get it".
+# 2. re-pace it into a cast (storyboard references those files; text stays verbatim)
+~/.claude/skills/readme-terminal-gif/scripts/make_cast.py assets/storyboard.json --out assets/demo.cast
+
+# 3. render + eyeball a frame before committing
+~/.claude/skills/readme-terminal-gif/scripts/render.sh assets/demo.cast assets/demo.gif
+~/.claude/skills/readme-terminal-gif/scripts/check_frame.py assets/demo.gif /tmp/frame.png 1.0
+```
 
 ## Storyboard (what the cast shows)
 
-1. `curl … bootstrap.sh | sh` → "Detected Claude Code, Cursor, Gemini CLI / Installed".
-2. `/agent-skill-creator "every Friday I clean the CRM export and email a regional
-   sales report"` → Phases 1–5 stream by; validate / security / pipeline / evals all
-   PASS.
-3. `✓ weekly-crm-report-skill (12 files, evals, installer)` installed on 3 tools.
-4. `/weekly-crm-report-skill data/crm-export.csv` → `report.pdf` + `dashboard.html`.
-5. Tagline beat: "Same skill, same command, every tool."
+A real quality-gate run on a generated skill, ending on the proof beat:
+
+1. `$ validate.py …/weekly-crm-report` → **Status: VALID** (+ 5 non-blocking warnings, truncated).
+2. `$ security_scan.py …/weekly-crm-report` → **Status: CLEAN — No security issues found.**
+3. `$ run_evals.py --rollout` → 9 golden-case checks, all `pass` →
+   **rollout: 9 passed, 0 failed, 0 errored.**
+
+That closing line — a generated skill's bundled evals actually passing — is the beat that
+makes a cold visitor "get it".

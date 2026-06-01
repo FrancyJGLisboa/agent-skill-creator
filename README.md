@@ -9,11 +9,11 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)]()
 
 <p align="center">
-  <img src="assets/hero.svg" alt="Describe a workflow; get a validated skill installed across 17 platforms." width="860">
+  <img src="assets/demo.gif" alt="A real run of a generated skill's quality gates: validate → security scan → eval rollout, all passing." width="820">
 </p>
 
-<!-- For an animated terminal demo, render assets/demo.cast → assets/demo.gif (see assets/DEMO.md) and swap the src above. -->
-<p align="center"><em><a href="assets/DEMO.md">▶ watch the 15-second terminal demo</a></em></p>
+<!-- demo.gif is built from assets/demo.cast (see assets/DEMO.md). hero.svg is the static flow diagram, linked below as the conceptual overview / fallback. -->
+<p align="center"><em>Genuine output from a real run — <code>validate</code> → <code>security_scan</code> → eval <code>--rollout</code> on a generated skill (paced for readability). <a href="assets/hero.svg">See the flow diagram</a>.</em></p>
 
 **What you get:** describe a workflow in plain English (or hand over a PDF, a link, a script) → a complete, **validated and security-scanned** agent skill, with functional code, its own **eval spec**, and a cross-platform installer → the same skill running on **Claude Code, Cursor, Copilot, Gemini, Windsurf, and 12 more** with one command.
 
