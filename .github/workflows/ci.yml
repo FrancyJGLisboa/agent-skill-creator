@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Run test suite
+        run: uv run --with pytest pytest scripts/tests/ -q
+
+      - name: Validate bundled example skills
+        run: |
+          for skill in references/examples/*/; do
+            if [ -f "$skill/SKILL.md" ]; then
+              echo "::group::$skill"
+              python3 scripts/validate.py "$skill"
+              python3 scripts/check_pipeline.py "$skill"
+              python3 scripts/security_scan.py "$skill"
+              echo "::endgroup::"
+            fi
+          done
+
+      - name: Validate bundled eval specs
+        run: |
+          for runner in references/examples/*/scripts/run_evals.py; do
+            [ -f "$runner" ] || continue
+            skill_dir="$(dirname "$(dirname "$runner")")"
+            echo "::group::eval $skill_dir"
+            python3 "$runner" "$skill_dir" --validate
+            echo "::endgroup::"
+          done
