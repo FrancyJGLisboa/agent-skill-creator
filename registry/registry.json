@@ -4,5 +4,55 @@
     "created": "2026-02-26T19:19:18+00:00",
     "schema_version": "1"
   },
-  "skills": []
+  "skills": [
+    {
+      "name": "xquik-social-data-skill",
+      "description": "Use Xquik for X (Twitter) data tasks such as tweet search, user lookup, follower extraction, media download, monitoring, webhooks, and MCP-backed API work. Requires a Xquik API key and must never request X login material.",
+      "version": "2.4.16",
+      "author": "Xquik",
+      "license": "MIT",
+      "tags": [
+        "x",
+        "twitter",
+        "social-data",
+        "mcp",
+        "api"
+      ],
+      "platforms": [
+        "claude-code",
+        "copilot",
+        "cursor",
+        "windsurf",
+        "cline",
+        "codex",
+        "gemini",
+        "kiro",
+        "trae",
+        "goose",
+        "opencode",
+        "roo-code",
+        "kilo-code",
+        "factory",
+        "junie",
+        "antigravity",
+        "universal"
+      ],
+      "published": "2026-06-08T23:16:48+00:00",
+      "path": "skills/xquik-social-data-skill",
+      "validation": {
+        "valid": true,
+        "errors": 0,
+        "warnings": 0
+      },
+      "security": {
+        "clean": true,
+        "issues": 0
+      },
+      "staleness": {
+        "created": "2026-06-08",
+        "last_reviewed": "2026-06-08",
+        "review_interval_days": 90
+      }
+    }
+  ]
 }
