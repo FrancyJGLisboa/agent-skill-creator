@@ -17,7 +17,12 @@ from pathlib import Path
 ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from export_utils import export_skill  # noqa: E402
+from export_utils import (  # noqa: E402
+    create_export_package,
+    export_skill,
+    get_skill_version,
+    should_include_file,
+)
 
 EXPORT_CLI = ROOT / "scripts" / "export_utils.py"
 
@@ -98,6 +103,92 @@ class TestExportSkillRegression(unittest.TestCase):
             expected.exists(),
             f"expected {expected}, found: {sorted(p.name for p in self.out.iterdir())}",
         )
+
+
+class TestGetSkillVersion(unittest.TestCase):
+    def setUp(self):
+        self._cwd = os.getcwd()
+        self._tmp = tempfile.TemporaryDirectory()
+        self.base = Path(self._tmp.name)
+
+    def tearDown(self):
+        os.chdir(self._cwd)
+        self._tmp.cleanup()
+
+    def test_override_takes_precedence_and_normalizes_v_prefix(self):
+        skill = make_skill(self.base)
+        self.assertEqual(get_skill_version(str(skill), "2.0.1"), "v2.0.1")
+        self.assertEqual(get_skill_version(str(skill), "v3.0.0"), "v3.0.0")
+
+    def test_falls_back_to_skill_md_frontmatter(self):
+        skill = make_skill(self.base)
+        self.assertEqual(get_skill_version(str(skill)), "v1.2.3")
+
+    def test_defaults_when_no_version_source(self):
+        bare = self.base / "bare-skill"
+        bare.mkdir()
+        self.assertEqual(get_skill_version(str(bare)), "v1.0.0")
+
+
+class TestShouldIncludeFile(unittest.TestCase):
+    def test_exclusions_and_inclusions(self):
+        cases = {
+            ".env": False,
+            "credentials.json": False,
+            ".DS_Store": False,
+            "module.pyc": False,
+            "debug.log": False,
+            "SKILL.md": True,
+            "main.py": True,
+            "data.csv": True,
+        }
+        for filename, expected in cases.items():
+            self.assertEqual(
+                should_include_file(f"/skill/{filename}", filename),
+                expected,
+                filename,
+            )
+
+
+class TestCreateExportPackage(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.base = Path(self._tmp.name)
+        self.skill = make_skill(self.base)
+        (self.skill / "references").mkdir()
+        (self.skill / "references" / "guide.md").write_text("docs\n", encoding="utf-8")
+        (self.skill / "examples").mkdir()
+        (self.skill / "examples" / "sample.csv").write_text("a,b\n", encoding="utf-8")
+        (self.skill / ".env").write_text("SECRET=1\n", encoding="utf-8")
+        self.out = self.base / "out"
+        self.out.mkdir()
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _names(self, result):
+        with zipfile.ZipFile(result["zip_path"]) as zf:
+            return set(zf.namelist())
+
+    def test_desktop_variant_includes_docs_and_excludes_secrets(self):
+        result = create_export_package(
+            str(self.skill), str(self.out), variant="desktop", version="v1.2.3"
+        )
+        self.assertTrue(result["success"], result["message"])
+        names = self._names(result)
+        self.assertIn("SKILL.md", names)
+        self.assertIn(os.path.join("references", "guide.md"), names)
+        self.assertNotIn(".env", names)
+
+    def test_api_variant_excludes_extra_docs_and_examples(self):
+        result = create_export_package(
+            str(self.skill), str(self.out), variant="api", version="v1.2.3"
+        )
+        self.assertTrue(result["success"], result["message"])
+        names = self._names(result)
+        self.assertIn("SKILL.md", names)
+        self.assertNotIn(os.path.join("references", "guide.md"), names)
+        self.assertNotIn(os.path.join("examples", "sample.csv"), names)
 
 
 class TestExportSkillFailurePath(unittest.TestCase):
