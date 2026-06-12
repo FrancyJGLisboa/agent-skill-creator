@@ -544,7 +544,6 @@ After installation, verify:
 def export_skill(
     skill_path: str,
     variants: List[str] = ['desktop', 'api'],
-    platform: str = None,
     version_override: str = None,
     output_dir: str = None
 ) -> Dict:
@@ -554,7 +553,6 @@ def export_skill(
     Args:
         skill_path: Path to skill directory
         variants: List of variants to create ('desktop', 'api', or both)
-        platform: Target platform for platform-specific output (optional)
         version_override: User-specified version (optional)
         output_dir: Where to save exports (default: exports/ in parent dir)
 
@@ -714,7 +712,7 @@ Examples:
 
     # Run export
     print(f"\n🚀 Exporting skill: {os.path.basename(skill_path)}\n")
-    results = export_skill(skill_path, variants, version_override, output_dir)
+    results = export_skill(skill_path, variants, version_override=version_override, output_dir=output_dir)
 
     # Print summary
     print(f"\n{'='*60}")
