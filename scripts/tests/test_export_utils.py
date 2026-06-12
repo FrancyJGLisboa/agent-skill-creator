@@ -95,9 +95,11 @@ class TestExportSkillRegression(unittest.TestCase):
                 "--version", "9.9.9",
                 "--output-dir", str(self.out),
             ],
-            capture_output=True, text=True, timeout=120,
+            # The CLI emits UTF-8 (emoji status output); decode it as UTF-8 so
+            # capture works regardless of the platform's default code page.
+            capture_output=True, text=True, encoding="utf-8", timeout=120,
         )
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(result.returncode, 0, (result.stdout or "") + (result.stderr or ""))
         expected = self.out / "demo-export-skill-desktop-v9.9.9.zip"
         self.assertTrue(
             expected.exists(),
