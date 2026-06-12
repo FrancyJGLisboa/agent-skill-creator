@@ -168,7 +168,9 @@ class TestCreateExportPackage(unittest.TestCase):
 
     def _names(self, result):
         with zipfile.ZipFile(result["zip_path"]) as zf:
-            return set(zf.namelist())
+            # Zip arcnames always use forward slashes; normalize so the
+            # assertions below are identical on POSIX and Windows.
+            return {name.replace("\\", "/") for name in zf.namelist()}
 
     def test_desktop_variant_includes_docs_and_excludes_secrets(self):
         result = create_export_package(
@@ -177,7 +179,7 @@ class TestCreateExportPackage(unittest.TestCase):
         self.assertTrue(result["success"], result["message"])
         names = self._names(result)
         self.assertIn("SKILL.md", names)
-        self.assertIn(os.path.join("references", "guide.md"), names)
+        self.assertIn("references/guide.md", names)
         self.assertNotIn(".env", names)
 
     def test_api_variant_excludes_extra_docs_and_examples(self):
@@ -187,8 +189,8 @@ class TestCreateExportPackage(unittest.TestCase):
         self.assertTrue(result["success"], result["message"])
         names = self._names(result)
         self.assertIn("SKILL.md", names)
-        self.assertNotIn(os.path.join("references", "guide.md"), names)
-        self.assertNotIn(os.path.join("examples", "sample.csv"), names)
+        self.assertNotIn("references/guide.md", names)
+        self.assertNotIn("examples/sample.csv", names)
 
 
 class TestExportSkillFailurePath(unittest.TestCase):

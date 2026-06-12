@@ -664,6 +664,15 @@ def export_skill(
 
 def main():
     """CLI interface for export_utils.py"""
+    # The status output uses emoji; Windows consoles default to cp1252 and
+    # raise UnicodeEncodeError on them. Force UTF-8 where the stream supports it.
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            try:
+                stream.reconfigure(encoding="utf-8")
+            except (ValueError, OSError):
+                pass
+
     if len(sys.argv) < 2:
         print("""
 Usage: python export_utils.py <skill-path> [options]
