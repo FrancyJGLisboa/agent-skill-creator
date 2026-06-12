@@ -16,7 +16,7 @@ metadata:
 compatibility: >-
   Works on all platforms supporting the Agent Skills Open Standard (SKILL.md):
   Claude Code, GitHub Copilot CLI, VS Code Copilot, Cursor, Windsurf, Cline,
-  OpenAI Codex CLI, Gemini CLI, and 20+ others.
+  OpenAI Codex CLI, Gemini CLI, and more — 17 platforms total.
 ---
 # /agent-skill-creator — Level 5 Skill Dark Factory
 
@@ -585,7 +585,7 @@ See `references/architecture-guide.md` for detailed decision framework.
 
 ## Cross-Platform Support
 
-Generated skills work across 20+ tools in 3 tiers. Every generated skill outputs both **SKILL.md** (skill definition, ~15 tools) and **AGENTS.md** (instruction file, ~15 tools) to maximize reach.
+Generated skills work across 17 tools in 3 tiers. Every generated skill outputs both **SKILL.md** (skill definition, ~15 tools) and **AGENTS.md** (instruction file, ~15 tools) to maximize reach.
 
 ### Tier 1 — Native SKILL.md (reads directly, no conversion)
 

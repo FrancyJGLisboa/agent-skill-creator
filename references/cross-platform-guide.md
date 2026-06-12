@@ -7,7 +7,7 @@
 
 ## Overview
 
-Skills created by agent-skill-creator output both **SKILL.md** (agentskills.io spec, ~15 tools) and **AGENTS.md** (AAIF-governed spec, ~15 tools) to maximize cross-tool reach. Together they cover 20+ tools across 3 support tiers.
+Skills created by agent-skill-creator output both **SKILL.md** (agentskills.io spec, ~15 tools) and **AGENTS.md** (AAIF-governed spec, ~15 tools) to maximize cross-tool reach. Together they cover 17 tools across 3 support tiers.
 
 **Standards governance:**
 - **SKILL.md** — maintained by Anthropic (agentskills.io). Defines skill format, frontmatter schema, progressive disclosure.
