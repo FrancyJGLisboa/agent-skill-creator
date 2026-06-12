@@ -175,6 +175,11 @@ def detect_platform() -> str:
     for platform, path in checks:
         if Path(path).expanduser().exists():
             return platform
+    print(
+        "Note: no agent platform detected; defaulting to claude-code "
+        "(use --platform to override)",
+        file=sys.stderr,
+    )
     return "claude-code"
 
 

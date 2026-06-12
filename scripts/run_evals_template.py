@@ -138,6 +138,15 @@ def validate_spec(spec: dict, skill_dir: Path) -> list[str]:
                 f"{where}: null 'expected' must be marked expected_status='pending-first-green'"
             )
 
+    if golden and all(
+        case.get("expected_status") == "pending-first-green" for case in golden
+    ):
+        print(
+            "WARNING: every golden case is pending-first-green; the first rollout "
+            "validates nothing until baselines are promoted with --promote",
+            file=sys.stderr,
+        )
+
     return errors
 
 

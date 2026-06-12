@@ -4,6 +4,8 @@ Covers the two modes the runner exposes: --validate (shape checking) and the
 default run (deterministic command checks against the golden baseline).
 """
 
+import contextlib
+import io
 import json
 import sys
 import tempfile
@@ -142,6 +144,25 @@ class ValidateSpecTest(unittest.TestCase):
         skill = _make_skill(self.tmp, WELL_FORMED_CRITERIA, _three_golden(with_expected=False))
         spec = parse_spec(find_spec(skill))
         self.assertEqual(validate_spec(spec, skill), [])
+
+    def test_all_pending_first_green_warns_on_stderr(self) -> None:
+        skill = _make_skill(self.tmp, WELL_FORMED_CRITERIA, _three_golden(with_expected=False))
+        spec = parse_spec(find_spec(skill))
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            self.assertEqual(validate_spec(spec, skill), [])
+        self.assertIn("pending-first-green", stderr.getvalue())
+
+    def test_mixed_baselines_do_not_warn(self) -> None:
+        golden = _three_golden()
+        golden[0]["expected"] = None
+        golden[0]["expected_status"] = "pending-first-green"
+        skill = _make_skill(self.tmp, WELL_FORMED_CRITERIA, golden)
+        spec = parse_spec(find_spec(skill))
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            self.assertEqual(validate_spec(spec, skill), [])
+        self.assertEqual(stderr.getvalue(), "")
 
 
 class RunCommandChecksTest(unittest.TestCase):
