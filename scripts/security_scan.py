@@ -44,6 +44,18 @@ API_KEY_PATTERNS: list[tuple[str, re.Pattern, str, str]] = [
         "high",
     ),
     (
+        "GitHub Fine-Grained Personal Access Token",
+        re.compile(r"github_pat_[a-zA-Z0-9_]{22,255}"),
+        "Hardcoded GitHub fine-grained personal access token detected",
+        "high",
+    ),
+    (
+        "GitHub OAuth/App Token",
+        re.compile(r"gh[ousr]_[a-zA-Z0-9]{36,255}"),
+        "Hardcoded GitHub OAuth, user-to-server, server, or refresh token detected",
+        "high",
+    ),
+    (
         "GitLab Personal Access Token",
         re.compile(r"glpat-[a-zA-Z0-9\-]{20}"),
         "Hardcoded GitLab personal access token detected",
