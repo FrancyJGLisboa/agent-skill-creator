@@ -14,7 +14,7 @@ jobs:
       - name: Run ruff
         uses: astral-sh/ruff-action@v3
         with:
-          args: "check --target-version py310 scripts/"
+          args: "check --target-version py310"
 
   test:
     runs-on: ubuntu-latest
