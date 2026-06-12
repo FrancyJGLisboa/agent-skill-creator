@@ -633,34 +633,50 @@ All commands use exit code `0` for success, `1` for errors. All support `--json`
 agent-skill-creator/
   SKILL.md                      # The skill definition (what the agent reads)
   README.md                     # This file
-  install.sh                    # Self-installer, macOS/Linux (for cloned repos)
-  install.ps1                   # Self-installer, Windows (for cloned repos)
+  CONTRIBUTING.md               # How to contribute (incl. adding a platform)
+  CODE_OF_CONDUCT.md            # Contributor Covenant
+  CHANGELOG.md                  # Version history
+  LICENSE                       # MIT
+  install.sh / install.ps1      # Self-installer for cloned repos (macOS/Linux, Windows)
   scripts/
-    bootstrap.sh                # One-liner bootstrap, macOS/Linux
-    bootstrap.ps1               # One-liner bootstrap, Windows (PowerShell)
-    bootstrap.bat               # One-liner bootstrap, Windows (Command Prompt)
-    install-skill.sh            # Universal skill installer, macOS/Linux
-    install-skill.ps1           # Universal skill installer, Windows
-    install-template.sh         # Template for generated installers, macOS/Linux
-    install-template.ps1        # Template for generated installers, Windows
-    validate.py                 # Spec compliance checker
-    security_scan.py            # Security scanner
-    staleness_check.py          # Staleness detection (review, deps, drift)
-    export_utils.py             # Cross-platform export
-    skill_registry.py           # Team skill registry
+    bootstrap.sh / .ps1 / .bat  # One-liner bootstrap (macOS/Linux, PowerShell, cmd)
+    install-skill.sh / .ps1     # Universal skill installer
+    install-template.sh / .ps1  # Template for generated skills' installers
+    platforms.py                # Canonical 17-platform registry (single source of truth)
+    validate.py                 # SKILL.md spec compliance checker
+    security_scan.py            # Secret / injection scanner
+    check_pipeline.py           # Verifies generated scripts compile + declare deps
+    export_utils.py             # Cross-platform export (desktop / API packages)
+    skill_registry.py           # Git-based team skill registry
+    skill_document.py           # SKILL.md parser (shared by the tools above)
+    run_evals_template.py       # Eval runner bundled into generated skills
+    staleness_check.py          # Staleness: review dates, deps, schema drift
+    dependency_health.py        # API dependency reachability check
+    schema_drift.py             # API schema drift detection
+    review_staleness.py         # Review-date staleness logic
+    artifact_detector.py        # Picks a React artifact shape for a skill
+    tests/                      # pytest suite (CI runs this)
   references/                   # Detailed docs (loaded by the agent on demand)
-    pipeline-phases.md          # Full creation pipeline
+    pipeline-phases.md          # Full 5-phase creation pipeline
     architecture-guide.md       # Skill structure decisions
     quality-standards.md        # Code and documentation standards
     multi-agent-guide.md        # Multi-skill suite creation
     cross-platform-guide.md     # Platform compatibility (tiers, adapters, paths)
     export-guide.md             # Export documentation
-    templates-guide.md          # Template system
+    templates-guide.md          # Template system (blueprints)
     interactive-mode.md         # Interactive wizard
     agentdb-integration.md      # Learning system
+    phase2-eval-assessment.md      # Eval-spec design reference
+    phase2-artifact-assessment.md  # Artifact-detection reference
     phase4-detection.md         # Detection & keyword-design craft reference
-    templates/                  # Skill templates
-    examples/stock-analyzer/    # Example skill
+    phase5-orchestration.md     # run_pipeline.py orchestration reference
+    claude-artifact-format.md   # Artifact emission protocol
+    artifact-templates/         # React artifact templates
+    templates/                  # Skill templates (activation README template)
+    examples/                   # Three runnable example skills
+      weekly-crm-report/
+      pr-blocker-summarizer/
+      stock-analyzer/
   registry/                     # Shared skill catalog
     registry.json
     skills/
@@ -671,11 +687,13 @@ agent-skill-creator/
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run `python3 scripts/validate.py ./` and `python3 scripts/security_scan.py ./`
-5. Submit a pull request
+Contributions are welcome — see **[CONTRIBUTING.md](CONTRIBUTING.md)** for the
+workflow, local checks, and a step-by-step guide to **adding a new platform**.
+By participating you agree to the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+The short version: fork, branch, make your change, run `uv run pytest
+scripts/tests/` plus `python3 scripts/validate.py ./` and
+`python3 scripts/security_scan.py ./`, then open a PR.
 
 ---
 

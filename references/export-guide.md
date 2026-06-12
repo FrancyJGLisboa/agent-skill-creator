@@ -548,7 +548,7 @@ jobs:
 - **Cross-Platform Guide**: `cross-platform-guide.md` - Platform compatibility matrix
 - **Main README**: `../README.md` - Agent-skill-creator overview
 - **SKILL.md**: `../SKILL.md` - Core skill definition
-- **CHANGELOG**: `../docs/CHANGELOG.md` - Version history
+- **CHANGELOG**: `../CHANGELOG.md` - Version history
 
 ---
 
