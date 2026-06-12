@@ -157,7 +157,7 @@ class StockAnalyzer:
             'timestamp': datetime.now().isoformat()
         }
 
-        print(f"[StockAnalyzer] Comparison complete")
+        print("[StockAnalyzer] Comparison complete")
         print("  Rankings:")
         for comp in comparisons:
             print(f"    #{comp['rank']}: {comp['ticker']} (score: {comp['score']:.2f})")
@@ -187,7 +187,7 @@ class StockAnalyzer:
             >>> print(alert['status'])
             active
         """
-        print(f"\n[StockAnalyzer] Setting up monitoring...")
+        print("\n[StockAnalyzer] Setting up monitoring...")
         print(f"  - Ticker: {ticker}")
         print(f"  - Condition: {condition}")
         print(f"  - Action: {action}")
@@ -382,6 +382,8 @@ def main():
     # Example 2: Multi-stock comparison
     print("\n\n--- Example 2: Compare Tech Stocks ---")
     comparison = analyzer.compare(["AAPL", "MSFT", "GOOGL"], rank_by="momentum")
+    for stock in comparison["ranked_stocks"]:
+        print(f"  {stock['ticker']}: {stock['score']}")
 
     # Example 3: Set up monitoring
     print("\n\n--- Example 3: Monitor Stock ---")

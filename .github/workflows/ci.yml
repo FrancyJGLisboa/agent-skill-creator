@@ -7,15 +7,28 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Run ruff
+        uses: astral-sh/ruff-action@v3
+        with:
+          args: "check --target-version py310"
 
-      - name: Set up Python
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
@@ -35,12 +48,64 @@ jobs:
             fi
           done
 
-      - name: Validate bundled eval specs
+      - name: Validate and roll out bundled eval specs
         run: |
           for runner in references/examples/*/scripts/run_evals.py; do
             [ -f "$runner" ] || continue
             skill_dir="$(dirname "$(dirname "$runner")")"
             echo "::group::eval $skill_dir"
             python3 "$runner" "$skill_dir" --validate
+            python3 "$runner" "$skill_dir" --rollout
             echo "::endgroup::"
           done
+
+  cross-os:
+    # The project's promise is cross-platform install; run the suite on the
+    # other POSIX/Windows targets to catch path- and OS-specific bugs.
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            pytest_args: "scripts/tests/ -q"
+          - os: windows-latest
+            # test_run_evals exercises the eval runner's command-checks, which
+            # use a POSIX shell (test/grep via shell=True) and don't run under
+            # cmd.exe. Everything else (path handling, parsing, export) is
+            # portable and does run on Windows.
+            pytest_args: "scripts/tests/ -q --ignore=scripts/tests/test_run_evals.py"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+      - name: Run test suite
+        run: uv run --with pytest pytest ${{ matrix.pytest_args }}
+
+  powershell:
+    # Syntax-check the Windows installers so a broken .ps1 cannot ship
+    # unnoticed (the headline claim includes Windows tools).
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse-check PowerShell installers
+        shell: pwsh
+        run: |
+          $failed = $false
+          Get-ChildItem -Recurse -Filter *.ps1 | ForEach-Object {
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile(
+              $_.FullName, [ref]$null, [ref]$errors) | Out-Null
+            if ($errors) {
+              Write-Host "::error file=$($_.FullName)::PowerShell parse errors"
+              $errors | ForEach-Object { Write-Host "  $($_.Message)" }
+              $failed = $true
+            } else {
+              Write-Host "OK: $($_.FullName)"
+            }
+          }
+          if ($failed) { exit 1 }
