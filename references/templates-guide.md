@@ -6,6 +6,13 @@ The template-based creation system accelerates skill creation by providing pre-b
 
 ## Available Templates
 
+> **Status note:** the templates below are **blueprints, not shipped scaffold
+> directories**. `references/templates/` currently contains only the README
+> activation template. When a user requests template-based creation, the agent
+> synthesizes the scaffold from the blueprint tables in this guide (APIs,
+> analyses, script layout) rather than copying files from disk. Shipping these
+> as ready-made directories is planned; contributions welcome.
+
 ### Financial Analysis
 
 **Template ID**: `financial-analysis`
@@ -175,7 +182,7 @@ references/templates/custom/
 
 ### Registering the Template
 
-After creating the template files, register it by adding an entry to `references/templates/registry.json`:
+After creating the template files, register it by adding an entry to `references/templates/registry.json` (this registry does not ship yet — create it alongside your first template directory):
 
 ```json
 {
