@@ -545,7 +545,8 @@ def export_skill(
     skill_path: str,
     variants: List[str] = ['desktop', 'api'],
     version_override: str = None,
-    output_dir: str = None
+    output_dir: str = None,
+    strict: bool = False
 ) -> Dict:
     """
     Main export function - validates, packages, and generates guides.
@@ -555,6 +556,9 @@ def export_skill(
         variants: List of variants to create ('desktop', 'api', or both)
         version_override: User-specified version (optional)
         output_dir: Where to save exports (default: exports/ in parent dir)
+        strict: If True, block the export when the security scan reports any
+            high-severity issue. Default False keeps the report-don't-block
+            behavior (findings are printed but the export proceeds).
 
     Returns:
         Dict with export results
@@ -600,10 +604,31 @@ def export_skill(
                 import json as _json
                 try:
                     sec_result = _json.loads(result.stdout)
-                    if sec_result.get('issues'):
-                        print(f"⚠️  Security issues found: {len(sec_result['issues'])}")
-                        for issue in sec_result['issues'][:5]:
+                    issues = sec_result.get('issues', [])
+                    if issues:
+                        print(f"⚠️  Security issues found: {len(issues)}")
+                        for issue in issues[:5]:
                             print(f"   - [{issue.get('severity', 'unknown')}] {issue.get('description', '')}")
+                        high_issues = [i for i in issues if i.get('severity') == 'high']
+                        if strict and high_issues:
+                            print(
+                                f"❌ Strict mode: blocking export on "
+                                f"{len(high_issues)} high-severity security issue(s)."
+                            )
+                            return {
+                                'success': False,
+                                'message': (
+                                    f"Security scan failed (strict mode): "
+                                    f"{len(high_issues)} high-severity issue(s)"
+                                ),
+                                'issues': [
+                                    f"[{i.get('severity')}] "
+                                    f"{i.get('file', '')}"
+                                    f"{':' + str(i['line']) if i.get('line') else ''}: "
+                                    f"{i.get('description', '')}"
+                                    for i in high_issues
+                                ],
+                            }
                 except (ValueError, KeyError):
                     pass
             else:
@@ -684,12 +709,15 @@ Options:
   --variant VARIANT       Export variant: desktop, api, or both (default: both)
   --version VERSION       Override version (default: auto-detect)
   --output-dir DIR        Output directory (default: exports/)
+  --strict                Block the export if the security scan reports any
+                          high-severity issue (default: report but don't block)
 
 Examples:
   python export_utils.py ./my-skill
   python export_utils.py ./my-skill --variant desktop
   python export_utils.py ./my-skill --version 2.0.1
   python export_utils.py ./my-skill --variant api --output-dir ./dist
+  python export_utils.py ./my-skill --strict
 """)
         sys.exit(1)
 
@@ -699,6 +727,7 @@ Examples:
     variants = ['desktop', 'api']  # default: both
     version_override = None
     output_dir = None
+    strict = False
 
     i = 2
     while i < len(sys.argv):
@@ -715,13 +744,19 @@ Examples:
         elif sys.argv[i] == '--output-dir':
             output_dir = sys.argv[i + 1]
             i += 2
+        elif sys.argv[i] == '--strict':
+            strict = True
+            i += 1
         else:
             print(f"Unknown option: {sys.argv[i]}")
             sys.exit(1)
 
     # Run export
     print(f"\n🚀 Exporting skill: {os.path.basename(skill_path)}\n")
-    results = export_skill(skill_path, variants, version_override=version_override, output_dir=output_dir)
+    results = export_skill(
+        skill_path, variants,
+        version_override=version_override, output_dir=output_dir, strict=strict,
+    )
 
     # Print summary
     print(f"\n{'='*60}")

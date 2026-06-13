@@ -68,6 +68,47 @@ API_KEY_PATTERNS: list[tuple[str, re.Pattern, str, str]] = [
         "high",
     ),
     (
+        "Anthropic API Key",
+        # Listed before the OpenAI "sk-" pattern; the hyphens in "sk-ant-"
+        # stop the OpenAI regex from matching, so order is for clarity only.
+        re.compile(r"sk-ant-[a-zA-Z0-9_\-]{20,}"),
+        "Hardcoded Anthropic API key detected",
+        "high",
+    ),
+    (
+        "Stripe Secret Key",
+        re.compile(r"[sr]k_live_[0-9a-zA-Z]{16,}"),
+        "Hardcoded Stripe live secret/restricted key detected",
+        "high",
+    ),
+    (
+        "npm Access Token",
+        re.compile(r"npm_[A-Za-z0-9]{36}"),
+        "Hardcoded npm access token detected",
+        "high",
+    ),
+    (
+        "Google API Key",
+        re.compile(r"AIza[0-9A-Za-z_\-]{35}"),
+        "Hardcoded Google API key detected",
+        "high",
+    ),
+    (
+        "Hugging Face Token",
+        re.compile(r"hf_[a-zA-Z0-9]{34,}"),
+        "Hardcoded Hugging Face access token detected",
+        "high",
+    ),
+    (
+        "JSON Web Token",
+        # Three base64url segments; the first two header/payload parts of a
+        # JWT both start with "eyJ" (base64 of '{"'). Medium severity: a JWT
+        # is not always a long-lived secret and can appear legitimately in docs.
+        re.compile(r"eyJ[a-zA-Z0-9_\-]+\.eyJ[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+"),
+        "Possible hardcoded JSON Web Token (JWT) detected",
+        "medium",
+    ),
+    (
         "Generic Secret",
         re.compile(
             r"""(api[_\-]?key|secret|token|password)\s*[:=]\s*["'][^"']{8,}["']""",

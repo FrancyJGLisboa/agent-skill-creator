@@ -203,5 +203,58 @@ class TestExportSkillFailurePath(unittest.TestCase):
             self.assertTrue(results.get("issues"))
 
 
+class TestStrictSecurityFlag(unittest.TestCase):
+    """Issue #11: --strict blocks export on high-severity security findings."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.base = Path(self._tmp.name)
+        self.skill = make_skill(self.base, "demo-strict-skill")
+        # A hardcoded GitHub PAT (built by concatenation so this test file
+        # never contains a contiguous token-shaped string) -> high severity.
+        token = "ghp_" + "a1B2" * 9
+        (self.skill / "scripts" / "leak.py").write_text(
+            f'TOKEN = "{token}"\n', encoding="utf-8"
+        )
+        self.out = self.base / "out"
+        self.out.mkdir()
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_strict_blocks_export_on_high_severity(self):
+        results = export_skill(
+            str(self.skill), ["desktop"],
+            version_override="1.0.0", output_dir=str(self.out), strict=True,
+        )
+        self.assertFalse(results["success"], results)
+        self.assertTrue(results.get("issues"))
+        # No package should have been written when strict mode blocks.
+        self.assertEqual(list(self.out.iterdir()), [])
+
+    def test_default_does_not_block_on_high_severity(self):
+        results = export_skill(
+            str(self.skill), ["desktop"],
+            version_override="1.0.0", output_dir=str(self.out),
+        )
+        self.assertTrue(results["success"], results)
+        zip_path = Path(results["packages"]["desktop"]["zip_path"])
+        self.assertTrue(zip_path.exists())
+
+    def test_cli_strict_flag_blocks(self):
+        result = subprocess.run(
+            [
+                sys.executable, str(EXPORT_CLI), str(self.skill),
+                "--variant", "desktop",
+                "--version", "1.0.0",
+                "--output-dir", str(self.out),
+                "--strict",
+            ],
+            capture_output=True, text=True, encoding="utf-8", timeout=120,
+        )
+        self.assertEqual(result.returncode, 1, (result.stdout or "") + (result.stderr or ""))
+        self.assertEqual(list(self.out.iterdir()), [])
+
+
 if __name__ == "__main__":
     unittest.main()
