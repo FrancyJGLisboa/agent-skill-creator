@@ -231,11 +231,12 @@ class TestSearch(unittest.TestCase):
 class TestResolveInstallPath(unittest.TestCase):
     def test_user_path_for_known_platform(self):
         path = reg.resolve_install_path("demo", "claude-code", project=False)
-        self.assertTrue(str(path).endswith("/.claude/skills/demo"))
+        # as_posix() normalizes separators so the assertion holds on Windows too.
+        self.assertTrue(path.as_posix().endswith("/.claude/skills/demo"))
 
     def test_project_path_for_known_platform(self):
         path = reg.resolve_install_path("demo", "claude-code", project=True)
-        self.assertTrue(str(path).endswith("/.claude/skills/demo"))
+        self.assertTrue(path.as_posix().endswith("/.claude/skills/demo"))
 
     def test_unknown_platform_exits(self):
         with self.assertRaises(SystemExit):
