@@ -476,7 +476,7 @@ python3 scripts/staleness_check.py ./my-skill/
 python3 scripts/staleness_check.py ./my-skill/ --check-deps --check-drift
 ```
 
-Skills that fail validation cannot be published. Skills with high-severity security issues are blocked.
+Skills that fail validation cannot be published. On publish, high-severity security issues block the skill (override with `--force`). On export, findings are reported but don't block by default — pass `--strict` to fail the export on any high-severity issue.
 
 ---
 
@@ -548,6 +548,7 @@ python3 scripts/skill_registry.py list                                # Browse a
 python3 scripts/skill_registry.py search "query"                     # Search skills
 python3 scripts/skill_registry.py info skill-name                    # Skill details
 python3 scripts/skill_registry.py install skill-name                 # Install a skill
+python3 scripts/skill_registry.py install skill-name --author alice  # Disambiguate a shared name
 python3 scripts/skill_registry.py remove skill-name --force          # Remove a skill
 python3 scripts/skill_registry.py stale                              # Report stale skills
 python3 scripts/skill_registry.py stale --json                       # Machine-readable output
@@ -607,6 +608,7 @@ python3 scripts/staleness_check.py ./skill/ --json               # Machine-reada
 ```bash
 python3 scripts/export_utils.py ./skill/ --variant desktop    # For Claude Desktop
 python3 scripts/export_utils.py ./skill/ --variant api        # For Claude API
+python3 scripts/export_utils.py ./skill/ --strict             # Block export on high-severity findings
 ```
 
 All commands use exit code `0` for success, `1` for errors. All support `--json` for CI/CD integration.

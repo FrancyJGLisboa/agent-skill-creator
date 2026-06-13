@@ -25,7 +25,7 @@ import json
 import re
 import shutil
 import sys
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 # --- Import sibling scripts ---
@@ -70,6 +70,75 @@ STOP_WORDS = {
 }
 
 MIN_TAG_LENGTH = 3
+
+
+# --- Namespacing & date parsing helpers ---
+
+def _slug(value: str) -> str:
+    """Return a filesystem-safe slug for an author/namespace path segment."""
+    slug = re.sub(r"[^a-zA-Z0-9._-]+", "-", value.strip().lower()).strip("-")
+    return slug or "unknown"
+
+
+def skill_storage_path(name: str, author: str) -> str:
+    """
+    Relative registry path for a skill's files, namespaced by author.
+
+    A skill with an author is stored under ``skills/<author-slug>/<name>`` so
+    two authors can publish the same skill name without clobbering each other's
+    files. Authorless skills keep the legacy flat ``skills/<name>`` layout for
+    backward compatibility with registries created before namespacing.
+    """
+    if author:
+        return f"skills/{_slug(author)}/{name}"
+    return f"skills/{name}"
+
+
+def resolve_skill_entry(
+    data: dict, name: str, author: str | None = None
+) -> tuple[dict | None, str | None]:
+    """
+    Find a single skill entry by name, disambiguating by author when needed.
+
+    Returns ``(entry, None)`` on a unique match, or ``(None, error_message)``
+    when the skill is missing or the name is shared by multiple authors and no
+    ``author`` filter was supplied.
+    """
+    matches = [s for s in data["skills"] if s.get("name") == name]
+    if author is not None:
+        matches = [s for s in matches if s.get("author", "") == author]
+
+    if not matches:
+        return None, f"skill '{name}' not found in registry."
+
+    authors = sorted({s.get("author", "") for s in matches})
+    if len(authors) > 1:
+        listed = ", ".join(a or "(no author)" for a in authors)
+        return None, (
+            f"skill '{name}' is published by multiple authors ({listed}); "
+            f"use --author to disambiguate."
+        )
+
+    # Unique (name, author); preserve first-published selection across versions.
+    return matches[0], None
+
+
+def parse_iso_date(value: str) -> date | None:
+    """
+    Parse an ISO date or timestamp string into a ``date``.
+
+    Accepts both plain dates ("2026-06-13") and full ISO timestamps
+    ("2026-06-13T12:00:00+00:00"). Returns None for empty or unparseable input.
+    """
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value).date()
+    except ValueError:
+        try:
+            return date.fromisoformat(value[:10])
+        except ValueError:
+            return None
 
 
 # --- Registry I/O ---
@@ -326,24 +395,38 @@ def cmd_publish(args: argparse.Namespace) -> None:
     if not tags:
         tags = auto_extract_tags(metadata["description"])
 
-    # Step 5: Check duplicates
+    author = metadata["author"]
+
+    # Step 5: Check duplicates. Identity is (name, author, version) so two
+    # authors can publish the same skill name without colliding.
     data = load_registry(registry_path)
+
+    def _same_skill(s: dict) -> bool:
+        return (
+            s["name"] == name
+            and s.get("author", "") == author
+            and s["version"] == version
+        )
+
     for existing in data["skills"]:
-        if existing["name"] == name and existing["version"] == version:
+        if _same_skill(existing):
             if not args.force:
+                who = f" by '{author}'" if author else ""
                 print(
-                    f"Error: skill '{name}' version '{version}' already exists in registry.",
+                    f"Error: skill '{name}' version '{version}'{who} already exists in registry.",
                     file=sys.stderr,
                 )
                 print("Use --force to overwrite.", file=sys.stderr)
                 sys.exit(1)
             # Remove old entry if forcing
-            data["skills"] = [s for s in data["skills"] if not (s["name"] == name and s["version"] == version)]
+            data["skills"] = [s for s in data["skills"] if not _same_skill(s)]
 
-    # Step 6: Copy skill to registry
-    dest = registry_path / "skills" / name
+    # Step 6: Copy skill to registry (author-namespaced path)
+    rel_path = skill_storage_path(name, author)
+    dest = registry_path / rel_path
     if dest.exists():
         shutil.rmtree(dest)
+    dest.parent.mkdir(parents=True, exist_ok=True)
     shutil.copytree(skill_path, dest, ignore=COPY_IGNORE_PATTERNS)
 
     # Step 7: Add entry (including staleness metadata)
@@ -362,12 +445,12 @@ def cmd_publish(args: argparse.Namespace) -> None:
         "name": name,
         "description": metadata["description"],
         "version": version,
-        "author": metadata["author"],
+        "author": author,
         "license": metadata["license"],
         "tags": tags,
         "platforms": list(ALL_PLATFORMS),
         "published": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "path": f"skills/{name}",
+        "path": rel_path,
         "validation": {
             "valid": validation["valid"],
             "errors": len(validation["errors"]),
@@ -436,15 +519,10 @@ def cmd_install(args: argparse.Namespace) -> None:
     registry_path = Path(args.registry).resolve()
     data = load_registry(registry_path)
 
-    # Find skill
-    skill_entry = None
-    for skill in data["skills"]:
-        if skill["name"] == args.skill_name:
-            skill_entry = skill
-            break
-
+    # Find skill (disambiguating by author when the name is shared)
+    skill_entry, error = resolve_skill_entry(data, args.skill_name, getattr(args, "author", None))
     if skill_entry is None:
-        print(f"Error: skill '{args.skill_name}' not found in registry.", file=sys.stderr)
+        print(f"Error: {error}", file=sys.stderr)
         sys.exit(1)
 
     # Resolve platform
@@ -508,14 +586,9 @@ def cmd_info(args: argparse.Namespace) -> None:
     registry_path = Path(args.registry).resolve()
     data = load_registry(registry_path)
 
-    skill_entry = None
-    for skill in data["skills"]:
-        if skill["name"] == args.skill_name:
-            skill_entry = skill
-            break
-
+    skill_entry, error = resolve_skill_entry(data, args.skill_name, getattr(args, "author", None))
     if skill_entry is None:
-        print(f"Error: skill '{args.skill_name}' not found in registry.", file=sys.stderr)
+        print(f"Error: {error}", file=sys.stderr)
         sys.exit(1)
 
     if getattr(args, "json", False):
@@ -551,15 +624,10 @@ def cmd_remove(args: argparse.Namespace) -> None:
     registry_path = Path(args.registry).resolve()
     data = load_registry(registry_path)
 
-    # Find skill
-    skill_entry = None
-    for skill in data["skills"]:
-        if skill["name"] == args.skill_name:
-            skill_entry = skill
-            break
-
+    # Find skill (disambiguating by author when the name is shared)
+    skill_entry, error = resolve_skill_entry(data, args.skill_name, getattr(args, "author", None))
     if skill_entry is None:
-        print(f"Error: skill '{args.skill_name}' not found in registry.", file=sys.stderr)
+        print(f"Error: {error}", file=sys.stderr)
         sys.exit(1)
 
     if not args.force:
@@ -571,8 +639,12 @@ def cmd_remove(args: argparse.Namespace) -> None:
     if skill_dir.exists():
         shutil.rmtree(skill_dir)
 
-    # Remove entry
-    data["skills"] = [s for s in data["skills"] if s["name"] != args.skill_name]
+    # Remove only the resolved author's entries for this name (all versions).
+    target_author = skill_entry.get("author", "")
+    data["skills"] = [
+        s for s in data["skills"]
+        if not (s["name"] == args.skill_name and s.get("author", "") == target_author)
+    ]
     save_registry(registry_path, data)
 
     print(f"Removed '{args.skill_name}' from registry.")
@@ -580,7 +652,7 @@ def cmd_remove(args: argparse.Namespace) -> None:
 
 def cmd_stale(args: argparse.Namespace) -> None:
     """Report skills that are overdue for review."""
-    from datetime import date, timedelta
+    from datetime import timedelta
 
     registry_path = Path(args.registry).resolve()
     data = load_registry(registry_path)
@@ -595,32 +667,15 @@ def cmd_stale(args: argparse.Namespace) -> None:
         ref_date = None
         date_source = "none"
 
-        lr = staleness.get("last_reviewed", "")
-        cr = staleness.get("created", "")
-
-        if lr:
-            try:
-                parts = lr.split("-")
-                ref_date = date(int(parts[0]), int(parts[1]), int(parts[2]))
-                date_source = "last_reviewed"
-            except (ValueError, IndexError):
-                pass
-
-        if ref_date is None and cr:
-            try:
-                parts = cr.split("-")
-                ref_date = date(int(parts[0]), int(parts[1]), int(parts[2]))
-                date_source = "created"
-            except (ValueError, IndexError):
-                pass
-
-        if ref_date is None and published:
-            try:
-                parts = published[:10].split("-")
-                ref_date = date(int(parts[0]), int(parts[1]), int(parts[2]))
-                date_source = "published"
-            except (ValueError, IndexError):
-                pass
+        for value, source in (
+            (staleness.get("last_reviewed", ""), "last_reviewed"),
+            (staleness.get("created", ""), "created"),
+            (published, "published"),
+        ):
+            ref_date = parse_iso_date(value)
+            if ref_date is not None:
+                date_source = source
+                break
 
         interval = staleness.get("review_interval_days", DEFAULT_REVIEW_INTERVAL_DAYS)
         if not isinstance(interval, int):
@@ -734,6 +789,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_install = subparsers.add_parser("install", help="Install a skill from the registry")
     p_install.add_argument("skill_name", help="Name of the skill to install")
     _add_registry_arg(p_install)
+    p_install.add_argument("--author", help="Disambiguate when the name is shared by multiple authors")
     p_install.add_argument("--platform", choices=ALL_PLATFORMS, help="Target platform (auto-detected if omitted)")
     p_install.add_argument("--project", action="store_true", help="Install at project level instead of user level")
     p_install.add_argument("--force", action="store_true", help="Overwrite existing installation")
@@ -743,12 +799,14 @@ def build_parser() -> argparse.ArgumentParser:
     p_info = subparsers.add_parser("info", help="Show detailed info about a skill")
     p_info.add_argument("skill_name", help="Name of the skill")
     _add_registry_arg(p_info)
+    p_info.add_argument("--author", help="Disambiguate when the name is shared by multiple authors")
     p_info.add_argument("--json", action="store_true", help="Output as JSON")
 
     # remove
     p_remove = subparsers.add_parser("remove", help="Remove a skill from the registry")
     p_remove.add_argument("skill_name", help="Name of the skill to remove")
     _add_registry_arg(p_remove)
+    p_remove.add_argument("--author", help="Disambiguate when the name is shared by multiple authors")
     p_remove.add_argument("--force", action="store_true", help="Confirm removal")
 
     # stale

@@ -57,5 +57,65 @@ class TestGitHubTokenDetection(unittest.TestCase):
             self.assertTrue(result["clean"], result["issues"])
 
 
+class TestModernTokenDetection(unittest.TestCase):
+    """Patterns added for issue #12: Stripe, npm, Google, Anthropic, HF, JWT."""
+
+    def _patterns_found(self, content):
+        with tempfile.TemporaryDirectory() as tmp:
+            skill = make_skill_with_content(Path(tmp), content)
+            result = security_scan(str(skill))
+            return {issue["pattern"] for issue in result["issues"]}
+
+    def test_anthropic_key_detected(self):
+        token = "sk-" + "ant-" + "api03-" + "Zz0" * 9  # 27 chars after sk-ant-
+        found = self._patterns_found(f'KEY = "{token}"\n')
+        self.assertIn("Anthropic API Key", found)
+
+    def test_stripe_live_key_detected(self):
+        token = "sk_" + "live_" + "4eC39Hq" * 4  # 28 chars after prefix
+        found = self._patterns_found(f'KEY = "{token}"\n')
+        self.assertIn("Stripe Secret Key", found)
+
+    def test_stripe_restricted_key_detected(self):
+        token = "rk_" + "live_" + "4eC39Hq" * 4
+        found = self._patterns_found(f'KEY = "{token}"\n')
+        self.assertIn("Stripe Secret Key", found)
+
+    def test_npm_token_detected(self):
+        token = "npm_" + "x9Y8z7w6" * 4 + "abcd"  # 36 chars after prefix
+        found = self._patterns_found(f'TOKEN = "{token}"\n')
+        self.assertIn("npm Access Token", found)
+
+    def test_google_api_key_detected(self):
+        token = "AIza" + "Sy0" * 11 + "ab"  # 35 chars after prefix
+        found = self._patterns_found(f'KEY = "{token}"\n')
+        self.assertIn("Google API Key", found)
+
+    def test_huggingface_token_detected(self):
+        token = "hf_" + "aBcDeFgHiJ" * 3 + "klmn"  # 34 chars after prefix
+        found = self._patterns_found(f'TOKEN = "{token}"\n')
+        self.assertIn("Hugging Face Token", found)
+
+    def test_jwt_detected(self):
+        header = "eyJ" + "abc012_-AB"
+        payload = "eyJ" + "def345_-CD"
+        signature = "Sig" + "nature9_-x"
+        token = header + "." + payload + "." + signature
+        found = self._patterns_found(f'JWT = "{token}"\n')
+        self.assertIn("JSON Web Token", found)
+
+    def test_modern_tokens_benign_content_clean(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            skill = make_skill_with_content(
+                Path(tmp),
+                'import os\n'
+                'STRIPE = os.environ["STRIPE_SECRET_KEY"]\n'
+                'ANTHROPIC = os.environ["ANTHROPIC_API_KEY"]\n'
+                'HF = os.getenv("HF_TOKEN")\n',
+            )
+            result = security_scan(str(skill))
+            self.assertTrue(result["clean"], result["issues"])
+
+
 if __name__ == "__main__":
     unittest.main()
