@@ -166,6 +166,22 @@ Once installed, anyone on any platform types `/skill-name` and the skill activat
 
 ## Core Workflow
 
+### Phase 0: Spec Ideation (only when input is too vague to spec)
+
+Most input names a workflow — skip straight to Phase 1. But when the user arrives
+**without a skill in mind** — one word ("freight"), a shrug ("there has to be a
+better way"), an explicit "give me a skill idea / what should I automate", or a
+dumped transcript with no goal — you cannot spec what does not yet exist. Do not
+guess a skill and build it. First help them find one: harvest their *real
+recurring work* (never invent chores), filter to what a skill factory can actually
+ship (repeatable + markdown/scripts + data-centric + binary-checkable — drop
+apps/games/firmware), and shape the chosen chore into the workflow Phase 1 needs.
+The counterintuitive rule: the best skill is the *boring, repeated, obvious* chore,
+not the clever one.
+
+See `references/spec-ideation.md` for the harvest → filter → shape procedure and
+its held-out bellwether.
+
 ### Phase 1: Discovery
 
 Research available APIs and data sources for the user's domain. Compare options by cost, rate limits, data quality, and documentation. **Decide** which API to use with justification.
@@ -749,6 +765,7 @@ The `-skill` suffix also serves as a signal to the agent: when it sees a repo or
 
 | File | Contents |
 |------|----------|
+| `references/spec-ideation.md` | Phase 0 front door: turn vague input / "give me a skill idea" into a grounded, skill-shaped spec |
 | `references/pipeline-phases.md` | Detailed Phase 1-5 instructions |
 | `references/architecture-guide.md` | Simple vs Suite decision, refactoring, cross-component communication, versioning |
 | `references/templates-guide.md` | Template-based creation |
