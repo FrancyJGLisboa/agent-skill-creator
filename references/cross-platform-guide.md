@@ -177,7 +177,14 @@ Extracts SKILL.md body as plain markdown into `.junie/skills/` directory.
 
 ### Claude Code
 
+```
+# Native plugin path (recommended — in-tool install, updates, enable/disable)
+/plugin marketplace add <github-owner>/<repo>     # or a local path: /plugin marketplace add ./skill-name
+/plugin install skill-name@skill-name
+```
+
 ```bash
+# Or copy directly:
 # User-level (global)
 cp -r skill-name/ ~/.claude/skills/skill-name/
 

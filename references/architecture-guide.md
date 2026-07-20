@@ -19,7 +19,7 @@ Before creating any skill, determine whether it should be a **Simple Skill** or 
 | **Maintenance scope** | Single developer | Team or multi-concern |
 | **Domain breadth** | Single domain focus | Spans multiple sub-domains |
 | **Deployment** | Install as one unit | Components may be used independently |
-| **marketplace.json** | **Not needed** | Optional (official fields only) |
+| **marketplace.json** | Shipped by default (`.claude-plugin/`, Step 6.5) | Shipped by default (official fields only) |
 
 ### 1.2 Decision Flowchart
 
@@ -59,16 +59,19 @@ How many distinct workflows does this skill address?
 
 ## 2. Simple Skill Structure
 
-A Simple Skill is a single, self-contained agent skill that follows the Agent Skills Open Standard. It has one SKILL.md file and no `marketplace.json`.
+A Simple Skill is a single, self-contained agent skill that follows the Agent Skills Open Standard. It has one SKILL.md file plus a `.claude-plugin/` manifest pair for the native plugin install path.
 
 ### 2.1 Standard Directory Layout
 
 ```
 skill-name/
 ├── SKILL.md          # <500 lines, spec-compliant frontmatter
-├── scripts/          # Functional Python code
+├── AGENTS.md         # Companion instruction file (cross-tool reach)
+├── .claude-plugin/   # plugin.json + marketplace.json (/plugin install path)
+├── scripts/          # Functional Python code + run_evals.py + evolve.py
 ├── references/       # Detailed documentation (loaded on demand)
 ├── assets/           # Templates, schemas, data files
+├── evals/            # Bundled eval spec + golden cases
 ├── install.sh        # Cross-platform auto-detect installer
 └── README.md         # Multi-platform installation instructions
 ```
@@ -99,18 +102,18 @@ compatibility: >-           # optional, use when platform-specific features exis
 | `scripts/` | Executable Python code (functional, no placeholders) | Yes (if skill has code) |
 | `references/` | Detailed documentation, API guides, methodology docs | Recommended |
 | `assets/` | Configuration files, templates, schemas, static data | Optional |
+| `.claude-plugin/` | Plugin manifests for `/plugin marketplace add` install | Yes |
+| `evals/` | Eval spec (binary checks + golden cases + judge canary) | Yes (unless `--no-eval`) |
+| `scripts/evolve.py` | Shipped self-maintenance loop (staleness + rollout → `EVOLUTION.md`) | Yes |
 | `install.sh` | Cross-platform installer script | Yes |
 | `README.md` | Installation instructions for 5+ platforms | Yes |
 
-### 2.4 Why No marketplace.json for Simple Skills
+### 2.4 marketplace.json and SKILL.md: complementary, not competing
 
-Per the Agent Skills Open Standard and FR-005:
-
-- SKILL.md is the universal discovery mechanism across all 26+ platforms
-- `marketplace.json` is a Claude Code-specific plugin manifest, not part of the standard
-- Simple skills activate via their SKILL.md `description` field alone
-- Adding `marketplace.json` to a simple skill creates a non-standard structure that may confuse other platforms
-- Skills placed in `~/.claude/skills/` or `.claude/skills/` are discovered automatically by Claude Code without `marketplace.json`
+- SKILL.md remains the universal discovery/activation mechanism across all 17 platforms — the `description` field alone activates the skill everywhere
+- `.claude-plugin/{plugin.json,marketplace.json}` is additive: it gives Claude Code users the native `/plugin marketplace add` + `/plugin install` path (in-tool install, updates, enable/disable). Other platforms simply ignore the directory
+- Because a generated skill has no `skills/` subdirectory, Claude Code discovers its root SKILL.md automatically (root-fallback); never add a `.claude/` directory inside a skill — it can shadow plugin skill discovery
+- Skills copied to `~/.claude/skills/` or `.claude/skills/` are still discovered without the manifests — the plugin path is an addition, not a requirement
 
 ---
 
@@ -912,8 +915,7 @@ Use this checklist before proceeding to implementation (Phase 5):
 - [ ] References planned for detailed content
 - [ ] `install.sh` included
 - [ ] `README.md` planned with multi-platform install instructions
-- [ ] No `marketplace.json` for Simple Skills
-- [ ] If Complex Suite with `marketplace.json`, only official fields used
+- [ ] `.claude-plugin/plugin.json` + `marketplace.json` planned (official fields only, names match SKILL.md)
 - [ ] If suite: shared/ directory planned with import patterns documented
 - [ ] If suite: each component is independently functional
 

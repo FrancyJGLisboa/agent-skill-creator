@@ -40,7 +40,7 @@ totals, and email a PDF sales report.
 ▸ Phase 2  Design+evals   ▸ Phase 5  Build · validate · security-scan
 ▸ Phase 3  Architecture
 
-✓ weekly-crm-report-skill  (12 files, evals, installer)
+✓ weekly-crm-report-skill  (23 files: evals, installer, plugin manifests, evolve loop)
   installed on Claude Code, Cursor, Gemini CLI
 
 Use it:  /weekly-crm-report-skill data/crm-export.csv
@@ -163,9 +163,11 @@ The generated skill includes a cross-platform installer (`install.sh`) that auto
 sales-report-skill/
 ├── SKILL.md          # Skill definition (activates with /sales-report-skill)
 ├── AGENTS.md         # Companion file (read by many tools for cross-tool reach)
-├── scripts/          # Functional Python code
+├── .claude-plugin/   # plugin.json + marketplace.json (/plugin install path)
+├── scripts/          # Functional Python code + run_evals.py + evolve.py (self-maintenance)
 ├── references/       # Detailed documentation
 ├── assets/           # Templates, configs
+├── evals/            # Bundled eval spec + golden cases (the skill's own metric)
 ├── install.sh        # Cross-platform installer (17 platforms, format adapters, --all flag)
 └── README.md         # Installation instructions
 ```
@@ -178,7 +180,7 @@ Your team installs it the same way — one `git clone` to their tool's path — 
 
 **v6 — Artifacts.** Skills can emit **interactive React artifacts** in Claude Code (and Claude.ai). When output is visualizable — time series, comparisons, KPIs, tables — Phase 2 inlines one of four bundled React templates plus the artifact protocol into the generated SKILL.md; you write no React. In hosts that don't render artifacts (Cursor, Cline, Codex CLI, Gemini CLI) the source appears as fenced code and the markdown analysis is unchanged — honest degradation. Suppress with `--no-artifact`; force a template with `--artifact <line-chart|bar-chart|kpi-cards|data-table>`. ([design notes](docs/superpowers/specs/2026-05-27-agent-skill-creator-v5-artifacts-first-design.md))
 
-**Every skill ships its own metric.** Each generated skill carries an **eval spec** (`evals/<name>.eval.md`) plus a `scripts/run_evals.py` runner. In Phase 2 the creator derives 3–6 **binary** checks and ≥3 golden cases (seeded from your own files); you give a one-word thumbs-up. It's an instant regression test — `python3 scripts/run_evals.py` exits non-zero on failure, so it drops into CI. With a declared `run` command, `run_evals.py --rollout` executes the skill on each golden input and scores the real output (`--rollout --promote` captures the first passing baseline). The spec is consumable by `autoresearch-universal` for optimization with no reformatting. *Honest limits:* `--rollout` is opt-in (it runs arbitrary skill code), and `llm-judge` checks print as a checklist rather than being auto-graded. On by default; skip with `--no-eval`.
+**Every skill ships its own metric.** Each generated skill carries an **eval spec** (`evals/<name>.eval.md`) plus a `scripts/run_evals.py` runner. In Phase 2 the creator derives 3–6 **binary** checks and ≥3 golden cases (seeded from your own files); you give a one-word thumbs-up. It's an instant regression test — `python3 scripts/run_evals.py` exits non-zero on failure, so it drops into CI. With a declared `run` command, `run_evals.py --rollout` executes the skill on each golden input, scores the real output, and **compares it against the promoted baseline** — divergence that slips past every command check still fails as a regression (`--rollout --promote` captures the first passing baseline; per-case `compare_ignore` handles volatile fields like timestamps). `--judge` grades `llm-judge` criteria with a judge **pinned in the spec** (model + temperature), and a known-bad canary must fail every criterion or the judge run is invalid. One golden case per skill is a `"split": "test"` **holdout** — skipped by default, scored only with `--include-holdout`, never fed to an optimization loop. Any failing run appends its raw evidence to the skill's `EVOLUTION.md`. The spec is consumable by `autoresearch-universal` for optimization with no reformatting. *Honest limits:* `--rollout` is opt-in (it runs arbitrary skill code), and `--judge` needs `ANTHROPIC_API_KEY`. On by default; skip with `--no-eval`.
 
 ---
 
@@ -194,7 +196,7 @@ BUILD         Structure directory → write code and docs → craft activation k
 VERIFY        Spec validation → security scan → block delivery if either fails
 ```
 
-Every skill is automatically validated (correct structure, naming, metadata) and security-scanned (no hardcoded keys, no credential exposure, no injection risks) before delivery. Skills that fail these checks are blocked.
+Every skill is automatically validated (correct structure, naming, metadata) and security-scanned before delivery: hardcoded keys, credential exposure, dangerous code patterns, **prompt injection in the instruction body itself** (override phrases, concealment/exfiltration directives, hidden unicode, encoded blobs), and undeclared network endpoints in scripts. Skills that fail these checks are blocked.
 
 ---
 
@@ -473,7 +475,7 @@ Every skill goes through automated checks before delivery and on every publish:
 | Gate | What It Checks |
 |------|---------------|
 | **Spec Validation** | SKILL.md structure, frontmatter format, naming rules, file references |
-| **Security Scan** | No hardcoded API keys, no credentials, no injection patterns |
+| **Security Scan** | Hardcoded keys/credentials, dangerous code patterns, instruction-body prompt injection (override/concealment/exfiltration phrases, hidden unicode, encoded blobs), undeclared network endpoints |
 | **Staleness Check** | Review dates, dependency health, API schema drift |
 
 Run them independently anytime:
@@ -482,10 +484,10 @@ Run them independently anytime:
 python3 scripts/validate.py ./my-skill/
 python3 scripts/security_scan.py ./my-skill/
 python3 scripts/staleness_check.py ./my-skill/
-python3 scripts/staleness_check.py ./my-skill/ --check-deps --check-drift
+python3 scripts/staleness_check.py ./my-skill/ --check-deps --check-drift --record
 ```
 
-Skills that fail validation cannot be published. On publish, high-severity security issues block the skill (override with `--force`). On export, findings are reported but don't block by default — pass `--strict` to fail the export on any high-severity issue.
+Skills that fail validation cannot be published. On publish, high-severity security issues are a hard block — `--force` only overrides duplicate-version entries, never security findings. On export, findings are reported but don't block by default — pass `--strict` to fail the export on any high-severity issue.
 
 ---
 
@@ -493,7 +495,15 @@ Skills that fail validation cannot be published. On publish, high-severity secur
 
 Skills go stale. APIs change, compliance rules update, data sources move. A skill that worked six months ago may silently produce wrong results today. Staleness detection surfaces this before users hit it.
 
-Three layers, each opt-in:
+**Generated skills carry this tooling themselves.** Every skill ships `scripts/evolve.py` plus the staleness/dependency/drift modules, so from the skill's own root one command closes the maintenance loop — no creator repo needed:
+
+```bash
+python3 scripts/evolve.py           # staleness + deps + drift + eval rollout
+python3 scripts/evolve.py --judge   # also grade llm-judge criteria
+# Any failure appends its raw evidence to the skill's EVOLUTION.md
+```
+
+The creator-repo commands below work too (for skills built before the toolkit shipped, or ad-hoc checks). Three layers, each opt-in:
 
 **Review tracking** — Every skill can declare when it was last reviewed and how often it should be. The staleness checker compares these dates and flags overdue skills. Skills without explicit dates fall back to the last git commit date on SKILL.md.
 
@@ -573,6 +583,7 @@ python3 scripts/security_scan.py ./skill/ --json    # Machine-readable output
 python3 scripts/staleness_check.py ./skill/                      # Review staleness
 python3 scripts/staleness_check.py ./skill/ --check-deps         # + dependency health
 python3 scripts/staleness_check.py ./skill/ --check-drift        # + schema drift
+python3 scripts/staleness_check.py ./skill/ --record             # append findings to EVOLUTION.md
 python3 scripts/staleness_check.py ./skill/ --json               # Machine-readable output
 ```
 
@@ -649,19 +660,22 @@ agent-skill-creator/
   CHANGELOG.md                  # Version history
   LICENSE                       # MIT
   install.sh / install.ps1      # Self-installer for cloned repos (macOS/Linux, Windows)
+  .claude-plugin/               # plugin.json + marketplace.json (/plugin marketplace add)
   scripts/
     bootstrap.sh / .ps1 / .bat  # One-liner bootstrap (macOS/Linux, PowerShell, cmd)
     install-skill.sh / .ps1     # Universal skill installer
     install-template.sh / .ps1  # Template for generated skills' installers
     platforms.py                # Canonical 17-platform registry (single source of truth)
     validate.py                 # SKILL.md spec compliance checker
-    security_scan.py            # Secret / injection scanner
+    security_scan.py            # Secrets + code patterns + instruction-body injection + endpoint audit
     check_pipeline.py           # Verifies generated scripts compile + declare deps
     export_utils.py             # Cross-platform export (desktop / API packages)
     skill_registry.py           # Git-based team skill registry
     skill_document.py           # SKILL.md parser (shared by the tools above)
-    run_evals_template.py       # Eval runner bundled into generated skills
-    staleness_check.py          # Staleness: review dates, deps, schema drift
+    run_evals_template.py       # Eval runner bundled into generated skills (rollout, regression gate, judge, holdout)
+    evolve_template.py          # Self-maintenance loop bundled into generated skills (evolve.py)
+    claude-plugin-template/     # Plugin manifest templates bundled into generated skills
+    staleness_check.py          # Staleness: review dates, deps, schema drift (--record → EVOLUTION.md)
     dependency_health.py        # API dependency reachability check
     schema_drift.py             # API schema drift detection
     review_staleness.py         # Review-date staleness logic

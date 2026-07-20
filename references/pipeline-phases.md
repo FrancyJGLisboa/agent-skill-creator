@@ -26,7 +26,7 @@ Phase 5: IMPLEMENTATION  -> Create all files, validate, security scan
 - Generated SKILL.md must be **<500 lines** (move detail to `references/`)
 - Frontmatter must include: `name`, `description`, `license`, `metadata` (author, version)
 - `install.sh` is generated for cross-platform support
-- `marketplace.json` is **NOT** needed for simple skills
+- `.claude-plugin/` manifests are emitted for every skill (Step 6.5) — additive to SKILL.md activation, never a replacement
 - Validation and security scan run at the end of Phase 5
 
 ---
@@ -649,7 +649,7 @@ skill-name/
 | Code size | <1000 lines | >2000 lines |
 | Maintenance | Single developer | Team |
 | Structure | Single SKILL.md | Multiple component SKILL.md files |
-| marketplace.json | Not needed | Optional (official fields only) |
+| marketplace.json | Shipped by default (`.claude-plugin/`, Step 6.5) | Shipped by default (official fields only) |
 
 **Default:** Start with simple skill. Upgrade to complex suite only when warranted.
 
@@ -1322,7 +1322,7 @@ chmod +x skill-name/install.sh
 
 The template handles:
 - POSIX-compatible shell (`set -eu`, no bashisms)
-- 14 platforms: claude-code, copilot, cursor, windsurf, cline, codex, gemini, kiro, trae, goose, opencode, roo-code, antigravity, universal
+- 17 platforms (see `scripts/platforms.py`, the single source of truth): claude-code, copilot, cursor, windsurf, cline, codex, gemini, kiro, kilo-code, factory, junie, trae, goose, opencode, roo-code, antigravity, universal
 - Corrected paths: Codex → `~/.agents/skills/`, Windsurf → `.windsurf/rules/` (project) / `global_rules.md` (global)
 - Format adapters: auto-generates `.mdc` for Cursor, `.md` rules for Windsurf, plain `.md` for Cline/Roo/Trae
 - Universal `.agents/skills/` secondary symlink after every install

@@ -151,13 +151,16 @@ The human removes the cognitive constraint by providing the raw material. The fa
 skill-name/
 ├── SKILL.md          # Starts with "# /skill-name" — the invocation trigger (~15 tools)
 ├── AGENTS.md         # Companion instruction file — AAIF format (~15 tools)
-├── scripts/          # Functional code + run_pipeline.py (multi-script) + run_evals.py
+├── .claude-plugin/   # plugin.json + marketplace.json (/plugin install path)
+├── scripts/          # Functional code + run_pipeline.py (multi-script) + run_evals.py + evolve.py
 ├── references/       # Detailed documentation (loaded on demand)
 ├── assets/           # Templates, schemas, data files
-├── evals/            # Bundled eval spec: binary checks + golden cases
+├── evals/            # Bundled eval spec: binary checks + golden cases (+ judge canary)
 ├── install.sh        # Cross-platform auto-detect installer
 └── README.md         # Multi-platform installation instructions
 ```
+
+(`EVOLUTION.md` appears at the skill root after the first failed check — it accumulates the raw evidence each failure leaves behind.)
 
 Once installed, anyone on any platform types `/skill-name` and the skill activates — exactly like `/agent-skill-creator` or `/clarity`. The generated skill is a first-class citizen, not a second-class output.
 
@@ -230,10 +233,11 @@ Create all files in this order:
 4. Implement Python scripts (functional, no placeholders, no TODOs). **For a multi-script pipeline**, also emit a single `scripts/run_pipeline.py` orchestrator that runs the steps in order and wires output→input **in code** — so the agent runs one command instead of sequencing steps from prose. Skip for genuinely interactive/branching skills. See `references/phase5-orchestration.md`
 5. Write references (detailed documentation the skill loads on demand)
 6. Write assets (templates, configs)
-7. **Emit the eval spec** (skip if `--no-eval`): write `evals/<name>.eval.md` (the binary checks + golden cases derived in Phase 2) and copy `scripts/run_evals_template.py` → the generated skill's `scripts/run_evals.py`. See `references/phase2-eval-assessment.md`
+7. **Emit the eval spec** (skip if `--no-eval`): write `evals/<name>.eval.md` (the binary checks + golden cases derived in Phase 2, one marked `"split": "test"` as the holdout, plus a `judge` block with a pinned model and known-bad canary when any criterion is `llm-judge`) and copy `scripts/run_evals_template.py` → the generated skill's `scripts/run_evals.py`. See `references/phase2-eval-assessment.md`
 8. Generate `install.sh` from `scripts/install-template.sh` (replace `{{SKILL_NAME}}` with actual name, `chmod +x`)
-9. Write `README.md` (multi-platform install instructions showing `git clone` to each tool's **native** path)
-10. Run **validation** against the official spec, **security scan** for hardcoded keys and injection patterns, **`python3 <skill>/scripts/check_pipeline.py <skill>`** (no compile or undeclared-dependency errors), and — if an eval spec was emitted — `python3 <skill>/scripts/run_evals.py --validate` (must report `VALID`)
+8.5. Generate `.claude-plugin/plugin.json` + `marketplace.json` from `scripts/claude-plugin-template/` (placeholders from frontmatter — makes the skill installable via `/plugin marketplace add`), and **ship the evolution toolkit**: copy `scripts/evolve_template.py` → `scripts/evolve.py` plus the staleness/drift/dep-health modules. See `references/pipeline-phases.md` Steps 6.5–6.6
+9. Write `README.md` (multi-platform install instructions showing the `/plugin marketplace add` path for Claude Code and `git clone` to each tool's **native** path)
+10. Run **validation** against the official spec, **security scan** for hardcoded keys, instruction-body injection, and undeclared endpoints, **`python3 <skill>/scripts/check_pipeline.py <skill>`** (no compile or undeclared-dependency errors), and — if an eval spec was emitted — `python3 <skill>/scripts/run_evals.py --validate` (must report `VALID`)
 11. **Auto-install on the current platform** (see below)
 12. Report results to user with clear next steps, including the eval/optimize one-liner from `references/phase2-eval-assessment.md`
 
@@ -579,7 +583,7 @@ The SKILL.md body must start with `# /skill-name` so the agent recognizes the sl
 | Code size | <1000 lines | >2000 lines |
 | Maintenance | Single developer | Team |
 | Structure | Single SKILL.md | Multiple component SKILL.md files |
-| marketplace.json | Not needed | Optional (official fields only) |
+| marketplace.json | Shipped by default (`.claude-plugin/`, Step 6.5) | Shipped by default (official fields only) |
 
 See `references/architecture-guide.md` for detailed decision framework.
 
@@ -633,7 +637,7 @@ See `references/cross-platform-guide.md` for full platform details.
 After generating a skill, run:
 
 - **Spec validation**: Checks frontmatter, naming, structure, line count
-- **Security scan**: Checks for hardcoded API keys, .env files, injection patterns
+- **Security scan**: Checks for hardcoded API keys, .env files, dangerous code patterns, instruction-body prompt injection (override/concealment/exfiltration phrases, hidden unicode, encoded blobs), and undeclared network endpoints in scripts
 
 ```bash
 # Validate a skill
