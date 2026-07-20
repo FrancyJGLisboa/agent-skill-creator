@@ -1,0 +1,82 @@
+/* Hallmark · macrostructure: Narrative Workflow · tone: technical · anchor hue: cobalt 262
+ * genre: modern-minimal · theme: Cobalt · enrichment: real demo.gif capture · nav: N1b · footer: Ft5
+ * axes: light paper / grotesk-sans display / cool accent
+ */
+
+:root {
+  /* paper — cool engineered near-white */
+  --color-paper: oklch(98.5% 0.004 250);
+  --color-paper-2: oklch(96.5% 0.006 250);
+  --color-paper-3: oklch(93.5% 0.008 250);
+  --color-ink: oklch(22% 0.015 260);
+  --color-ink-muted: oklch(45% 0.015 260);
+  --color-ink-faint: oklch(50% 0.014 260);
+
+  /* one electric cobalt signal accent */
+  --color-accent: oklch(52% 0.23 262);
+  --color-accent-ink: oklch(99% 0.005 262);
+  --color-accent-soft: oklch(94% 0.035 262);
+  --color-focus: oklch(52% 0.23 262);
+
+  /* semantic */
+  --color-accent-hover: oklch(46% 0.23 262);
+  --color-shadow: oklch(0% 0 0 / 0.35);
+  --color-success-ink: oklch(80% 0.12 150);
+  --color-success-rule: oklch(45% 0.1 150);
+  --color-error-ink: oklch(80% 0.1 25);
+  --color-error-rule: oklch(45% 0.1 25);
+  --color-pass: oklch(52% 0.14 150);
+  --color-rule: oklch(88% 0.008 255);
+  --color-rule-strong: oklch(78% 0.012 255);
+  --color-code-bg: oklch(20% 0.02 262);
+  --color-code-ink: oklch(90% 0.02 250);
+  --color-code-bg-2: oklch(30% 0.03 262);
+  --color-code-bg-3: oklch(36% 0.03 262);
+  --color-code-rule: oklch(40% 0.03 262);
+
+  /* type — Space Grotesk display · IBM Plex Sans body · JetBrains Mono outlier */
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* scale — perfect fourth (1.333) */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-md: 1.125rem;
+  --text-lg: 1.333rem;
+  --text-xl: 1.777rem;
+  --text-2xl: 2.369rem;
+  --text-3xl: 3.157rem;
+  --text-display-s: clamp(2rem, 4vw + 0.5rem, 3.157rem);
+  --text-display: clamp(2.5rem, 5vw + 0.5rem, 4.4rem);
+
+  /* 4pt spacing scale */
+  --space-2xs: 0.25rem;
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2.5rem;
+  --space-2xl: 4rem;
+  --space-3xl: 6.5rem;
+
+  /* rules + radii — ruler-drawn hairlines, tight radii */
+  --rule-hair: 1px;
+  --rule-thick: 2px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-pill: 999px;
+
+  /* motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-micro: 140ms;
+  --dur-minor: 240ms;
+  --dur-major: 420ms;
+
+  /* layout */
+  --page-max: 72rem;
+  --page-gutter: clamp(1rem, 4vw, 2.5rem);
+}
