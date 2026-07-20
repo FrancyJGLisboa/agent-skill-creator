@@ -6,6 +6,21 @@ to semantic versioning where practical.
 
 ## [Unreleased]
 
+### Changed
+- **Keyless, subscription-based `llm-judge` grading** (`scripts/run_evals_template.py`):
+  the `--judge` path no longer requires `ANTHROPIC_API_KEY`. It now resolves a
+  grader in priority order — (1) `$EVAL_JUDGE_CMD`, any runtime's print-mode
+  command (e.g. `gemini -p`); (2) `claude -p --model <pinned>` when the Claude Code
+  CLI is on PATH, honoring the spec's pinned judge model, keyless under the
+  subscription; (3) `ANTHROPIC_API_KEY` as a last-resort direct API call for
+  unattended CI with no runtime present. An explicitly requested judge run still
+  never silently passes (raises if no backend resolves), and the known-bad canary
+  still guards every path. Rationale: in an agentic runtime the host agent is
+  already a model under the user's subscription, so pinning the grader to one
+  vendor's API key contradicted the cross-platform promise. New tests cover the
+  keyless `EVAL_JUDGE_CMD` path and the no-backend error; the three bundled example
+  runners are re-synced from the template.
+
 ### Added
 - **Phase 0 spec-ideation front door** (`references/spec-ideation.md`): a
   pre-Discovery step for when the user arrives without a skill in mind — one word

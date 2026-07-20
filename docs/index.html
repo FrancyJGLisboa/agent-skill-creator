@@ -129,7 +129,7 @@
   </header>
   <ul class="limits__list">
     <li>Eval rollout is opt-in — it executes the skill’s real code, so you choose when.</li>
-    <li>Subjective <code>llm-judge</code> criteria are graded by the agent running the skill — the model your runtime already provides — so no extra API key is needed in an agentic runtime. A raw key is only for grading them unattended in CI; either way it never silently passes.</li>
+    <li>Subjective <code>llm-judge</code> criteria are graded by the agent running the skill — the model your runtime already provides — so no API key is needed. Even unattended CI grades keyless through your runtime’s print mode (Claude Code <code>claude</code>, or <code>$EVAL_JUDGE_CMD</code> for any runtime); a raw API key is only a last-resort fallback when no runtime is present. It never silently passes.</li>
     <li>Artifact signing (cosign/SLSA) is on the roadmap, not shipped.</li>
     <li>The episodic learning layer is a design document, clearly marked not-implemented.</li>
   </ul>

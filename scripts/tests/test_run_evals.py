@@ -7,10 +7,12 @@ default run (deterministic command checks against the golden baseline).
 import contextlib
 import io
 import json
+import os
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -19,6 +21,7 @@ from run_evals_template import (  # noqa: E402
     find_spec,
     llm_judge_criteria,
     main,
+    make_judge,
     parse_spec,
     run_command_checks,
     run_judge_canary,
@@ -633,15 +636,37 @@ class JudgeHarnessTest(unittest.TestCase):
         errors = validate_spec(spec, skill)
         self.assertTrue(any("canary" in e for e in errors))
 
-    def test_judge_flag_without_api_key_exits_one(self) -> None:
+    def test_judge_flag_without_any_backend_exits_one(self) -> None:
+        # No key, no EVAL_JUDGE_CMD, and no runtime CLI on PATH -> must exit 1
+        # (an explicitly requested judge run must never silently pass).
         skill, _ = self._make_judged_skill()
-        import os
-        old = os.environ.pop("ANTHROPIC_API_KEY", None)
-        try:
+        env = {k: v for k, v in os.environ.items()
+               if k not in ("ANTHROPIC_API_KEY", "EVAL_JUDGE_CMD")}
+        with mock.patch.dict(os.environ, env, clear=True), \
+                mock.patch("run_evals_template.shutil.which", return_value=None):
             self.assertEqual(main([str(skill), "--rollout", "--judge"]), 1)
-        finally:
-            if old is not None:
-                os.environ["ANTHROPIC_API_KEY"] = old
+
+    def test_judge_via_headless_env_cmd_is_keyless(self) -> None:
+        # EVAL_JUDGE_CMD routes grading to a print-mode command under the
+        # runtime's subscription — no ANTHROPIC_API_KEY anywhere in the run.
+        skill, spec = self._make_judged_skill()
+        stub = skill / "grader_stub.py"
+        stub.write_text(
+            "import sys, json\n"
+            "out = sys.stdin.read().split('<output>', 1)[-1]\n"
+            "print(json.dumps({'pass': 'garbage' not in out, 'reason': 'stub'}))\n",
+            encoding="utf-8",
+        )
+        env = {k: v for k, v in os.environ.items() if k != "ANTHROPIC_API_KEY"}
+        env["EVAL_JUDGE_CMD"] = f"python3 {stub}"
+        with mock.patch.dict(os.environ, env, clear=True):
+            judge = make_judge(spec["judge"])              # keyless resolution
+            canary = run_judge_canary(spec, skill, judge)  # garbage must fail
+            good = judge("Output tone is professional", '{"ok": true}')
+            bad = judge("Output tone is professional", '{"ok": "garbage"}')
+        self.assertTrue(canary["valid"])   # known-bad canary correctly failed
+        self.assertTrue(good[0])           # clean output passes, no API key
+        self.assertFalse(bad[0])           # garbage output fails
 
 
 class InterpreterFallbackTest(unittest.TestCase):
