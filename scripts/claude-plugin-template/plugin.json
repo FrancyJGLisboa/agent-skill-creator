@@ -1,0 +1,8 @@
+{
+  "name": "{{SKILL_NAME}}",
+  "version": "{{SKILL_VERSION}}",
+  "description": "{{SKILL_DESCRIPTION}}",
+  "author": {
+    "name": "{{SKILL_AUTHOR}}"
+  }
+}

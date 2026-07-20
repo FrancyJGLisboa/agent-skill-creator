@@ -73,7 +73,7 @@ skill-name/
 └── README.md         # Multi-platform installation instructions
 ```
 
-**Key rule:** NO `.claude-plugin/marketplace.json` for simple skills. The SKILL.md file is the sole manifest and activation mechanism.
+**Key rule:** SKILL.md is the activation mechanism on every platform. Additionally, every skill ships a `.claude-plugin/` directory (`plugin.json` + `marketplace.json`) so Claude Code can install it natively via `/plugin marketplace add <repo-or-path>` + `/plugin install` — the SKILL.md at the skill root is discovered automatically (root-fallback; no `skills/` subdirectory needed). Other platforms ignore the directory.
 
 ### 2.2 SKILL.md Frontmatter (Required)
 
