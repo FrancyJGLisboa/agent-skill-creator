@@ -75,8 +75,12 @@ MIN_TAG_LENGTH = 3
 # --- Namespacing & date parsing helpers ---
 
 def _slug(value: str) -> str:
-    """Return a filesystem-safe slug for an author/namespace path segment."""
-    slug = re.sub(r"[^a-zA-Z0-9._-]+", "-", value.strip().lower()).strip("-")
+    """Return a filesystem-safe slug for an author/namespace path segment.
+
+    Edge dots are stripped (internal ones kept, e.g. "j.r.tolkien") so a value
+    like ".." can never become a path-traversal segment.
+    """
+    slug = re.sub(r"[^a-zA-Z0-9._-]+", "-", value.strip().lower()).strip("-.")
     return slug or "unknown"
 
 
@@ -424,6 +428,16 @@ def cmd_publish(args: argparse.Namespace) -> None:
     # Step 6: Copy skill to registry (author-namespaced path)
     rel_path = skill_storage_path(name, author)
     dest = registry_path / rel_path
+    # Containment guard: dest must resolve strictly inside skills/ before any
+    # destructive operation (defense in depth against traversal via metadata).
+    skills_root = (registry_path / "skills").resolve()
+    resolved_dest = dest.resolve()
+    if resolved_dest == skills_root or not resolved_dest.is_relative_to(skills_root):
+        print(
+            f"Error: refusing to publish outside the registry skills root: {dest}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
     if dest.exists():
         shutil.rmtree(dest)
     dest.parent.mkdir(parents=True, exist_ok=True)

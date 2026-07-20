@@ -94,6 +94,8 @@ class SkillDoc:
             return None
         lines = self._frontmatter.split("\n")
         for i, line in enumerate(lines):
+            if line[:1] in (" ", "\t"):
+                continue  # indented lines are nested keys, not top-level fields
             stripped = line.strip()
             if stripped.startswith(f"{field}:"):
                 value = stripped[len(field) + 1:].strip()
@@ -114,45 +116,42 @@ class SkillDoc:
         if self._frontmatter is None:
             return False
         for line in self._frontmatter.split("\n"):
+            if line[:1] in (" ", "\t"):
+                continue
             if line.strip().startswith(f"{field}:"):
                 return True
         return False
 
     def subfield(self, parent: str, child: str) -> str | None:
-        """Scalar value of `child` under the indented `parent:` block."""
+        """Scalar value of `child` as a DIRECT child of the top-level `parent:` block.
+
+        Deeper-nested keys with the same name (e.g. a `version:` inside a
+        `dependencies:` list item) are ignored.
+        """
         if self._frontmatter is None:
             return None
         in_parent = False
+        child_indent: int | None = None
         for line in self._frontmatter.split("\n"):
             stripped = line.strip()
-            if stripped.startswith(f"{parent}:"):
-                in_parent = True
+            if not in_parent:
+                if line[:1] not in (" ", "\t") and stripped.startswith(f"{parent}:"):
+                    in_parent = True
                 continue
-            if in_parent:
-                if line and (line[0] == " " or line[0] == "\t"):
-                    if stripped.startswith(f"{child}:"):
-                        return stripped[len(child) + 1:].strip()
-                else:
-                    in_parent = False
+            if not stripped:
+                continue  # blank lines don't end the block
+            indent = len(line) - len(line.lstrip())
+            if indent == 0:
+                break
+            if child_indent is None:
+                child_indent = indent
+            if indent == child_indent and stripped.startswith(f"{child}:"):
+                return stripped[len(child) + 1:].strip()
         return None
 
     def has_subfield(self, parent: str, child: str) -> bool:
-        """True if `child` exists under the indented `parent:` block."""
-        if self._frontmatter is None:
-            return False
-        in_parent = False
-        for line in self._frontmatter.split("\n"):
-            stripped = line.strip()
-            if stripped.startswith(f"{parent}:"):
-                in_parent = True
-                continue
-            if in_parent:
-                if line and (line[0] == " " or line[0] == "\t"):
-                    if stripped.startswith(f"{child}:"):
-                        return True
-                else:
-                    in_parent = False
-        return False
+        """True if `child` exists as a direct child of the top-level `parent:` block."""
+        return self.subfield(parent, child) is not None
 
     def list_of_objects(self, parent: str, child: str) -> list[dict]:
         """Parse a YAML list-of-objects under `parent.child`.

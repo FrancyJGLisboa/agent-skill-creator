@@ -5,7 +5,7 @@ import sys
 import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-from urllib.error import URLError
+from urllib.error import HTTPError, URLError
 
 ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -97,6 +97,13 @@ class CheckSchemaDriftTest(unittest.TestCase):
         mock_urlopen.return_value = cm
         issues = check_schema_drift(self.EXP)
         self.assertTrue(any(i["level"] == "error" and "not valid JSON" in i["message"] for i in issues))
+
+    @patch("schema_drift.urlopen")
+    def test_raised_httperror_reports_status_not_unreachable(self, mock_urlopen: MagicMock) -> None:
+        mock_urlopen.side_effect = HTTPError("https://api.example.com", 404, "Not Found", None, None)
+        issues = check_schema_drift(self.EXP)
+        self.assertTrue(any("HTTP 404" in i["detail"] for i in issues))
+        self.assertFalse(any("Cannot reach" in i["message"] for i in issues))
 
     @patch("schema_drift.urlopen")
     def test_urlerror_is_error(self, mock_urlopen: MagicMock) -> None:

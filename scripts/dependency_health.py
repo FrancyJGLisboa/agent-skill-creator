@@ -9,7 +9,7 @@ Non-HTTP URLs and URLs without a scheme are reported as skipped.
 
 from __future__ import annotations
 
-from urllib.error import URLError
+from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 HTTP_TIMEOUT_SECONDS = 10
@@ -71,6 +71,22 @@ def check_dependency_health(dependencies: list[dict]) -> list[dict]:
                         "message": f"Dependency '{name}' returned server error",
                         "detail": f"HTTP {status} from {url}",
                     })
+        except HTTPError as exc:
+            # urlopen RAISES on 4xx/5xx; HTTPError subclasses URLError, so this
+            # must be caught first or every error status reads as "unreachable".
+            if 400 <= exc.code < 500:
+                issues.append({
+                    "level": "warning",
+                    "message": f"Dependency '{name}' returned client error",
+                    "detail": f"HTTP {exc.code} from {url}. "
+                              "The endpoint may have moved or require authentication.",
+                })
+            else:
+                issues.append({
+                    "level": "error",
+                    "message": f"Dependency '{name}' returned server error",
+                    "detail": f"HTTP {exc.code} from {url}",
+                })
         except URLError as exc:
             issues.append({
                 "level": "error",

@@ -20,8 +20,13 @@ from validate import validate_skill  # noqa: E402
 EXCLUDE_DIRS = {
     '.git', '__pycache__', 'node_modules', '.claude-plugin',
     'venv', 'env', '.venv', '.pytest_cache', '.mypy_cache',
-    'dist', 'build', '*.egg-info'
+    'dist', 'build'
 }
+
+
+def _is_excluded_dir(dirname: str) -> bool:
+    """Exact EXCLUDE_DIRS match, plus the *.egg-info suffix pattern."""
+    return dirname in EXCLUDE_DIRS or dirname.endswith('.egg-info')
 
 EXCLUDE_FILES = {
     '.DS_Store', '.gitignore', 'Thumbs.db', '*.pyc', '*.pyo',
@@ -65,7 +70,8 @@ def get_skill_version(skill_path: str, override_version: str = None) -> str:
     skill_md_path = os.path.join(skill_path, 'SKILL.md')
     if os.path.exists(skill_md_path):
         try:
-            version = SkillDoc.from_path(skill_md_path).field("version")
+            doc = SkillDoc.from_path(skill_md_path)
+            version = doc.subfield("metadata", "version") or doc.field("version")
             if version:
                 return version if version.startswith('v') else f'v{version}'
         except Exception:
@@ -117,7 +123,7 @@ def get_directory_size(path: str) -> int:
     total = 0
     for root, dirs, files in os.walk(path):
         # Filter excluded directories
-        dirs[:] = [d for d in dirs if d not in EXCLUDE_DIRS]
+        dirs[:] = [d for d in dirs if not _is_excluded_dir(d)]
 
         for file in files:
             if should_include_file(os.path.join(root, file), file):
@@ -162,7 +168,7 @@ def create_export_package(
         with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as zipf:
             for root, dirs, files in os.walk(skill_path):
                 # Filter excluded directories
-                dirs[:] = [d for d in dirs if d not in EXCLUDE_DIRS]
+                dirs[:] = [d for d in dirs if not _is_excluded_dir(d)]
 
                 # For API variant, exclude .claude-plugin
                 if variant == 'api' and '.claude-plugin' in dirs:

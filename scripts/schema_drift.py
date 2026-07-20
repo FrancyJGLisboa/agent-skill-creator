@@ -11,7 +11,7 @@ top-level JSON keys to the expected set.
 from __future__ import annotations
 
 import json
-from urllib.error import URLError
+from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from skill_document import SkillDoc
@@ -167,6 +167,15 @@ def check_schema_drift(expectations: list[dict]) -> list[dict]:
                 "level": "error",
                 "message": f"Response from {url} is not valid JSON",
                 "detail": "Cannot perform schema drift check.",
+            })
+        except HTTPError as exc:
+            # Caught before URLError (its parent class): an HTTP error status
+            # means the endpoint answered — report the status, not "unreachable".
+            issues.append({
+                "level": "error",
+                "message": f"Schema check got an HTTP error from {url}",
+                "detail": f"HTTP {exc.code} ({exc.reason}). "
+                          "Cannot compare keys against an error response.",
             })
         except URLError as exc:
             issues.append({
