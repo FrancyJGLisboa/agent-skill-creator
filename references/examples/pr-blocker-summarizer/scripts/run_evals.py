@@ -206,9 +206,10 @@ def _run_one(cmd: str, output_path: Path | None) -> bool:
     if OUTPUT_PLACEHOLDER in cmd:
         if output_path is None:
             return False
-        bound = cmd.replace(OUTPUT_PLACEHOLDER, shlex.quote(str(output_path)))
+        bound = cmd.replace(OUTPUT_PLACEHOLDER, _quote_path(output_path))
     else:
         bound = cmd
+    bound = _resolve_interpreter(bound)
     for _ in range(2):
         proc = subprocess.run(bound, shell=True, capture_output=True)  # noqa: S602
         if proc.returncode == 0:
@@ -301,6 +302,18 @@ def _effective_expected(evals_dir: Path, case: dict) -> Path | None:
     return conventional if conventional.exists() else None
 
 
+def _quote_path(path: Path) -> str:
+    """Shell-quote a path for the platform shell.
+
+    shlex.quote is POSIX-only: under Windows shell=True (cmd.exe) its single
+    quotes are passed through literally and corrupt the path. cmd.exe wants
+    double quotes.
+    """
+    if os.name == "nt":
+        return f'"{path}"'
+    return shlex.quote(str(path))
+
+
 def _resolve_interpreter(bound: str) -> str:
     """Swap a leading 'python3' for the running interpreter when python3 is
     not on PATH (Windows ships 'python'/'py', not 'python3')."""
@@ -316,11 +329,11 @@ def _run_skill(run_cmd: str, input_path: Path | None, output_path: Path, skill_d
     True only on exit code 0 within the timeout. Mirrors _run_one's shell form
     and the timeout= convention used elsewhere (review_staleness, export_utils).
     """
-    bound = run_cmd.replace(OUTPUT_PLACEHOLDER, shlex.quote(str(output_path)))
+    bound = run_cmd.replace(OUTPUT_PLACEHOLDER, _quote_path(output_path))
     if INPUT_PLACEHOLDER in bound:
         if input_path is None:
             return False
-        bound = bound.replace(INPUT_PLACEHOLDER, shlex.quote(str(input_path)))
+        bound = bound.replace(INPUT_PLACEHOLDER, _quote_path(input_path))
     bound = _resolve_interpreter(bound)
     try:
         proc = subprocess.run(  # noqa: S602
