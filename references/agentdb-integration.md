@@ -1,5 +1,16 @@
 # AgentDB Integration
 
+> **STATUS: DESIGN DOCUMENT — NOT IMPLEMENTED.**
+> Nothing described in this file exists in the codebase: there is no
+> `integrations/` directory, no `agentdb_bridge.py`, no nightly learner, and no
+> reflexion/causal/skill-extraction storage. The skill creator neither reads
+> nor writes any AgentDB state today. This document is a design sketch for a
+> possible future learning layer. The learning loop that DOES exist and ship
+> with every generated skill is the eval harness: `run_evals.py` with baseline
+> promotion, a regression gate, and a holdout split (see
+> `phase2-eval-assessment.md`). Do not describe AgentDB features as current
+> behavior in user-facing output.
+
 ## Overview
 
 AgentDB is an invisible learning system that improves skill creation quality over time. It operates behind the scenes during every skill creation episode, recording decisions, outcomes, and patterns. The user never interacts with AgentDB directly -- they simply get progressively better skill outputs as the system accumulates experience.

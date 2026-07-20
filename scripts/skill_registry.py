@@ -75,8 +75,12 @@ MIN_TAG_LENGTH = 3
 # --- Namespacing & date parsing helpers ---
 
 def _slug(value: str) -> str:
-    """Return a filesystem-safe slug for an author/namespace path segment."""
-    slug = re.sub(r"[^a-zA-Z0-9._-]+", "-", value.strip().lower()).strip("-")
+    """Return a filesystem-safe slug for an author/namespace path segment.
+
+    Edge dots are stripped (internal ones kept, e.g. "j.r.tolkien") so a value
+    like ".." can never become a path-traversal segment.
+    """
+    slug = re.sub(r"[^a-zA-Z0-9._-]+", "-", value.strip().lower()).strip("-.")
     return slug or "unknown"
 
 
@@ -369,14 +373,17 @@ def cmd_publish(args: argparse.Namespace) -> None:
                 location += f":{issue['line']}"
             print(f"  [WARN] {location}: {issue['description']}")
 
-    if high_issues and not args.force:
+    if high_issues:
+        # Hard gate, deliberately NOT bypassable by --force: unreviewed
+        # ingestion is the dominant registry risk. --force only overrides
+        # duplicate-version entries, never security findings.
         print("Security scan found high-severity issues:", file=sys.stderr)
         for issue in high_issues:
             location = issue["file"]
             if issue["line"] > 0:
                 location += f":{issue['line']}"
             print(f"  [HIGH] {location}: {issue['description']}", file=sys.stderr)
-        print("Use --force to publish anyway.", file=sys.stderr)
+        print("Fix the findings and re-publish; --force does not bypass the scan.", file=sys.stderr)
         sys.exit(1)
 
     # Step 3: Extract metadata
@@ -424,6 +431,16 @@ def cmd_publish(args: argparse.Namespace) -> None:
     # Step 6: Copy skill to registry (author-namespaced path)
     rel_path = skill_storage_path(name, author)
     dest = registry_path / rel_path
+    # Containment guard: dest must resolve strictly inside skills/ before any
+    # destructive operation (defense in depth against traversal via metadata).
+    skills_root = (registry_path / "skills").resolve()
+    resolved_dest = dest.resolve()
+    if resolved_dest == skills_root or not resolved_dest.is_relative_to(skills_root):
+        print(
+            f"Error: refusing to publish outside the registry skills root: {dest}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
     if dest.exists():
         shutil.rmtree(dest)
     dest.parent.mkdir(parents=True, exist_ok=True)

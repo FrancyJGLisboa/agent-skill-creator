@@ -692,15 +692,19 @@ Step-by-step wizard for complex projects:
 
 See `references/interactive-mode.md` for wizard documentation.
 
-## AgentDB Integration
+## Learning & Evolution
 
-Optional learning system that gets smarter over time:
+Every generated skill ships its own learning loop — the eval harness plus a
+self-maintenance command:
 
-- Stores creation episodes for pattern learning
-- Progressively improves API selection, architecture, and keywords
-- Works identically with or without AgentDB available
+- `run_evals.py --rollout` runs the skill on its golden inputs and scores real output
+- `--promote` captures first-green baselines; later runs are compared against them (regression gate)
+- `--judge` grades `llm-judge` criteria with a judge pinned in the spec (model + temperature); a known-bad canary must fail every criterion or the judge run is invalid
+- A `"split": "test"` holdout case is scored only at release, never fed to an optimization loop
+- `evolve.py` runs staleness/dependency/drift checks + the rollout in one command; every failure appends its raw evidence to the skill's `EVOLUTION.md`, which feeds a regenerate pass
 
-See `references/agentdb-integration.md` for integration details.
+`references/agentdb-integration.md` is a design sketch for a future episodic
+learning layer — it is NOT implemented; never present it as current behavior.
 
 ## Quality Standards
 
@@ -746,7 +750,7 @@ The `-skill` suffix also serves as a signal to the agent: when it sees a repo or
 | `references/templates-guide.md` | Template-based creation |
 | `references/interactive-mode.md` | Interactive wizard docs |
 | `references/multi-agent-guide.md` | Suite creation, orchestration patterns, routing logic |
-| `references/agentdb-integration.md` | AgentDB learning system |
+| `references/agentdb-integration.md` | Future learning-layer design sketch (not implemented) |
 | `references/cross-platform-guide.md` | Platform compatibility matrix |
 | `references/export-guide.md` | Cross-platform export system |
 | `references/quality-standards.md` | Quality standards, dependency management, testing strategy |

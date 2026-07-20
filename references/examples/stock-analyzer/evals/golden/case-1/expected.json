@@ -1,0 +1,29 @@
+{
+  "ticker": "AAPL",
+  "current_price": 178.45,
+  "indicators": {
+    "RSI": {
+      "value": 62.3,
+      "signal": "neutral",
+      "interpretation": "RSI above 50 indicates bullish momentum, but not overbought"
+    },
+    "MACD": {
+      "macd_line": 2.15,
+      "signal_line": 1.89,
+      "histogram": 0.26,
+      "signal": "buy",
+      "interpretation": "MACD line crossed above signal line - bullish crossover"
+    }
+  },
+  "signal": {
+    "action": "BUY",
+    "confidence": "moderate",
+    "reasoning": [
+      "RSI at 62.3 - neutral zone",
+      "MACD bullish crossover detected"
+    ],
+    "price": 178.45
+  },
+  "timestamp": "2026-07-20T10:41:01.415699",
+  "period": "1y"
+}

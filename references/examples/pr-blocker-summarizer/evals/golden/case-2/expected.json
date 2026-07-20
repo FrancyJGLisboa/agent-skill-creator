@@ -1,0 +1,9 @@
+{
+  "total": 2,
+  "blocked": [],
+  "ready": [
+    "Bump deps",
+    "New dashboard"
+  ],
+  "summary": "2 open \u00b7 0 blocked \u00b7 2 ready to merge"
+}

@@ -2,6 +2,10 @@
 name: stock-analyzer
 description: Provides comprehensive technical analysis for stocks and ETFs using RSI, MACD, Bollinger Bands, and other indicators. Activates when user requests stock analysis, technical indicators, trading signals, or market data for specific ticker symbols.
 version: 1.0.0
+metadata:
+  created: 2025-10-23
+  last_reviewed: 2026-07-20
+  review_interval_days: 180
 ---
 # Stock Analyzer Skill - Technical Specification
 

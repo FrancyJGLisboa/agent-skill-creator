@@ -584,6 +584,7 @@ skill-name/
 │   └── guide.md
 ├── assets/
 │   └── config.json
+├── .claude-plugin/       # plugin.json + marketplace.json (Claude Code plugin install)
 ├── install.sh            # Cross-platform installer
 └── README.md             # Multi-platform install instructions
 ```
@@ -605,6 +606,7 @@ skill-name/
 │   └── analysis-methods.md
 ├── assets/
 │   └── config.json
+├── .claude-plugin/
 ├── install.sh
 └── README.md
 ```
@@ -632,11 +634,12 @@ skill-name/
 ├── assets/
 │   ├── config.json
 │   └── metadata.json
+├── .claude-plugin/
 ├── install.sh
 └── README.md
 ```
 
-**Important:** There is NO `.claude-plugin/marketplace.json` required for simple skills. The SKILL.md file with its frontmatter is sufficient for discovery and activation on all platforms.
+**Important:** The SKILL.md file with its frontmatter is what activates the skill on all platforms. The `.claude-plugin/` manifests (Step 6.5) are additive: they make the same skill installable through Claude Code's native plugin system (`/plugin marketplace add`), which brings in-tool install, updates, and enable/disable. Because the skill has no `skills/` subdirectory, Claude Code discovers the root SKILL.md automatically (root-fallback). Do NOT add a `.claude/` directory inside a skill — it can shadow plugin skill discovery.
 
 ### Step 3: Simple vs Complex Suite Decision
 
@@ -960,7 +963,7 @@ Execute these 10 steps in order:
 mkdir -p skill-name/{scripts,references,assets}
 ```
 
-No `.claude-plugin/` directory needed for simple skills.
+Every skill also gets a `.claude-plugin/` directory (see Step 6.5) so Claude Code can install it as a plugin.
 
 ### Step 2: Write SKILL.md (PRIMARY FILE - CREATE FIRST)
 
@@ -1326,6 +1329,59 @@ The template handles:
 - `--all` flag to install to every detected tool at once
 - `--dry-run` for preview without changes
 
+### Step 6.5: Generate Claude Code plugin manifests
+
+Generate `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` from
+the canonical templates in `scripts/claude-plugin-template/`. This makes the
+skill installable through Claude Code's native plugin system — in-tool install,
+updates, and enable/disable — with two commands:
+
+```
+/plugin marketplace add <github-owner>/<repo>     # or a local path: /plugin marketplace add ./skill-name
+/plugin install <skill-name>@<skill-name>
+```
+
+Fill the placeholders from the SKILL.md frontmatter:
+
+| Placeholder | Source |
+|---|---|
+| `{{SKILL_NAME}}` | frontmatter `name` (must match exactly) |
+| `{{SKILL_VERSION}}` | frontmatter `metadata.version` |
+| `{{SKILL_AUTHOR}}` | frontmatter `metadata.author` |
+| `{{SKILL_DESCRIPTION}}` | one-line summary derived from `description` — single line, no double quotes, so the JSON stays valid |
+
+```bash
+# During skill generation (repeat for marketplace.json):
+sed -e "s/{{SKILL_NAME}}/skill-name/g" \
+    -e "s/{{SKILL_VERSION}}/1.0.0/g" \
+    -e "s/{{SKILL_AUTHOR}}/Author Name/g" \
+    -e "s/{{SKILL_DESCRIPTION}}/One-line description/g" \
+    scripts/claude-plugin-template/plugin.json > skill-name/.claude-plugin/plugin.json
+```
+
+After generation, verify both files parse (`python3 -c "import json,sys; json.load(open(sys.argv[1]))" ...`)
+and that the `name` fields match the SKILL.md `name`. Claude Code discovers the
+skill's root SKILL.md automatically (root-fallback — no `skills/` subdirectory
+needed). Never create a `.claude/` directory inside a generated skill; it can
+shadow plugin skill discovery.
+
+### Step 6.6: Ship the evolution toolkit
+
+Copy the maintenance loop into the skill so it can check itself after delivery
+— no creator repo needed:
+
+```bash
+cp scripts/evolve_template.py <skill>/scripts/evolve.py
+cp scripts/skill_document.py scripts/review_staleness.py scripts/dependency_health.py \
+   scripts/schema_drift.py scripts/staleness_check.py <skill>/scripts/
+chmod +x <skill>/scripts/evolve.py
+```
+
+`python3 scripts/evolve.py` runs staleness/dependency/drift checks plus the
+eval rollout (with `--judge` to grade llm-judge criteria). Any failure appends
+the raw evidence to the skill's `EVOLUTION.md` — that file is the input for a
+regenerate pass (`/agent-skill-creator <skill> using EVOLUTION.md`).
+
 ### Step 7: Write README.md
 
 Multi-platform installation instructions:
@@ -1345,7 +1401,14 @@ git clone <repo-url> ~/.agents/skills/skill-name
 
 Works with Codex CLI, Gemini CLI, Kiro, Antigravity, and other tools that read `~/.agents/skills/`.
 
-### Using install.sh (Recommended)
+### Claude Code (plugin — recommended)
+
+```
+/plugin marketplace add <github-owner>/<repo>    # or local: /plugin marketplace add ./skill-name
+/plugin install skill-name@skill-name
+```
+
+### Using install.sh (Recommended for other tools)
 
 ```bash
 chmod +x install.sh
@@ -1529,6 +1592,8 @@ See README.md for complete multi-platform installation instructions.
 | 5 | `assets/*.json` | Real values, validated JSON |
 | 5.5 | `evals/*.eval.md` + `scripts/run_evals.py` | Bundled loss function; skip if `--no-eval` |
 | 6 | `install.sh` | Cross-platform installer, `chmod +x` |
+| 6.5 | `.claude-plugin/*.json` | Plugin manifests from `scripts/claude-plugin-template/`; names match SKILL.md |
+| 6.6 | `scripts/evolve.py` + staleness/drift modules | Shipped self-maintenance loop; failures append evidence to `EVOLUTION.md` |
 | 7 | `README.md` | Multi-platform install instructions |
 | 8 | Run `validate.py` + `check_pipeline.py` | Must pass before delivery |
 | 9 | Run `security_scan.py` | Must pass before delivery |
@@ -1536,7 +1601,7 @@ See README.md for complete multi-platform installation instructions.
 
 ## Phase 5 Checklist
 
-- [ ] Directory structure created (NO `.claude-plugin/` for simple skills)
+- [ ] Directory structure created
 - [ ] SKILL.md created FIRST with spec-compliant frontmatter
 - [ ] SKILL.md is <500 lines
 - [ ] Frontmatter has: name, description (<=1024 chars), license, metadata (author, version)
@@ -1561,8 +1626,12 @@ See README.md for complete multi-platform installation instructions.
 - [ ] Assets created with valid JSON and real values
 - [ ] Eval spec emitted (`evals/<name>.eval.md` + `scripts/run_evals.py`) unless `--no-eval`
 - [ ] Eval spec validates (`python3 scripts/run_evals.py --validate` → VALID)
+- [ ] At least one golden case marked `"split": "test"` (holdout — skipped by default, scored only with `--include-holdout`, never fed to an optimization loop)
 - [ ] `install.sh` generated with cross-platform support
-- [ ] `README.md` written with multi-platform install instructions
+- [ ] `.claude-plugin/plugin.json` + `marketplace.json` generated (valid JSON, `name` fields match SKILL.md)
+- [ ] Evolution toolkit shipped (`scripts/evolve.py` + staleness/drift/dep-health modules; `python3 scripts/evolve.py` exits 0)
+- [ ] Eval spec has a `judge` block with a pinned model + known-bad canary when any criterion is `llm-judge`
+- [ ] `README.md` written with multi-platform install instructions (including `/plugin marketplace add`)
 - [ ] `requirements.txt` created (if third-party dependencies used)
 - [ ] Spec validation passed (`scripts/validate.py`)
 - [ ] Security scan passed (`scripts/security_scan.py`)

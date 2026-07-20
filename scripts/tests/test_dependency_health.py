@@ -4,7 +4,7 @@ import sys
 import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-from urllib.error import URLError
+from urllib.error import HTTPError, URLError
 
 ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -41,6 +41,22 @@ class DependencyHealthTest(unittest.TestCase):
         mock_urlopen.return_value = _mock_response(503)
         issues = check_dependency_health([{"name": "API", "url": "https://example.com"}])
         self.assertTrue(any(i["level"] == "error" and "server error" in i["message"] for i in issues))
+
+    @patch("dependency_health.urlopen")
+    def test_raised_httperror_404_is_client_error_warning(self, mock_urlopen: MagicMock) -> None:
+        # Real urlopen RAISES HTTPError on 4xx/5xx (it never returns those
+        # statuses), so the raised form must classify the same as the returned form.
+        mock_urlopen.side_effect = HTTPError("https://example.com/old", 404, "Not Found", None, None)
+        issues = check_dependency_health([{"name": "Gone", "url": "https://example.com/old"}])
+        self.assertTrue(any(i["level"] == "warning" and "client error" in i["message"] for i in issues))
+        self.assertFalse(any("unreachable" in i["message"] for i in issues))
+
+    @patch("dependency_health.urlopen")
+    def test_raised_httperror_503_is_server_error(self, mock_urlopen: MagicMock) -> None:
+        mock_urlopen.side_effect = HTTPError("https://example.com", 503, "Unavailable", None, None)
+        issues = check_dependency_health([{"name": "API", "url": "https://example.com"}])
+        self.assertTrue(any(i["level"] == "error" and "server error" in i["message"] for i in issues))
+        self.assertFalse(any("unreachable" in i["message"] for i in issues))
 
     @patch("dependency_health.urlopen")
     def test_urlerror_is_unreachable(self, mock_urlopen: MagicMock) -> None:

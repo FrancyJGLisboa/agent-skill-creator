@@ -40,9 +40,9 @@ can capture a concrete baseline with
     {"id": "signal-is-justified", "text": "signal.reasoning supports the chosen action", "type": "llm-judge"}
   ],
   "golden": [
-    {"id": "case-1", "input": "golden/case-1/input.json", "expected": null, "split": "val", "expected_status": "pending-first-green"},
-    {"id": "case-2", "input": "golden/case-2/input.json", "expected": null, "split": "val", "expected_status": "pending-first-green"},
-    {"id": "case-3", "input": "golden/case-3/input.json", "expected": null, "split": "val", "expected_status": "pending-first-green"}
+    {"id": "case-1", "input": "golden/case-1/input.json", "expected": null, "split": "val", "expected_status": "pending-first-green", "compare_ignore": ["timestamp"]},
+    {"id": "case-2", "input": "golden/case-2/input.json", "expected": null, "split": "test", "expected_status": "pending-first-green", "compare_ignore": ["timestamp"]},
+    {"id": "case-3", "input": "golden/case-3/input.json", "expected": null, "split": "val", "expected_status": "pending-first-green", "compare_ignore": ["timestamp"]}
   ]
 }
 ```

@@ -1,0 +1,21 @@
+{
+  "ticker": "GOOGL",
+  "current_price": 178.45,
+  "indicators": {
+    "RSI": {
+      "value": 62.3,
+      "signal": "neutral",
+      "interpretation": "RSI above 50 indicates bullish momentum, but not overbought"
+    }
+  },
+  "signal": {
+    "action": "HOLD",
+    "confidence": "low",
+    "reasoning": [
+      "RSI at 62.3 - neutral zone"
+    ],
+    "price": 178.45
+  },
+  "timestamp": "2026-07-20T10:41:02.079943",
+  "period": "1y"
+}

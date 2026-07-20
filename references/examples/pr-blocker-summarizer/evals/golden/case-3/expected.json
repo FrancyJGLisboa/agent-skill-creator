@@ -1,0 +1,14 @@
+{
+  "total": 1,
+  "blocked": [
+    {
+      "title": "Stale spike",
+      "reasons": [
+        "awaiting review",
+        "stale (21d)"
+      ]
+    }
+  ],
+  "ready": [],
+  "summary": "1 open \u00b7 1 blocked \u00b7 0 ready to merge"
+}

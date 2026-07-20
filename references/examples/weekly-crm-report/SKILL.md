@@ -5,6 +5,9 @@ license: MIT
 metadata:
   author: agent-skill-creator
   version: 1.0.0
+  created: 2026-06-27
+  last_reviewed: 2026-07-20
+  review_interval_days: 180
 ---
 
 # Weekly CRM Report

@@ -184,6 +184,20 @@ class TestCreateExportPackage(unittest.TestCase):
         self.assertIn("references/guide.md", names)
         self.assertNotIn(".env", names)
 
+    def test_egg_info_dirs_are_excluded(self):
+        egg = self.skill / "demo.egg-info"
+        egg.mkdir()
+        (egg / "PKG-INFO").write_text("Metadata-Version: 2.1\n", encoding="utf-8")
+        result = create_export_package(
+            str(self.skill), str(self.out), variant="desktop", version="v1.2.3"
+        )
+        self.assertTrue(result["success"], result["message"])
+        names = self._names(result)
+        self.assertFalse(
+            any(n.startswith("demo.egg-info/") for n in names),
+            f"egg-info shipped in export: {sorted(names)}",
+        )
+
     def test_api_variant_excludes_extra_docs_and_examples(self):
         result = create_export_package(
             str(self.skill), str(self.out), variant="api", version="v1.2.3"

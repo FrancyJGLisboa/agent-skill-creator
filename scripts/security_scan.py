@@ -20,6 +20,9 @@ import re
 import sys
 from pathlib import Path
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from skill_document import SkillDoc  # noqa: E402
+
 
 # --- API Key Patterns ---
 # Each entry: (pattern_name, compiled_regex, description, severity)
@@ -167,6 +170,60 @@ PYTHON_DANGER_PATTERNS: list[tuple[str, re.Pattern, str, str]] = [
 ]
 
 
+# --- Instruction-body injection patterns (markdown/prose files) ---
+# Skill-file prompt injection executes at LOAD time, before any code runs, so
+# the instruction body is scanned as an attack surface in its own right.
+
+INSTRUCTION_INJECTION_PATTERNS: list[tuple[str, re.Pattern, str, str]] = [
+    (
+        "Instruction override",
+        re.compile(
+            r"(?i)\b(?:ignore|disregard|forget)\s+(?:all\s+|any\s+)?"
+            r"(?:previous|prior|above|earlier)\s+(?:instructions?|rules?|prompts?|guidance)"
+        ),
+        "Instruction-override phrase in skill prose (prompt-injection marker)",
+        "high",
+    ),
+    (
+        "Concealment directive",
+        re.compile(
+            r"(?i)(?:\b(?:do\s+not|don't|never)\s+(?:tell|inform|notify)\s+the\s+user"
+            r"|\bwithout\s+(?:telling|informing|asking|notifying)\s+the\s+user)"
+        ),
+        "Directive to hide behavior from the user",
+        "high",
+    ),
+    (
+        "Exfiltration directive",
+        re.compile(
+            r"(?i)\b(?:send|post|upload|transmit|forward|exfiltrate)\b[^.\n]{0,60}"
+            r"\b(?:api[\s_-]?keys?|credentials?|tokens?|secrets?|passwords?|"
+            r"environment\s+variables?)\b"
+        ),
+        "Directive to transmit secrets/credentials",
+        "high",
+    ),
+]
+
+# Invisible/bidi characters that can hide instructions from human review.
+# Escaped on purpose: the scanner's own source must not contain hidden unicode.
+HIDDEN_UNICODE_RE = re.compile(
+    "[\\u200b-\\u200f\\u202a-\\u202e\\u2060-\\u2064\\u2066-\\u2069\\ufeff]"
+)
+
+# Long base64-shaped runs in prose files (possible encoded payload).
+ENCODED_BLOB_RE = re.compile(r"[A-Za-z0-9+/=]{200,}")
+
+PROSE_EXTENSIONS: set[str] = {".md", ".markdown", ".rst", ".txt"}
+
+# Hosts a script may reach without declaring them in SKILL.md frontmatter.
+# api.anthropic.com is the platform's own API (the shipped judge harness in
+# run_evals.py calls it), not a third-party dependency.
+ENDPOINT_SKIP_HOSTS: set[str] = {"localhost", "127.0.0.1", "0.0.0.0", "example.com", "www.example.com", "api.anthropic.com"}  # noqa: S104
+
+_URL_HOST_RE = re.compile(r"https?://([a-zA-Z0-9.-]+)")
+
+
 # File extensions to scan for content patterns
 TEXT_EXTENSIONS: set[str] = {
     ".py", ".md", ".txt", ".json", ".yaml", ".yml", ".toml", ".cfg",
@@ -257,8 +314,39 @@ def _scan_file_content(
         return issues
 
     is_python = file_path.suffix.lower() == ".py"
+    is_prose = file_path.suffix.lower() in PROSE_EXTENSIONS
 
     for line_num, line in enumerate(lines, start=1):
+        # Hidden/bidi unicode is suspicious anywhere: it can conceal
+        # instructions or reorder what a human reviewer sees.
+        if HIDDEN_UNICODE_RE.search(line):
+            issues.append({
+                "severity": "high",
+                "file": relative_path,
+                "line": line_num,
+                "pattern": "Hidden unicode",
+                "description": "Invisible/bidirectional unicode character (can hide instructions from review)",
+            })
+
+        if is_prose:
+            for pattern_name, regex, description, severity in INSTRUCTION_INJECTION_PATTERNS:
+                if regex.search(line):
+                    issues.append({
+                        "severity": severity,
+                        "file": relative_path,
+                        "line": line_num,
+                        "pattern": pattern_name,
+                        "description": description,
+                    })
+            if ENCODED_BLOB_RE.search(line):
+                issues.append({
+                    "severity": "medium",
+                    "file": relative_path,
+                    "line": line_num,
+                    "pattern": "Encoded blob",
+                    "description": "Long base64-shaped run in instruction file (possible encoded payload)",
+                })
+
         # Check API key patterns against all text files
         for pattern_name, regex, description, severity in API_KEY_PATTERNS:
             match = regex.search(line)
@@ -393,6 +481,9 @@ def security_scan(skill_path: str) -> dict:
             file_issues = _scan_file_content(file_path, skill_dir)
             issues.extend(file_issues)
 
+    # --- Least-privilege cross-check: script URLs must be declared ---
+    issues.extend(_scan_undeclared_endpoints(skill_dir))
+
     # Sort issues: high first, then medium, then low
     severity_order = {"high": 0, "medium": 1, "low": 2}
     issues.sort(key=lambda x: (severity_order.get(x["severity"], 3), x["file"], x["line"]))
@@ -401,6 +492,67 @@ def security_scan(skill_path: str) -> dict:
         "clean": len(issues) == 0,
         "issues": issues,
     }
+
+
+def _declared_hosts(skill_dir: Path) -> set[str]:
+    """Hostnames the SKILL.md frontmatter declares (dependencies, schema
+    expectations, and an optional metadata.permissions network list)."""
+    skill_md = skill_dir / "SKILL.md"
+    if not skill_md.exists():
+        return set()
+    try:
+        doc = SkillDoc.from_path(skill_md)
+    except OSError:
+        return set()
+    hosts: set[str] = set()
+    for parent, child in (("metadata", "dependencies"), ("metadata", "schema_expectations")):
+        for entry in doc.list_of_objects(parent, child):
+            url = entry.get("url", "")
+            match = _URL_HOST_RE.match(url)
+            if match:
+                hosts.add(match.group(1).lower())
+    return hosts
+
+
+def _scan_undeclared_endpoints(skill_dir: Path) -> list[dict]:
+    """Flag network endpoints reached by scripts but not declared in SKILL.md.
+
+    Least-privilege gate: every host a skill's code talks to must appear in the
+    frontmatter (dependencies / schema_expectations), so a reviewer can audit
+    egress without reading every script.
+    """
+    declared = _declared_hosts(skill_dir)
+    issues: list[dict] = []
+    scripts_dir = skill_dir / "scripts"
+    if not scripts_dir.is_dir():
+        return issues
+    for path in sorted(scripts_dir.rglob("*")):
+        if path.suffix.lower() not in {".py", ".sh", ".bash"} or not path.is_file():
+            continue
+        if "tests" in path.relative_to(scripts_dir).parts:
+            continue  # test fixtures legitimately contain URL literals
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        for line_num, line in enumerate(text.splitlines(), start=1):
+            for match in _URL_HOST_RE.finditer(line):
+                host = match.group(1).lower()
+                if host in ENDPOINT_SKIP_HOSTS or host in declared:
+                    continue
+                if host == "example.com" or host.endswith(".example.com"):
+                    continue  # RFC 2606 documentation domain
+                issues.append({
+                    "severity": "medium",
+                    "file": str(path.relative_to(skill_dir)),
+                    "line": line_num,
+                    "pattern": "Undeclared network endpoint",
+                    "description": (
+                        f"Script reaches '{host}' but SKILL.md declares no such "
+                        "dependency; declare it in metadata.dependencies or remove the call"
+                    ),
+                })
+    return issues
 
 
 def _print_human_readable(result: dict, skill_path: str) -> None:

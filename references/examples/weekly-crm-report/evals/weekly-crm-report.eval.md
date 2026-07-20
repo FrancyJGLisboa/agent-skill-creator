@@ -30,7 +30,7 @@ runtime, so cases are `pending-first-green`; capture a baseline with
   ],
   "golden": [
     {"id": "case-1", "input": "golden/case-1/input.csv", "expected": null, "split": "val", "expected_status": "pending-first-green"},
-    {"id": "case-2", "input": "golden/case-2/input.csv", "expected": null, "split": "val", "expected_status": "pending-first-green"},
+    {"id": "case-2", "input": "golden/case-2/input.csv", "expected": null, "split": "test", "expected_status": "pending-first-green"},
     {"id": "case-3", "input": "golden/case-3/input.csv", "expected": null, "split": "val", "expected_status": "pending-first-green"}
   ]
 }

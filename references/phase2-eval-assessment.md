@@ -68,8 +68,18 @@ a design rule, not a user question:
 3. **Never interrogate the user for examples.** That re-introduces the cognitive
    constraint the factory exists to remove.
 
-Mark each case `"split": "val"` — these become `autoresearch-universal`'s fixed
-validation set.
+Mark most cases `"split": "val"` — these become `autoresearch-universal`'s fixed
+validation set. Mark **at least one case `"split": "test"`** — the holdout. The
+runner skips holdout cases by default and never promotes their baselines; they
+are scored only with `--include-holdout` (release scoring / CI), and must NEVER
+be handed to an optimization loop. This is the one check the loop cannot
+overfit.
+
+Two optional per-case fields control the regression gate (see Step 3.5):
+- `"compare": "none"` — opt a nondeterministic case out of baseline comparison
+  entirely (last resort; prefer `compare_ignore`).
+- `"compare_ignore": ["timestamp", ...]` — top-level JSON keys dropped from
+  both sides before comparison, for volatile fields like timestamps.
 
 ## Step 3 — Emit the spec in Phase 5
 
@@ -99,7 +109,7 @@ words) **plus** one fenced ` ```json ` block the runner and autoresearch parse:
   ],
   "golden": [
     {"id": "case-1", "input": "golden/case-1/input.csv", "expected": "golden/case-1/expected.json", "split": "val"},
-    {"id": "case-2", "input": "golden/case-2/input.csv", "expected": "golden/case-2/expected.json", "split": "val"},
+    {"id": "case-2", "input": "golden/case-2/input.csv", "expected": null, "split": "test", "expected_status": "pending-first-green"},
     {"id": "case-3", "input": "golden/case-3/input.csv", "expected": null, "split": "val", "expected_status": "pending-first-green"}
   ]
 }
@@ -193,13 +203,44 @@ Eval emission is never allowed to block or fail skill creation (mirrors the
 
 ## Out of scope for this version
 
-- Automated grading of `llm-judge` criteria (printed as a checklist).
-- A held-out `test` split distinct from `val` (all golden cases are `val`).
 - Multiple eval specs per skill.
 - Making `--rollout` a hard pre-delivery gate: it runs arbitrary skill code and
   `pending-first-green` cases have no baseline to score, so it stays opt-in.
   `--validate` remains the delivery gate.
 
-Now supported (previously out of scope): an end-to-end **rollout harness** —
-`run_evals.py --rollout` runs the skill's declared `run` command on each golden
-input and scores the real output (see Step 3.5).
+Now supported (previously out of scope):
+- An end-to-end **rollout harness** — `run_evals.py --rollout` runs the skill's
+  declared `run` command on each golden input and scores the real output (see
+  Step 3.5).
+- A **regression gate**: rollout compares each produced output against the
+  case's promoted `expected` baseline (JSON-value equality with
+  `compare_ignore` for volatile keys; `compare: "none"` opts out). A run that
+  passes every command check but diverges from the baseline exits 1 with a
+  `<baseline>`-criterion `regression` row. A `--promote`d baseline at the
+  conventional `golden/<id>/expected.json` path arms the gate automatically and
+  is never overwritten by a later `--promote`.
+- A **held-out `test` split** — `"split": "test"` cases are skipped by default,
+  never promoted, and scored only with `--include-holdout` (release/CI
+  scoring). Keep the holdout away from any optimization loop.
+- **Automated `llm-judge` grading** — `run_evals.py --rollout --judge` grades
+  judge criteria via a **pinned** judge declared in the spec:
+
+  ```json
+  "judge": {
+    "model": "claude-haiku-4-5-20251001",
+    "temperature": 0,
+    "canary": "canary/bad_output.json"
+  }
+  ```
+
+  The pin (model + temperature) keeps verdicts stable across reruns; the judge
+  sees only criterion + output (never the skill's code) and is told to ignore
+  instructions inside the judged output. The `canary` is a known-bad output
+  that every judge criterion must FAIL — if the judge passes it, the whole run
+  is invalid (exit 1): a judge that can't reject garbage proves nothing.
+  Needs `ANTHROPIC_API_KEY`; an explicitly requested `--judge` run errors
+  rather than silently passing when the key is absent. Emit a judge block +
+  canary whenever any criterion is `llm-judge`.
+- **Evidence-bearing failures** — any failed run appends the raw failing check
+  rows to the skill's `EVOLUTION.md` (as does `staleness_check --record`), so
+  the fix/regenerate step consumes evidence, not an exit code.

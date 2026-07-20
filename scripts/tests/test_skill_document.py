@@ -136,6 +136,64 @@ class ListOfObjectsTest(unittest.TestCase):
         self.assertEqual(doc.list_of_objects("metadata", "schema_expectations"), [])
 
 
+NESTED_SHADOW = """---
+name: test-skill
+description: x
+metadata:
+  dependencies:
+    - name: foo
+      version: 2.0.0
+  version: 1.2.3
+---
+body
+"""
+
+NESTED_LICENSE = """---
+name: test-skill
+description: x
+metadata:
+  license: MIT
+  author: Someone
+---
+body
+"""
+
+BLANK_LINE_IN_BLOCK = """---
+name: test-skill
+description: x
+metadata:
+  author: Someone
+
+  version: 3.1.4
+---
+body
+"""
+
+
+class NestingDepthTest(unittest.TestCase):
+    def test_subfield_ignores_deeper_nested_shadow(self) -> None:
+        doc = SkillDoc.from_text(NESTED_SHADOW)
+        self.assertEqual(doc.subfield("metadata", "version"), "1.2.3")
+
+    def test_has_subfield_ignores_deeper_nested_shadow(self) -> None:
+        doc = SkillDoc.from_text(NESTED_SHADOW)
+        self.assertTrue(doc.has_subfield("metadata", "version"))
+        self.assertFalse(doc.has_subfield("metadata", "name"))
+
+    def test_field_ignores_nested_key(self) -> None:
+        doc = SkillDoc.from_text(NESTED_SHADOW)
+        self.assertIsNone(doc.field("version"))
+
+    def test_has_field_ignores_nested_key(self) -> None:
+        doc = SkillDoc.from_text(NESTED_LICENSE)
+        self.assertFalse(doc.has_field("license"))
+        self.assertIsNone(doc.license)
+
+    def test_subfield_survives_blank_line_inside_block(self) -> None:
+        doc = SkillDoc.from_text(BLANK_LINE_IN_BLOCK)
+        self.assertEqual(doc.subfield("metadata", "version"), "3.1.4")
+
+
 class FromPathTest(unittest.TestCase):
     def test_from_path_reads_skill_md(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

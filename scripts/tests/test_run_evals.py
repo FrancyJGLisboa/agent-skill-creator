@@ -21,6 +21,7 @@ from run_evals_template import (  # noqa: E402
     main,
     parse_spec,
     run_command_checks,
+    run_judge_canary,
     run_rollout,
     validate_spec,
 )
@@ -162,7 +163,7 @@ class ValidateSpecTest(unittest.TestCase):
         stderr = io.StringIO()
         with contextlib.redirect_stderr(stderr):
             self.assertEqual(validate_spec(spec, skill), [])
-        self.assertEqual(stderr.getvalue(), "")
+        self.assertNotIn("pending-first-green", stderr.getvalue())
 
 
 class RunCommandChecksTest(unittest.TestCase):
@@ -345,6 +346,361 @@ class RunRolloutTest(unittest.TestCase):
         spec = parse_spec(find_spec(skill))
         result = run_rollout(spec, skill, only_case="case-2")
         self.assertEqual(result["passed"], 1)
+
+
+# Passes the grep criterion ("ok" is present) but diverges from the baseline
+# {"ok": true} — exactly the behavioral regression command checks can't see.
+_PIPELINE_SUBTLY_DIFFERENT = (
+    "import argparse, pathlib\n"
+    "ap = argparse.ArgumentParser()\n"
+    "ap.add_argument('--input'); ap.add_argument('--output', required=True)\n"
+    "a = ap.parse_args()\n"
+    "pathlib.Path(a.output).write_text('{\"ok\": false}\\n')\n"
+)
+# Same JSON value as the baseline, different formatting — must NOT be a regression.
+_PIPELINE_REFORMATTED_BASELINE = (
+    "import argparse, pathlib\n"
+    "ap = argparse.ArgumentParser()\n"
+    "ap.add_argument('--input'); ap.add_argument('--output', required=True)\n"
+    "a = ap.parse_args()\n"
+    "pathlib.Path(a.output).write_text('{ \"ok\" :   true }')\n"
+)
+
+
+class BaselineComparisonTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def _rollout(self, pipeline_body: str, golden=None):
+        skill = _make_skill(
+            self.tmp, ROLLOUT_CRITERIA, golden or _three_golden(), run=_RUN_CMD,
+            pipeline_body=pipeline_body,
+        )
+        spec = parse_spec(find_spec(skill))
+        return skill, run_rollout(spec, skill)
+
+    def test_matching_output_has_no_regressions(self) -> None:
+        _, result = self._rollout(_PIPELINE_COPIES_BASELINE)
+        self.assertEqual(result["regressions"], 0)
+
+    def test_divergence_that_passes_checks_is_a_regression(self) -> None:
+        _, result = self._rollout(_PIPELINE_SUBTLY_DIFFERENT)
+        self.assertEqual(result["failed"], 0)  # command checks are blind to it
+        self.assertEqual(result["regressions"], 3)
+        self.assertTrue(
+            any(c["criterion"] == "<baseline>" and c["status"] == "regression"
+                for c in result["checks"])
+        )
+
+    def test_json_equivalent_formatting_is_not_a_regression(self) -> None:
+        _, result = self._rollout(_PIPELINE_REFORMATTED_BASELINE)
+        self.assertEqual(result["regressions"], 0)
+
+    def test_compare_none_opts_out(self) -> None:
+        golden = _three_golden()
+        for case in golden:
+            case["compare"] = "none"
+        _, result = self._rollout(_PIPELINE_SUBTLY_DIFFERENT, golden=golden)
+        self.assertEqual(result["regressions"], 0)
+
+    def test_regression_exits_one(self) -> None:
+        skill = _make_skill(
+            self.tmp, ROLLOUT_CRITERIA, _three_golden(), run=_RUN_CMD,
+            pipeline_body=_PIPELINE_SUBTLY_DIFFERENT,
+        )
+        self.assertEqual(main([str(skill), "--rollout"]), 1)
+
+    def test_compare_ignore_skips_volatile_fields(self) -> None:
+        golden = _three_golden()
+        for case in golden:
+            case["compare_ignore"] = ["stamp"]
+        # Baseline {"ok": true}; produced adds/uses a differing volatile field.
+        pipeline = (
+            "import argparse, pathlib\n"
+            "ap = argparse.ArgumentParser()\n"
+            "ap.add_argument('--input'); ap.add_argument('--output', required=True)\n"
+            "a = ap.parse_args()\n"
+            "pathlib.Path(a.output).write_text('{\"ok\": true, \"stamp\": \"2026-07-20T10:00:00\"}')\n"
+        )
+        _, result = self._rollout(pipeline, golden=golden)
+        self.assertEqual(result["regressions"], 0)
+
+    def test_compare_ignore_still_catches_substantive_divergence(self) -> None:
+        golden = _three_golden()
+        for case in golden:
+            case["compare_ignore"] = ["stamp"]
+        pipeline = (
+            "import argparse, pathlib\n"
+            "ap = argparse.ArgumentParser()\n"
+            "ap.add_argument('--input'); ap.add_argument('--output', required=True)\n"
+            "a = ap.parse_args()\n"
+            "pathlib.Path(a.output).write_text('{\"ok\": false, \"stamp\": \"x\"}')\n"
+        )
+        _, result = self._rollout(pipeline, golden=golden)
+        self.assertEqual(result["regressions"], 3)
+
+    def test_validate_rejects_bad_compare_ignore(self) -> None:
+        golden = _three_golden()
+        golden[0]["compare_ignore"] = "timestamp"  # must be a list, not a string
+        skill = _make_skill(self.tmp, ROLLOUT_CRITERIA, golden, run=_RUN_CMD)
+        spec = parse_spec(find_spec(skill))
+        errors = validate_spec(spec, skill)
+        self.assertTrue(any("compare_ignore" in e for e in errors))
+
+    def test_validate_rejects_bad_compare_value(self) -> None:
+        golden = _three_golden()
+        golden[0]["compare"] = "fuzzy"
+        skill = _make_skill(self.tmp, ROLLOUT_CRITERIA, golden, run=_RUN_CMD)
+        spec = parse_spec(find_spec(skill))
+        errors = validate_spec(spec, skill)
+        self.assertTrue(any("compare" in e for e in errors))
+
+
+class PromotedBaselineLifecycleTest(unittest.TestCase):
+    """After --promote, the captured baseline must actually gate later runs."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def test_promoted_baseline_gates_subsequent_rollouts(self) -> None:
+        skill = _make_skill(
+            self.tmp, ROLLOUT_CRITERIA, _three_golden(with_expected=False), run=_RUN_CMD,
+            pipeline_body=_PIPELINE_COPIES_BASELINE,
+        )
+        spec = parse_spec(find_spec(skill))
+        first = run_rollout(spec, skill, promote=True)
+        self.assertEqual(len(first["promoted"]), 3)
+
+        # The skill silently changes behavior in a way the command checks miss.
+        (skill / "scripts" / "run_pipeline.py").write_text(
+            _PIPELINE_SUBTLY_DIFFERENT, encoding="utf-8"
+        )
+        second = run_rollout(spec, skill, promote=True)
+        self.assertEqual(second["regressions"], 3)
+        # And the divergent output must NOT be re-promoted over the baseline.
+        self.assertEqual(second["promoted"], [])
+        captured = skill / "evals" / "golden" / "case-1" / "expected.json"
+        self.assertIn("true", captured.read_text())
+
+
+def _golden_with_holdout() -> list[dict]:
+    cases = _three_golden()
+    cases[2]["split"] = "test"
+    return cases
+
+
+class HoldoutTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def test_holdout_skipped_by_default_in_rollout(self) -> None:
+        skill = _make_skill(
+            self.tmp, ROLLOUT_CRITERIA, _golden_with_holdout(), run=_RUN_CMD,
+            pipeline_body=_PIPELINE_COPIES_BASELINE,
+        )
+        spec = parse_spec(find_spec(skill))
+        result = run_rollout(spec, skill)
+        self.assertEqual(result["passed"], 2)
+        self.assertEqual(result["held_out"], ["case-3"])
+
+    def test_include_holdout_scores_it(self) -> None:
+        skill = _make_skill(
+            self.tmp, ROLLOUT_CRITERIA, _golden_with_holdout(), run=_RUN_CMD,
+            pipeline_body=_PIPELINE_COPIES_BASELINE,
+        )
+        spec = parse_spec(find_spec(skill))
+        result = run_rollout(spec, skill, include_holdout=True)
+        self.assertEqual(result["passed"], 3)
+        self.assertEqual(result["held_out"], [])
+
+    def test_holdout_is_never_promoted(self) -> None:
+        golden = _three_golden(with_expected=False)
+        golden[2]["split"] = "test"
+        skill = _make_skill(
+            self.tmp, ROLLOUT_CRITERIA, golden, run=_RUN_CMD,
+            pipeline_body=_PIPELINE_COPIES_BASELINE,
+        )
+        spec = parse_spec(find_spec(skill))
+        result = run_rollout(spec, skill, promote=True, include_holdout=True)
+        self.assertNotIn("case-3", result["promoted"])
+        self.assertEqual(sorted(result["promoted"]), ["case-1", "case-2"])
+
+    def test_holdout_skipped_in_default_command_checks(self) -> None:
+        skill = _make_skill(self.tmp, ROLLOUT_CRITERIA, _golden_with_holdout())
+        spec = parse_spec(find_spec(skill))
+        result = run_command_checks(spec, skill)
+        scored_cases = {c["case"] for c in result["checks"]}
+        self.assertNotIn("case-3", scored_cases)
+
+    def test_validate_rejects_bad_split_value(self) -> None:
+        golden = _three_golden()
+        golden[0]["split"] = "train"
+        skill = _make_skill(self.tmp, ROLLOUT_CRITERIA, golden)
+        spec = parse_spec(find_spec(skill))
+        errors = validate_spec(spec, skill)
+        self.assertTrue(any("split" in e for e in errors))
+
+
+JUDGE_CRITERIA = ROLLOUT_CRITERIA + [
+    {"id": "tone-ok", "text": "Output tone is professional", "type": "llm-judge"},
+]
+
+
+def _spec_with_judge(golden, canary_text: str | None = '{"ok": "garbage nonsense"}\n'):
+    """Judge config block + optional canary file content."""
+    judge = {"model": "claude-haiku-4-5-20251001", "temperature": 0}
+    if canary_text is not None:
+        judge["canary"] = "canary/bad_output.json"
+    return judge, canary_text
+
+
+class JudgeHarnessTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def _make_judged_skill(self, canary_text='{"ok": "garbage"}\n'):
+        skill = _make_skill(
+            self.tmp, JUDGE_CRITERIA, _three_golden(), run=_RUN_CMD,
+            pipeline_body=_PIPELINE_COPIES_BASELINE,
+        )
+        spec_path = find_spec(skill)
+        spec = parse_spec(spec_path)
+        judge_cfg, _ = _spec_with_judge(spec["golden"], canary_text)
+        spec["judge"] = judge_cfg
+        if canary_text is not None:
+            canary = skill / "evals" / "canary"
+            canary.mkdir()
+            (canary / "bad_output.json").write_text(canary_text, encoding="utf-8")
+        body = "# spec\n\n```json\n" + json.dumps(spec, indent=2) + "\n```\n"
+        spec_path.write_text(body, encoding="utf-8")
+        return skill, parse_spec(spec_path)
+
+    def test_judge_failure_counts_and_rows(self) -> None:
+        skill, spec = self._make_judged_skill()
+        fake = lambda criterion, output: (False, "tone is off")  # noqa: E731
+        result = run_rollout(spec, skill, judge=fake)
+        self.assertEqual(result["judge_failed"], 3)  # one judge criterion x 3 cases
+        self.assertTrue(
+            any(c["criterion"] == "tone-ok" and c["status"] == "judge-fail"
+                for c in result["checks"])
+        )
+
+    def test_judge_pass_keeps_all_green(self) -> None:
+        skill, spec = self._make_judged_skill()
+        fake = lambda criterion, output: (True, "fine")  # noqa: E731
+        result = run_rollout(spec, skill, judge=fake)
+        self.assertEqual(result["judge_failed"], 0)
+        self.assertEqual(result["judge_passed"], 3)
+
+    def test_canary_passing_judge_invalidates_run(self) -> None:
+        # A judge that passes the known-bad canary cannot be trusted.
+        skill, spec = self._make_judged_skill()
+        always_pass = lambda criterion, output: (True, "looks fine")  # noqa: E731
+        canary = run_judge_canary(spec, skill, always_pass)
+        self.assertFalse(canary["valid"])
+
+    def test_canary_failing_judge_is_valid(self) -> None:
+        skill, spec = self._make_judged_skill()
+        strict = lambda criterion, output: (False, "garbage output")  # noqa: E731
+        canary = run_judge_canary(spec, skill, strict)
+        self.assertTrue(canary["valid"])
+
+    def test_validate_requires_model_in_judge_block(self) -> None:
+        skill, spec = self._make_judged_skill()
+        del spec["judge"]["model"]
+        errors = validate_spec(spec, skill)
+        self.assertTrue(any("judge" in e and "model" in e for e in errors))
+
+    def test_validate_requires_existing_canary_file(self) -> None:
+        skill, spec = self._make_judged_skill()
+        spec["judge"]["canary"] = "canary/missing.json"
+        errors = validate_spec(spec, skill)
+        self.assertTrue(any("canary" in e for e in errors))
+
+    def test_judge_flag_without_api_key_exits_one(self) -> None:
+        skill, _ = self._make_judged_skill()
+        import os
+        old = os.environ.pop("ANTHROPIC_API_KEY", None)
+        try:
+            self.assertEqual(main([str(skill), "--rollout", "--judge"]), 1)
+        finally:
+            if old is not None:
+                os.environ["ANTHROPIC_API_KEY"] = old
+
+
+class InterpreterFallbackTest(unittest.TestCase):
+    def test_python3_swapped_when_absent(self) -> None:
+        from unittest.mock import patch
+        import run_evals_template as ret
+        with patch.object(ret.shutil, "which", return_value=None):
+            bound = ret._resolve_interpreter("python3 scripts/run_pipeline.py --output o")
+        self.assertTrue(bound.startswith(f'"{sys.executable}"'))
+        self.assertIn("scripts/run_pipeline.py", bound)
+
+    def test_python3_kept_when_present(self) -> None:
+        from unittest.mock import patch
+        import run_evals_template as ret
+        with patch.object(ret.shutil, "which", return_value="/usr/bin/python3"):
+            bound = ret._resolve_interpreter("python3 x.py")
+        self.assertEqual(bound, "python3 x.py")
+
+
+class EvolutionRecordTest(unittest.TestCase):
+    """Failures must leave an evidence-bearing EVOLUTION.md entry, not just exit 1."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def test_failing_rollout_records_raw_evidence(self) -> None:
+        skill = _make_skill(
+            self.tmp, ROLLOUT_CRITERIA, _three_golden(), run=_RUN_CMD,
+            pipeline_body=_PIPELINE_SUBTLY_DIFFERENT,  # regression, exit 1
+        )
+        self.assertEqual(main([str(skill), "--rollout"]), 1)
+        evolution = skill / "EVOLUTION.md"
+        self.assertTrue(evolution.exists())
+        text = evolution.read_text(encoding="utf-8")
+        self.assertIn("regression", text)      # raw failing rows embedded
+        self.assertIn("<baseline>", text)
+        self.assertIn("--rollout", text)
+
+    def test_passing_rollout_records_nothing(self) -> None:
+        skill = _make_skill(
+            self.tmp, ROLLOUT_CRITERIA, _three_golden(), run=_RUN_CMD,
+            pipeline_body=_PIPELINE_COPIES_BASELINE,
+        )
+        self.assertEqual(main([str(skill), "--rollout"]), 0)
+        self.assertFalse((skill / "EVOLUTION.md").exists())
+
+    def test_repeat_failures_append(self) -> None:
+        skill = _make_skill(
+            self.tmp, ROLLOUT_CRITERIA, _three_golden(), run=_RUN_CMD,
+            pipeline_body=_PIPELINE_SUBTLY_DIFFERENT,
+        )
+        main([str(skill), "--rollout"])
+        main([str(skill), "--rollout"])
+        text = (skill / "EVOLUTION.md").read_text(encoding="utf-8")
+        self.assertEqual(text.count("## "), 2)
 
 
 class RolloutMainExitCodeTest(unittest.TestCase):
