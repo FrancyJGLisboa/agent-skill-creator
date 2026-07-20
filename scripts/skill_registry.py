@@ -373,14 +373,17 @@ def cmd_publish(args: argparse.Namespace) -> None:
                 location += f":{issue['line']}"
             print(f"  [WARN] {location}: {issue['description']}")
 
-    if high_issues and not args.force:
+    if high_issues:
+        # Hard gate, deliberately NOT bypassable by --force: unreviewed
+        # ingestion is the dominant registry risk. --force only overrides
+        # duplicate-version entries, never security findings.
         print("Security scan found high-severity issues:", file=sys.stderr)
         for issue in high_issues:
             location = issue["file"]
             if issue["line"] > 0:
                 location += f":{issue['line']}"
             print(f"  [HIGH] {location}: {issue['description']}", file=sys.stderr)
-        print("Use --force to publish anyway.", file=sys.stderr)
+        print("Fix the findings and re-publish; --force does not bypass the scan.", file=sys.stderr)
         sys.exit(1)
 
     # Step 3: Extract metadata
