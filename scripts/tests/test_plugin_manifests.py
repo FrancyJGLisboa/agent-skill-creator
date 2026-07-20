@@ -58,6 +58,36 @@ def test_template_substitutes_to_valid_json(template_name):
     assert parsed["name"] == "sample-skill"
 
 
+CROSS_RUNTIME_MANIFESTS = [
+    ".codex-plugin/plugin.json",
+    ".agents/plugins/marketplace.json",
+    ".github/plugin/plugin.json",
+    ".github/plugin/marketplace.json",
+    ".cursor-plugin/plugin.json",
+    ".cursor-plugin/marketplace.json",
+    "gemini-extension.json",
+]
+
+
+@pytest.mark.parametrize("rel", CROSS_RUNTIME_MANIFESTS)
+def test_cross_runtime_manifest_parses_and_names_match(rel):
+    data = json.loads((REPO_ROOT / rel).read_text(encoding="utf-8"))
+    assert data["name"] == "agent-skill-creator", rel
+    if "version" in data:
+        doc = SkillDoc.from_path(REPO_ROOT / "SKILL.md")
+        assert data["version"] == doc.subfield("metadata", "version"), rel
+
+
+def test_gemini_context_file_exists():
+    data = json.loads((REPO_ROOT / "gemini-extension.json").read_text(encoding="utf-8"))
+    context = data.get("contextFileName")
+    assert context, "gemini-extension.json must declare contextFileName"
+    assert (REPO_ROOT / context).exists(), (
+        f"gemini-extension.json points at {context}, which is missing — "
+        "apply the staged AGENTS.md before merging"
+    )
+
+
 def test_templates_use_only_documented_placeholders():
     import re
 

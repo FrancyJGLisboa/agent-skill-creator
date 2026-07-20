@@ -1,0 +1,21 @@
+{
+  "name": "agent-skill-creator",
+  "interface": {
+    "displayName": "Agent Skill Creator"
+  },
+  "plugins": [
+    {
+      "name": "agent-skill-creator",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/FrancyJGLisboa/agent-skill-creator.git",
+        "ref": "main"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

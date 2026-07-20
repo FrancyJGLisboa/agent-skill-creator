@@ -6,6 +6,20 @@ to semantic versioning where practical.
 
 ## [Unreleased]
 
+### Added
+- **Cross-runtime native install manifests + README install matrix**: the repo
+  now ships `.codex-plugin/plugin.json` + `.agents/plugins/marketplace.json`
+  (Codex CLI), `.github/plugin/{plugin,marketplace}.json` (Copilot CLI),
+  `gemini-extension.json` with `AGENTS.md` as context (Gemini CLI /
+  Antigravity), and `.cursor-plugin/{plugin,marketplace}.json` (Cursor
+  in-editor `/add-plugin`) alongside the existing `.claude-plugin/` pair. The
+  README's Advanced Install section documents the exact in-tool install
+  command per runtime, per each runtime's official plugin docs, with the
+  universal installer as the honest fallback for runtimes without a native
+  install verb (opencode, Goose, and the rest). A root `AGENTS.md` companion
+  file joins the repo (the factory's own checklist has required one of
+  generated skills all along).
+
 ### Fixed
 - **skill_document.py depth-blind YAML lookups**: `field()`/`has_field()` matched
   nested keys as top-level and `subfield()` matched any depth under the parent —

@@ -1,0 +1,16 @@
+{
+  "name": "agent-skill-creator",
+  "description": "Turn any workflow into reusable AI agent software that installs on 17 platforms.",
+  "owner": {
+    "name": "Francy Lisboa Charuto",
+    "url": "https://github.com/FrancyJGLisboa"
+  },
+  "plugins": [
+    {
+      "name": "agent-skill-creator",
+      "source": "./",
+      "description": "Skill factory: describe a workflow in plain English and receive a validated, security-scanned cross-platform agent skill with evals and an installer.",
+      "category": "productivity"
+    }
+  ]
+}

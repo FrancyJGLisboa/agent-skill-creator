@@ -1,0 +1,6 @@
+{
+  "name": "agent-skill-creator",
+  "version": "6.0.0",
+  "description": "Skill factory: describe a workflow in plain English and receive a validated, security-scanned cross-platform agent skill with evals and an installer.",
+  "contextFileName": "AGENTS.md"
+}
