@@ -301,6 +301,14 @@ def _effective_expected(evals_dir: Path, case: dict) -> Path | None:
     return conventional if conventional.exists() else None
 
 
+def _resolve_interpreter(bound: str) -> str:
+    """Swap a leading 'python3' for the running interpreter when python3 is
+    not on PATH (Windows ships 'python'/'py', not 'python3')."""
+    if bound.startswith("python3 ") and shutil.which("python3") is None:
+        return f'"{sys.executable}"' + bound[len("python3"):]
+    return bound
+
+
 def _run_skill(run_cmd: str, input_path: Path | None, output_path: Path, skill_dir: Path, timeout: int) -> bool:
     """Execute the skill's `run` command for one case.
 
@@ -313,6 +321,7 @@ def _run_skill(run_cmd: str, input_path: Path | None, output_path: Path, skill_d
         if input_path is None:
             return False
         bound = bound.replace(INPUT_PLACEHOLDER, shlex.quote(str(input_path)))
+    bound = _resolve_interpreter(bound)
     try:
         proc = subprocess.run(  # noqa: S602
             bound, shell=True, cwd=str(skill_dir), capture_output=True, timeout=timeout

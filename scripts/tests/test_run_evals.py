@@ -644,6 +644,23 @@ class JudgeHarnessTest(unittest.TestCase):
                 os.environ["ANTHROPIC_API_KEY"] = old
 
 
+class InterpreterFallbackTest(unittest.TestCase):
+    def test_python3_swapped_when_absent(self) -> None:
+        from unittest.mock import patch
+        import run_evals_template as ret
+        with patch.object(ret.shutil, "which", return_value=None):
+            bound = ret._resolve_interpreter("python3 scripts/run_pipeline.py --output o")
+        self.assertTrue(bound.startswith(f'"{sys.executable}"'))
+        self.assertIn("scripts/run_pipeline.py", bound)
+
+    def test_python3_kept_when_present(self) -> None:
+        from unittest.mock import patch
+        import run_evals_template as ret
+        with patch.object(ret.shutil, "which", return_value="/usr/bin/python3"):
+            bound = ret._resolve_interpreter("python3 x.py")
+        self.assertEqual(bound, "python3 x.py")
+
+
 class EvolutionRecordTest(unittest.TestCase):
     """Failures must leave an evidence-bearing EVOLUTION.md entry, not just exit 1."""
 
