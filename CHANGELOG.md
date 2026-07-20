@@ -7,6 +7,17 @@ to semantic versioning where practical.
 ## [Unreleased]
 
 ### Added
+- **Phase 0 spec-ideation front door** (`references/spec-ideation.md`): a
+  pre-Discovery step for when the user arrives without a skill in mind — one word
+  ("freight"), a shrug, "give me a skill idea", or a dumped transcript with no
+  goal. Instead of guessing a skill and building it, the factory harvests the
+  user's *real recurring work* (never invents chores), filters to what it can
+  actually ship (repeatable + markdown/scripts + data-centric + binary-checkable —
+  drops apps/games/firmware), and shapes the chosen chore into the workflow Phase 1
+  needs. Carries an inverted anti-slop rule (the best skill is the boring, repeated
+  chore, not the clever one) and a held-out bellwether: a spec is only proven when
+  the skill it produces passes its own first bundled eval. Validated end-to-end —
+  an emitted spec built a skill that passed 5/5 checks, VALID, and CLEAN.
 - **Cross-runtime native install manifests + README install matrix**: the repo
   now ships `.codex-plugin/plugin.json` + `.agents/plugins/marketplace.json`
   (Codex CLI), `.github/plugin/{plugin,marketplace}.json` (Copilot CLI),
