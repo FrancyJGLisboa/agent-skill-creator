@@ -36,9 +36,12 @@ agent is present.
 **Why:** the landing page framed a raw `ANTHROPIC_API_KEY` as the primary judge
 path and the checklist as a degraded fallback. That's backwards for every agentic
 runtime and provider-locks a tool that markets cross-platform support (user
-review, 2026-07-20). Decision: keep the CI path Anthropic-only for now (YAGNI —
-in-runtime grading is keyless and covers the common case); a provider-agnostic CI
-judge (OpenAI-compatible `JUDGE_BASE_URL`) is a future option, not shipped.
+review, 2026-07-20). Shipped in #23: `make_judge()` resolves keyless first —
+`$EVAL_JUDGE_CMD` (any runtime's print mode) → `claude -p --model <pinned>` (Claude
+Code CLI on PATH, honors the pin) → `ANTHROPIC_API_KEY` as a last-resort fallback
+for CI boxes with no runtime. Never silently passes; the canary guards every path.
+(An earlier note here said "keep CI Anthropic-only, YAGNI" — superseded once the
+reviewer pointed out the runtime's own model makes even CI keyless.)
 
 **When to apply:** any docs or code describing how evals/judges run. State
 agent-graded-in-runtime (keyless) as primary; a raw key is CI-only; never name a
