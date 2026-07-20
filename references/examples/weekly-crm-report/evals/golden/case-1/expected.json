@@ -1,0 +1,9 @@
+{
+  "rows_in": 4,
+  "rows_after_dedup": 3,
+  "regions": {
+    "West": 100.5,
+    "East": 350.25
+  },
+  "grand_total": 450.75
+}

@@ -55,7 +55,9 @@ jobs:
             skill_dir="$(dirname "$(dirname "$runner")")"
             echo "::group::eval $skill_dir"
             python3 "$runner" "$skill_dir" --validate
-            python3 "$runner" "$skill_dir" --rollout
+            # CI is release scoring: holdout (split=test) cases are included here
+            # and only here — never in an optimization loop.
+            python3 "$runner" "$skill_dir" --rollout --include-holdout
             echo "::endgroup::"
           done
 

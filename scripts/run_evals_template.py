@@ -7,8 +7,14 @@ of binary checks (each graded by a shell command or flagged for an LLM judge)
 plus a handful of golden cases. This runner turns that spec into a deterministic
 regression gate, a shape validator, and — when the spec declares a `run` command —
 an end-to-end rollout harness that executes the skill on each golden input and
-scores the real output. It still does NOT grade `llm-judge` checks — those are
-printed as a checklist for an agent or autoresearch-universal.
+scores the real output. In rollout mode each produced output is ALSO compared
+against the case's promoted `expected` baseline (JSON-value equality; per-case
+`compare_ignore` drops volatile top-level keys like timestamps, `compare: "none"`
+opts out) — divergence is reported as a `<baseline>` regression and exits 1.
+Golden cases marked `"split": "test"` are a holdout: skipped by default, never
+promoted, scored only with --include-holdout (release/CI scoring) — keep them
+away from any optimization loop. It still does NOT grade `llm-judge` checks —
+those are printed as a checklist for an agent or autoresearch-universal.
 
 Modes:
     python3 scripts/run_evals.py                 # run command checks against the
@@ -137,6 +143,15 @@ def validate_spec(spec: dict, skill_dir: Path) -> list[str]:
             errors.append(
                 f"{where}: null 'expected' must be marked expected_status='pending-first-green'"
             )
+        if case.get("split") not in (None, "val", "test"):
+            errors.append(f"{where}: 'split' must be 'val' or 'test', got {case.get('split')!r}")
+        if case.get("compare") not in (None, "exact", "none"):
+            errors.append(f"{where}: 'compare' must be 'exact' or 'none', got {case.get('compare')!r}")
+        ignore = case.get("compare_ignore")
+        if ignore is not None and (
+            not isinstance(ignore, list) or not all(isinstance(k, str) for k in ignore)
+        ):
+            errors.append(f"{where}: 'compare_ignore' must be a list of key names")
 
     if golden and all(
         case.get("expected_status") == "pending-first-green" for case in golden
@@ -144,6 +159,13 @@ def validate_spec(spec: dict, skill_dir: Path) -> list[str]:
         print(
             "WARNING: every golden case is pending-first-green; the first rollout "
             "validates nothing until baselines are promoted with --promote",
+            file=sys.stderr,
+        )
+
+    if golden and not any(case.get("split") == "test" for case in golden):
+        print(
+            "NOTE: no holdout case (split: 'test'); consider reserving one golden "
+            "case an optimization loop never sees",
             file=sys.stderr,
         )
 
@@ -174,30 +196,37 @@ def run_command_checks(
     skill_dir: Path,
     output: Path | None = None,
     only_case: str | None = None,
+    include_holdout: bool = False,
 ) -> dict:
     """Run every command criterion against each applicable golden case.
 
     By default {output} binds to each case's `expected` baseline file. When
     `output` is given it binds to that path instead (scoring a real run); use
-    `only_case` to restrict scoring to one case.
+    `only_case` to restrict scoring to one case. Cases marked `split: "test"`
+    are held out unless `include_holdout` is set.
 
-    Returns a result dict with passed/failed counts and per-check detail.
+    Returns a result dict with passed/failed counts, held-out case ids, and
+    per-check detail.
     """
     evals_dir = skill_dir / "evals"
     command_criteria = [c for c in spec.get("criteria", []) if c.get("type") == "command"]
     results: list[dict] = []
+    held_out: list[str] = []
     passed = failed = skipped = 0
 
     for case in spec.get("golden", []):
         case_id = case.get("id", "?")
         if only_case and case_id != only_case:
             continue
+        if case.get("split") == "test" and not include_holdout:
+            held_out.append(case_id)
+            continue
         if output is not None:
             bound_output: Path | None = output
-        elif case.get("expected"):
-            bound_output = evals_dir / case["expected"]
         else:
-            bound_output = None  # pending-first-green: no baseline yet
+            # Declared expected, or a promoted baseline at the conventional
+            # path; None while pending-first-green with no baseline yet.
+            bound_output = _effective_expected(evals_dir, case)
 
         for crit in command_criteria:
             needs_output = OUTPUT_PLACEHOLDER in crit["cmd"]
@@ -212,7 +241,13 @@ def run_command_checks(
                 {"case": case_id, "criterion": crit["id"], "status": "pass" if ok else "fail"}
             )
 
-    return {"passed": passed, "failed": failed, "skipped": skipped, "checks": results}
+    return {
+        "passed": passed,
+        "failed": failed,
+        "skipped": skipped,
+        "held_out": held_out,
+        "checks": results,
+    }
 
 
 def _expected_baseline_path(evals_dir: Path, case: dict) -> Path:
@@ -225,6 +260,20 @@ def _expected_baseline_path(evals_dir: Path, case: dict) -> Path:
     if expected:
         return evals_dir / expected
     return evals_dir / "golden" / case.get("id", "case") / "expected.json"
+
+
+def _effective_expected(evals_dir: Path, case: dict) -> Path | None:
+    """The baseline that gates this case, or None if none exists yet.
+
+    A declared `expected` wins; otherwise a previously --promote'd file at the
+    conventional path counts, so promotion arms the regression gate without
+    requiring a manual spec edit.
+    """
+    declared = case.get("expected")
+    if declared:
+        return evals_dir / declared
+    conventional = evals_dir / "golden" / case.get("id", "case") / "expected.json"
+    return conventional if conventional.exists() else None
 
 
 def _run_skill(run_cmd: str, input_path: Path | None, output_path: Path, skill_dir: Path, timeout: int) -> bool:
@@ -248,6 +297,31 @@ def _run_skill(run_cmd: str, input_path: Path | None, output_path: Path, skill_d
     return proc.returncode == 0
 
 
+def _baseline_matches(produced: Path, expected: Path, ignore_keys: list[str] | None = None) -> bool:
+    """True when a produced output is equivalent to the promoted baseline.
+
+    Byte equality first; then JSON-value equality (formatting-insensitive,
+    with `ignore_keys` dropped from the top level of both sides — for volatile
+    fields like timestamps); then whitespace-trimmed text equality. Binary
+    outputs that differ in bytes are a mismatch.
+    """
+    p, e = produced.read_bytes(), expected.read_bytes()
+    if p == e:
+        return True
+    try:
+        pj, ej = json.loads(p), json.loads(e)
+        if ignore_keys and isinstance(pj, dict) and isinstance(ej, dict):
+            pj = {k: v for k, v in pj.items() if k not in ignore_keys}
+            ej = {k: v for k, v in ej.items() if k not in ignore_keys}
+        return pj == ej
+    except (ValueError, UnicodeDecodeError):
+        pass
+    try:
+        return p.decode("utf-8").strip() == e.decode("utf-8").strip()
+    except UnicodeDecodeError:
+        return False
+
+
 def run_rollout(
     spec: dict,
     skill_dir: Path,
@@ -255,27 +329,37 @@ def run_rollout(
     promote: bool = False,
     only_case: str | None = None,
     timeout: int = DEFAULT_ROLLOUT_TIMEOUT,
+    include_holdout: bool = False,
 ) -> dict:
     """Run the skill end-to-end on each golden input, then score the real output.
 
     For each golden case the spec's `run` command produces an output into a temp
     file; that output is then scored through the same command criteria used by
-    run_command_checks. When `promote` is set, a pending-first-green case whose
-    run and checks all pass has its produced output captured as the `expected`
-    baseline.
+    run_command_checks, AND compared against the case's promoted `expected`
+    baseline (the regression gate; per-case `compare: "none"` opts out for
+    nondeterministic outputs). When `promote` is set, a pending-first-green case
+    whose run and checks all pass has its produced output captured as the
+    `expected` baseline. Cases marked `split: "test"` are held out unless
+    `include_holdout` is set, and are never promoted.
 
-    Returns {passed, failed, errors, promoted, checks}. `errors` counts cases
-    whose `run` command itself failed or timed out (their checks are not scored).
+    Returns {passed, failed, errors, regressions, promoted, held_out, checks}.
+    `errors` counts cases whose `run` command itself failed or timed out (their
+    checks are not scored); `regressions` counts outputs that passed the command
+    checks but diverged from the promoted baseline.
     """
     evals_dir = skill_dir / "evals"
     run_cmd = spec.get("run")
-    passed = failed = errors = 0
+    passed = failed = errors = regressions = 0
     promoted: list[str] = []
+    held_out: list[str] = []
     checks: list[dict] = []
 
     for case in spec.get("golden", []):
         case_id = case.get("id", "?")
         if only_case and case_id != only_case:
+            continue
+        if case.get("split") == "test" and not include_holdout:
+            held_out.append(case_id)
             continue
 
         inp = case.get("input")
@@ -289,15 +373,35 @@ def run_rollout(
                 checks.append({"case": case_id, "criterion": "<run>", "status": "error"})
                 continue
 
-            scored = run_command_checks(spec, skill_dir, output=produced, only_case=case_id)
+            scored = run_command_checks(
+                spec, skill_dir, output=produced, only_case=case_id,
+                include_holdout=include_holdout,
+            )
             passed += scored["passed"]
             failed += scored["failed"]
             checks.extend(scored["checks"])
 
-            is_pending = case.get("expected") is None and (
+            # Regression gate: the produced output must still be equivalent to
+            # the promoted baseline, not merely pass the shape checks.
+            baseline = _effective_expected(evals_dir, case)
+            if baseline is not None and case.get("compare", "exact") != "none":
+                matches = _baseline_matches(produced, baseline, case.get("compare_ignore"))
+                regressions += not matches
+                checks.append({
+                    "case": case_id,
+                    "criterion": "<baseline>",
+                    "status": "pass" if matches else "regression",
+                })
+
+            # A case is only pending until a baseline exists — a promoted
+            # baseline is never overwritten by a later --promote run.
+            is_pending = baseline is None and (
                 case.get("expected_status") == "pending-first-green"
             )
-            if promote and is_pending and scored["failed"] == 0 and scored["passed"] > 0:
+            if (
+                promote and is_pending and case.get("split") != "test"
+                and scored["failed"] == 0 and scored["passed"] > 0
+            ):
                 dest = _expected_baseline_path(evals_dir, case)
                 dest.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(produced, dest)
@@ -307,7 +411,9 @@ def run_rollout(
         "passed": passed,
         "failed": failed,
         "errors": errors,
+        "regressions": regressions,
         "promoted": promoted,
+        "held_out": held_out,
         "checks": checks,
     }
 
@@ -348,6 +454,12 @@ def main(argv: list[str] | None = None) -> int:
         type=int,
         default=DEFAULT_ROLLOUT_TIMEOUT,
         help=f"With --rollout: per-case run timeout in seconds (default {DEFAULT_ROLLOUT_TIMEOUT}).",
+    )
+    parser.add_argument(
+        "--include-holdout",
+        action="store_true",
+        help="Also score golden cases marked split='test' (normally held out; "
+        "use only for release scoring, never inside an optimization loop).",
     )
     parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON.")
     args = parser.parse_args(argv)
@@ -392,27 +504,36 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps({"rollout": "unavailable", "reason": msg}) if args.json else msg)
             return 0
         result = run_rollout(
-            spec, skill_dir, promote=args.promote, only_case=args.case, timeout=args.timeout
+            spec, skill_dir, promote=args.promote, only_case=args.case,
+            timeout=args.timeout, include_holdout=args.include_holdout,
         )
         if args.json:
             print(json.dumps({**result, "llm_judge": [c["id"] for c in judges]}, indent=2))
         else:
             for check in result["checks"]:
-                print(f"  [{check['status']:>7}] {check['case']} :: {check['criterion']}")
+                print(f"  [{check['status']:>10}] {check['case']} :: {check['criterion']}")
             print(
                 f"\nrollout: {result['passed']} passed, {result['failed']} failed, "
-                f"{result['errors']} errored"
+                f"{result['errors']} errored, {result['regressions']} regressed"
             )
+            if result["held_out"]:
+                print(
+                    f"held out (split=test, use --include-holdout): "
+                    f"{', '.join(result['held_out'])}"
+                )
             if result["promoted"]:
                 print(f"promoted baselines: {', '.join(result['promoted'])}")
             if judges:
                 print("\nllm-judge checks (evaluate manually or via /autoresearch-universal):")
                 for crit in judges:
                     print(f"  - {crit['id']}: {crit['text']}")
-        return 1 if (result["failed"] or result["errors"]) else 0
+        return 1 if (result["failed"] or result["errors"] or result["regressions"]) else 0
 
     output = Path(args.output).resolve() if args.output else None
-    result = run_command_checks(spec, skill_dir, output=output, only_case=args.case)
+    result = run_command_checks(
+        spec, skill_dir, output=output, only_case=args.case,
+        include_holdout=args.include_holdout,
+    )
 
     if args.json:
         print(json.dumps({**result, "llm_judge": [c["id"] for c in judges]}, indent=2))

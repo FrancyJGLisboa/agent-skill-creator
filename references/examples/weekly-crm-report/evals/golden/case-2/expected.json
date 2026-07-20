@@ -1,0 +1,9 @@
+{
+  "rows_in": 3,
+  "rows_after_dedup": 3,
+  "regions": {
+    "North": 1500.0,
+    "South": 2000.0
+  },
+  "grand_total": 3500.0
+}

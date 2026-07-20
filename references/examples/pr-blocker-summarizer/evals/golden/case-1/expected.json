@@ -1,0 +1,23 @@
+{
+  "total": 3,
+  "blocked": [
+    {
+      "title": "Add retry to uploader",
+      "reasons": [
+        "failing checks",
+        "awaiting review"
+      ]
+    },
+    {
+      "title": "Refactor auth",
+      "reasons": [
+        "changes requested",
+        "stale (9d)"
+      ]
+    }
+  ],
+  "ready": [
+    "Fix typo in README"
+  ],
+  "summary": "3 open \u00b7 2 blocked \u00b7 1 ready to merge"
+}
