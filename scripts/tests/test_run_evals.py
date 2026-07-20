@@ -21,6 +21,7 @@ from run_evals_template import (  # noqa: E402
     main,
     parse_spec,
     run_command_checks,
+    run_judge_canary,
     run_rollout,
     validate_spec,
 )
@@ -550,6 +551,139 @@ class HoldoutTest(unittest.TestCase):
         spec = parse_spec(find_spec(skill))
         errors = validate_spec(spec, skill)
         self.assertTrue(any("split" in e for e in errors))
+
+
+JUDGE_CRITERIA = ROLLOUT_CRITERIA + [
+    {"id": "tone-ok", "text": "Output tone is professional", "type": "llm-judge"},
+]
+
+
+def _spec_with_judge(golden, canary_text: str | None = '{"ok": "garbage nonsense"}\n'):
+    """Judge config block + optional canary file content."""
+    judge = {"model": "claude-haiku-4-5-20251001", "temperature": 0}
+    if canary_text is not None:
+        judge["canary"] = "canary/bad_output.json"
+    return judge, canary_text
+
+
+class JudgeHarnessTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def _make_judged_skill(self, canary_text='{"ok": "garbage"}\n'):
+        skill = _make_skill(
+            self.tmp, JUDGE_CRITERIA, _three_golden(), run=_RUN_CMD,
+            pipeline_body=_PIPELINE_COPIES_BASELINE,
+        )
+        spec_path = find_spec(skill)
+        spec = parse_spec(spec_path)
+        judge_cfg, _ = _spec_with_judge(spec["golden"], canary_text)
+        spec["judge"] = judge_cfg
+        if canary_text is not None:
+            canary = skill / "evals" / "canary"
+            canary.mkdir()
+            (canary / "bad_output.json").write_text(canary_text, encoding="utf-8")
+        body = "# spec\n\n```json\n" + json.dumps(spec, indent=2) + "\n```\n"
+        spec_path.write_text(body, encoding="utf-8")
+        return skill, parse_spec(spec_path)
+
+    def test_judge_failure_counts_and_rows(self) -> None:
+        skill, spec = self._make_judged_skill()
+        fake = lambda criterion, output: (False, "tone is off")  # noqa: E731
+        result = run_rollout(spec, skill, judge=fake)
+        self.assertEqual(result["judge_failed"], 3)  # one judge criterion x 3 cases
+        self.assertTrue(
+            any(c["criterion"] == "tone-ok" and c["status"] == "judge-fail"
+                for c in result["checks"])
+        )
+
+    def test_judge_pass_keeps_all_green(self) -> None:
+        skill, spec = self._make_judged_skill()
+        fake = lambda criterion, output: (True, "fine")  # noqa: E731
+        result = run_rollout(spec, skill, judge=fake)
+        self.assertEqual(result["judge_failed"], 0)
+        self.assertEqual(result["judge_passed"], 3)
+
+    def test_canary_passing_judge_invalidates_run(self) -> None:
+        # A judge that passes the known-bad canary cannot be trusted.
+        skill, spec = self._make_judged_skill()
+        always_pass = lambda criterion, output: (True, "looks fine")  # noqa: E731
+        canary = run_judge_canary(spec, skill, always_pass)
+        self.assertFalse(canary["valid"])
+
+    def test_canary_failing_judge_is_valid(self) -> None:
+        skill, spec = self._make_judged_skill()
+        strict = lambda criterion, output: (False, "garbage output")  # noqa: E731
+        canary = run_judge_canary(spec, skill, strict)
+        self.assertTrue(canary["valid"])
+
+    def test_validate_requires_model_in_judge_block(self) -> None:
+        skill, spec = self._make_judged_skill()
+        del spec["judge"]["model"]
+        errors = validate_spec(spec, skill)
+        self.assertTrue(any("judge" in e and "model" in e for e in errors))
+
+    def test_validate_requires_existing_canary_file(self) -> None:
+        skill, spec = self._make_judged_skill()
+        spec["judge"]["canary"] = "canary/missing.json"
+        errors = validate_spec(spec, skill)
+        self.assertTrue(any("canary" in e for e in errors))
+
+    def test_judge_flag_without_api_key_exits_one(self) -> None:
+        skill, _ = self._make_judged_skill()
+        import os
+        old = os.environ.pop("ANTHROPIC_API_KEY", None)
+        try:
+            self.assertEqual(main([str(skill), "--rollout", "--judge"]), 1)
+        finally:
+            if old is not None:
+                os.environ["ANTHROPIC_API_KEY"] = old
+
+
+class EvolutionRecordTest(unittest.TestCase):
+    """Failures must leave an evidence-bearing EVOLUTION.md entry, not just exit 1."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def test_failing_rollout_records_raw_evidence(self) -> None:
+        skill = _make_skill(
+            self.tmp, ROLLOUT_CRITERIA, _three_golden(), run=_RUN_CMD,
+            pipeline_body=_PIPELINE_SUBTLY_DIFFERENT,  # regression, exit 1
+        )
+        self.assertEqual(main([str(skill), "--rollout"]), 1)
+        evolution = skill / "EVOLUTION.md"
+        self.assertTrue(evolution.exists())
+        text = evolution.read_text(encoding="utf-8")
+        self.assertIn("regression", text)      # raw failing rows embedded
+        self.assertIn("<baseline>", text)
+        self.assertIn("--rollout", text)
+
+    def test_passing_rollout_records_nothing(self) -> None:
+        skill = _make_skill(
+            self.tmp, ROLLOUT_CRITERIA, _three_golden(), run=_RUN_CMD,
+            pipeline_body=_PIPELINE_COPIES_BASELINE,
+        )
+        self.assertEqual(main([str(skill), "--rollout"]), 0)
+        self.assertFalse((skill / "EVOLUTION.md").exists())
+
+    def test_repeat_failures_append(self) -> None:
+        skill = _make_skill(
+            self.tmp, ROLLOUT_CRITERIA, _three_golden(), run=_RUN_CMD,
+            pipeline_body=_PIPELINE_SUBTLY_DIFFERENT,
+        )
+        main([str(skill), "--rollout"])
+        main([str(skill), "--rollout"])
+        text = (skill / "EVOLUTION.md").read_text(encoding="utf-8")
+        self.assertEqual(text.count("## "), 2)
 
 
 class RolloutMainExitCodeTest(unittest.TestCase):

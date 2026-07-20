@@ -142,10 +142,34 @@ def _print_human_readable(result: dict, skill_path: str) -> None:
     print(f"{'=' * 60}")
 
 
+def record_stale(skill_dir: Path, result: dict) -> None:
+    """Append the raw staleness/drift evidence to the skill's EVOLUTION.md."""
+    from datetime import datetime, timezone
+
+    stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    actionable = [i for i in result["issues"] if i["level"] in ("error", "warning")]
+    entry = (
+        f"## {stamp} — staleness_check {result['review_status'].upper()}\n\n"
+        f"- days_since_review: {result['days_since_review']} (source: {result['date_source']})\n"
+        f"- raw findings:\n\n"
+        "```json\n" + json.dumps(actionable, indent=2) + "\n```\n\n"
+    )
+    evolution = skill_dir / "EVOLUTION.md"
+    if not evolution.exists():
+        evolution.write_text(
+            "# Evolution log\n\nAppended automatically by scripts/run_evals.py "
+            "(and scripts/evolve.py) when a check fails. Each entry is the raw "
+            "evidence for a fix/regenerate step.\n\n",
+            encoding="utf-8",
+        )
+    with evolution.open("a", encoding="utf-8") as fh:
+        fh.write(entry)
+
+
 def main() -> None:
     if len(sys.argv) < 2:
         print(
-            "Usage: python3 scripts/staleness_check.py <skill-path> [--json] [--check-deps] [--check-drift]\n"
+            "Usage: python3 scripts/staleness_check.py <skill-path> [--json] [--check-deps] [--check-drift] [--record]\n"
             "\n"
             "Arguments:\n"
             "  skill-path      Path to the skill directory to check\n"
@@ -154,6 +178,7 @@ def main() -> None:
             "  --json           Output results as JSON to stdout\n"
             "  --check-deps     HTTP-check declared dependency URLs\n"
             "  --check-drift    Detect schema drift in declared API endpoints\n"
+            "  --record         On stale/degraded, append raw evidence to EVOLUTION.md\n"
             "\n"
             "Exit codes:\n"
             "  0  Fresh (no staleness issues)\n"
@@ -167,6 +192,7 @@ def main() -> None:
     use_json = "--json" in sys.argv
     check_deps = "--check-deps" in sys.argv
     check_drift = "--check-drift" in sys.argv
+    record = "--record" in sys.argv
 
     result = staleness_check(skill_path, check_deps=check_deps, check_drift=check_drift)
 
@@ -175,13 +201,17 @@ def main() -> None:
     else:
         _print_human_readable(result, skill_path)
 
-    if result["review_status"] == "overdue":
-        sys.exit(1)
-
     has_dep_or_drift_errors = any(
         i["level"] == "error" and "review" not in i["message"].lower()
         for i in result["issues"]
     )
+
+    if record and (result["review_status"] == "overdue" or has_dep_or_drift_errors):
+        record_stale(Path(skill_path), result)
+
+    if result["review_status"] == "overdue":
+        sys.exit(1)
+
     if has_dep_or_drift_errors:
         sys.exit(2)
 
