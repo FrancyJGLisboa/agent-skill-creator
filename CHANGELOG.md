@@ -26,6 +26,31 @@ to semantic versioning where practical.
   globbed, so real `.egg-info/` build metadata shipped inside export zips.
 
 ### Added
+- **Pinned LLM-judge harness** (`run_evals.py --rollout --judge`): grades
+  `llm-judge` criteria via the Anthropic API (stdlib urllib, `ANTHROPIC_API_KEY`)
+  with the judge model + temperature pinned in the spec's `judge` block. The
+  judge sees only criterion + output, and a known-bad `canary` output must fail
+  every judge criterion or the entire run is invalid — a judge that passes
+  garbage proves nothing. Previously llm-judge checks were printed as a
+  checklist and never graded anywhere.
+- **Evidence artifacts**: any failed eval run appends the raw failing check
+  rows to the skill's `EVOLUTION.md` (timestamped), and
+  `staleness_check --record` does the same for stale/degraded findings — a
+  detected failure now produces consumable evidence, not just an exit code.
+- **Shipped evolve loop**: generated skills carry `scripts/evolve.py` plus the
+  staleness/dependency-health/schema-drift modules, so
+  `python3 scripts/evolve.py` closes detect → record → re-verify from the
+  skill's own root (previously these tools lived only in the creator repo).
+  The bundled examples ship it and CI runs it end-to-end.
+- **Instruction-body injection scanning** in `security_scan.py`: SKILL.md and
+  reference prose are now scanned for override phrases, concealment and
+  exfiltration directives, hidden/bidirectional unicode, and encoded blobs —
+  skill-file prompt injection fires at load time, before any code runs, and the
+  old scanner missed that class entirely. Plus a least-privilege cross-check:
+  script URLs must be declared in frontmatter (`Undeclared network endpoint`).
+- **Registry scan gate hardened**: `publish --force` no longer bypasses
+  high-severity security findings — `--force` only overrides duplicate-version
+  entries. Unreviewed ingestion is the documented dominant registry risk.
 - **Real regression gate in the bundled eval runner** (`run_evals.py --rollout`):
   each produced output is now compared against the case's promoted `expected`
   baseline (JSON-value equality; `compare_ignore: [keys]` for volatile fields

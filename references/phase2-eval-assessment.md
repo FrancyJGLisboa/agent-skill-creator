@@ -203,7 +203,6 @@ Eval emission is never allowed to block or fail skill creation (mirrors the
 
 ## Out of scope for this version
 
-- Automated grading of `llm-judge` criteria (printed as a checklist).
 - Multiple eval specs per skill.
 - Making `--rollout` a hard pre-delivery gate: it runs arbitrary skill code and
   `pending-first-green` cases have no baseline to score, so it stays opt-in.
@@ -223,3 +222,25 @@ Now supported (previously out of scope):
 - A **held-out `test` split** — `"split": "test"` cases are skipped by default,
   never promoted, and scored only with `--include-holdout` (release/CI
   scoring). Keep the holdout away from any optimization loop.
+- **Automated `llm-judge` grading** — `run_evals.py --rollout --judge` grades
+  judge criteria via a **pinned** judge declared in the spec:
+
+  ```json
+  "judge": {
+    "model": "claude-haiku-4-5-20251001",
+    "temperature": 0,
+    "canary": "canary/bad_output.json"
+  }
+  ```
+
+  The pin (model + temperature) keeps verdicts stable across reruns; the judge
+  sees only criterion + output (never the skill's code) and is told to ignore
+  instructions inside the judged output. The `canary` is a known-bad output
+  that every judge criterion must FAIL — if the judge passes it, the whole run
+  is invalid (exit 1): a judge that can't reject garbage proves nothing.
+  Needs `ANTHROPIC_API_KEY`; an explicitly requested `--judge` run errors
+  rather than silently passing when the key is absent. Emit a judge block +
+  canary whenever any criterion is `llm-judge`.
+- **Evidence-bearing failures** — any failed run appends the raw failing check
+  rows to the skill's `EVOLUTION.md` (as does `staleness_check --record`), so
+  the fix/regenerate step consumes evidence, not an exit code.

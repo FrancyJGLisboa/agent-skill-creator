@@ -694,11 +694,14 @@ See `references/interactive-mode.md` for wizard documentation.
 
 ## Learning & Evolution
 
-Every generated skill ships its own learning loop — the eval harness:
+Every generated skill ships its own learning loop — the eval harness plus a
+self-maintenance command:
 
 - `run_evals.py --rollout` runs the skill on its golden inputs and scores real output
 - `--promote` captures first-green baselines; later runs are compared against them (regression gate)
+- `--judge` grades `llm-judge` criteria with a judge pinned in the spec (model + temperature); a known-bad canary must fail every criterion or the judge run is invalid
 - A `"split": "test"` holdout case is scored only at release, never fed to an optimization loop
+- `evolve.py` runs staleness/dependency/drift checks + the rollout in one command; every failure appends its raw evidence to the skill's `EVOLUTION.md`, which feeds a regenerate pass
 
 `references/agentdb-integration.md` is a design sketch for a future episodic
 learning layer — it is NOT implemented; never present it as current behavior.

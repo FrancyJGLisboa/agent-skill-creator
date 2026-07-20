@@ -1365,6 +1365,23 @@ skill's root SKILL.md automatically (root-fallback — no `skills/` subdirectory
 needed). Never create a `.claude/` directory inside a generated skill; it can
 shadow plugin skill discovery.
 
+### Step 6.6: Ship the evolution toolkit
+
+Copy the maintenance loop into the skill so it can check itself after delivery
+— no creator repo needed:
+
+```bash
+cp scripts/evolve_template.py <skill>/scripts/evolve.py
+cp scripts/skill_document.py scripts/review_staleness.py scripts/dependency_health.py \
+   scripts/schema_drift.py scripts/staleness_check.py <skill>/scripts/
+chmod +x <skill>/scripts/evolve.py
+```
+
+`python3 scripts/evolve.py` runs staleness/dependency/drift checks plus the
+eval rollout (with `--judge` to grade llm-judge criteria). Any failure appends
+the raw evidence to the skill's `EVOLUTION.md` — that file is the input for a
+regenerate pass (`/agent-skill-creator <skill> using EVOLUTION.md`).
+
 ### Step 7: Write README.md
 
 Multi-platform installation instructions:
@@ -1576,6 +1593,7 @@ See README.md for complete multi-platform installation instructions.
 | 5.5 | `evals/*.eval.md` + `scripts/run_evals.py` | Bundled loss function; skip if `--no-eval` |
 | 6 | `install.sh` | Cross-platform installer, `chmod +x` |
 | 6.5 | `.claude-plugin/*.json` | Plugin manifests from `scripts/claude-plugin-template/`; names match SKILL.md |
+| 6.6 | `scripts/evolve.py` + staleness/drift modules | Shipped self-maintenance loop; failures append evidence to `EVOLUTION.md` |
 | 7 | `README.md` | Multi-platform install instructions |
 | 8 | Run `validate.py` + `check_pipeline.py` | Must pass before delivery |
 | 9 | Run `security_scan.py` | Must pass before delivery |
@@ -1611,6 +1629,8 @@ See README.md for complete multi-platform installation instructions.
 - [ ] At least one golden case marked `"split": "test"` (holdout — skipped by default, scored only with `--include-holdout`, never fed to an optimization loop)
 - [ ] `install.sh` generated with cross-platform support
 - [ ] `.claude-plugin/plugin.json` + `marketplace.json` generated (valid JSON, `name` fields match SKILL.md)
+- [ ] Evolution toolkit shipped (`scripts/evolve.py` + staleness/drift/dep-health modules; `python3 scripts/evolve.py` exits 0)
+- [ ] Eval spec has a `judge` block with a pinned model + known-bad canary when any criterion is `llm-judge`
 - [ ] `README.md` written with multi-platform install instructions (including `/plugin marketplace add`)
 - [ ] `requirements.txt` created (if third-party dependencies used)
 - [ ] Spec validation passed (`scripts/validate.py`)
