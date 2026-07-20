@@ -45,8 +45,9 @@ Tag each criterion as one of two grader types:
   `test "$(wc -w < {output})" -lt 150`. **Prefer `command` wherever a reliable
   programmatic check exists.**
 - **`llm-judge`** — graded by a model reading the output. Use only when meaning,
-  tone, or quality cannot be checked by a command. The bundled runner does
-  **not** grade these; it prints them as a checklist.
+  tone, or quality cannot be checked by a command. The bundled runner grades
+  these with `--rollout --judge` (pinned judge + canary — see "Automated
+  llm-judge grading" below); without `--judge` they print as a checklist.
 
 Present the criteria to the user for a thumbs-up before writing them (one short
 confirmation, not a questionnaire).
@@ -166,8 +167,8 @@ After creation, alongside the install/share messaging, print:
 > `python3 scripts/run_evals.py --rollout --promote`
 > To optimize the skill against its metric:
 > `/autoresearch-universal optimize . using evals/<skill-name>.eval.md`
-> (`--rollout` runs the skill's `run` command; `llm-judge` checks are still a
-> printed checklist, not auto-graded.)
+> Grade `llm-judge` checks with the pinned judge: `python3 scripts/run_evals.py --rollout --judge`
+> (needs `ANTHROPIC_API_KEY`; without `--judge` they print as a checklist.)
 
 ## Handoff to autoresearch-universal (rule 18)
 

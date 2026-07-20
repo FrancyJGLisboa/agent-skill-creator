@@ -77,8 +77,13 @@ so a partial addition fails loudly.
 ## A note on eval specs
 
 Generated skills bundle `run_evals.py` (from `scripts/run_evals_template.py`),
-which executes spec-defined command checks via the shell. Eval specs are
-trusted input — only run evals from specs you or your team wrote.
+which executes spec-defined command checks via the shell, compares rollout
+output against promoted baselines (regression gate), holds out `"split": "test"`
+cases from optimization, and — with `--judge` — grades `llm-judge` criteria via
+a judge pinned in the spec (with a known-bad canary that must fail). Skills also
+bundle `evolve.py` (from `scripts/evolve_template.py`) and plugin manifests
+(from `scripts/claude-plugin-template/`). Eval specs are trusted input — only
+run evals from specs you or your team wrote.
 
 ## License
 
