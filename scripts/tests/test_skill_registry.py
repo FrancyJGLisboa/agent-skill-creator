@@ -113,8 +113,10 @@ class TestSlugSafety(unittest.TestCase):
 
     def test_storage_path_stays_under_skills(self):
         path = reg.skill_storage_path("skills", "..")
-        resolved = Path("/registry", path).resolve()
-        self.assertTrue(str(resolved).startswith(str(Path("/registry", "skills"))))
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp).resolve()
+            resolved = (root / path).resolve()
+            self.assertTrue(resolved.is_relative_to(root / "skills"))
 
 
 # --- Publish --------------------------------------------------------------
@@ -155,7 +157,15 @@ class TestPublish(unittest.TestCase):
     def test_malicious_author_cannot_delete_skills_root(self):
         victim = make_skill(self.base, "alpha", author="alice")
         publish(self.registry, victim)
-        evil = make_skill(self.base, "skills", author="..")
+        # Build the source under a benign dir name (Windows strips trailing
+        # dots from path components, so "src-.." would not round-trip), then
+        # set the malicious author in the frontmatter publish actually reads.
+        evil = make_skill(self.base, "skills", author="evil")
+        md = evil / "SKILL.md"
+        md.write_text(
+            md.read_text(encoding="utf-8").replace("author: evil", "author: .."),
+            encoding="utf-8",
+        )
         publish(self.registry, evil)
         # the previously published skill must survive
         self.assertTrue(
