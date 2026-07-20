@@ -58,6 +58,8 @@ jobs:
             # CI is release scoring: holdout (split=test) cases are included here
             # and only here — never in an optimization loop.
             python3 "$runner" "$skill_dir" --rollout --include-holdout
+            # The shipped self-maintenance loop must run green end-to-end.
+            (cd "$skill_dir" && python3 scripts/evolve.py)
             echo "::endgroup::"
           done
 
