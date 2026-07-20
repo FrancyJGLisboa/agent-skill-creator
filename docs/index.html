@@ -129,7 +129,7 @@
   </header>
   <ul class="limits__list">
     <li>Eval rollout is opt-in — it executes the skill’s real code, so you choose when.</li>
-    <li>Judge grading needs an <code>ANTHROPIC_API_KEY</code>; without one it prints a checklist instead of silently passing.</li>
+    <li>Subjective <code>llm-judge</code> criteria are graded by the agent running the skill — the model your runtime already provides — so no extra API key is needed in an agentic runtime. A raw key is only for grading them unattended in CI; either way it never silently passes.</li>
     <li>Artifact signing (cosign/SLSA) is on the roadmap, not shipped.</li>
     <li>The episodic learning layer is a design document, clearly marked not-implemented.</li>
   </ul>
