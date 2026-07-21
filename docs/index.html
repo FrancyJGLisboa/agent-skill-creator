@@ -45,33 +45,10 @@
     </div>
   </div>
   <figure class="hero__proof">
-    <pre class="mermaid" aria-label="Architecture diagram: a plain-English description enters the five-phase creator pipeline, the generated skill passes four quality gates before installing on 17 platforms, and the evolve loop feeds failure evidence back into regeneration.">
-flowchart LR
-    IN["You describe&lt;br/&gt;a workflow in plain English&lt;br/&gt;(or a PDF, a link, a script)"]
-
-    subgraph CREATOR["Creator pipeline — phases 0–5"]
-        direction LR
-        P0["0 Spec&lt;br/&gt;ideation"] --> P1["1 Discovery"] --> P2["2 Design&lt;br/&gt;+ eval spec"] --> P3["3 Architecture"] --> P4["4 Detection"] --> P5["5 Build"]
-    end
-
-    subgraph GATES["Quality gates"]
-        direction LR
-        G1["validate"] --> G2["security_scan"] --> G3["check_pipeline"] --> G4["run_evals&lt;br/&gt;--rollout"]
-    end
-
-    SKILL["Generated skill&lt;br/&gt;SKILL.md · pipeline scripts&lt;br/&gt;evals · installer · manifests"]
-
-    INSTALL["install.sh / install.ps1&lt;br/&gt;17 platforms&lt;br/&gt;Claude Code · Cursor · Copilot · Gemini …"]
-
-    subgraph EVOLVE["Self-maintenance — evolve.py"]
-        direction LR
-        E1["staleness_check"] --> E2["regression gate"] --> E3["EVOLUTION.md"]
-    end
-
-    IN --> CREATOR --> SKILL --> GATES --> INSTALL
-    SKILL --> EVOLVE
-    E3 -. "regenerate from evidence" .-> CREATOR
-    </pre>
+    <a href="assets/architecture.png">
+      <img src="assets/architecture.png" width="820" height="525"
+           alt="Architecture diagram: a plain-English description enters the five-phase creator pipeline, the generated skill passes four quality gates before installing on 17 platforms, and the evolve loop feeds failure evidence back into regeneration.">
+    </a>
     <figcaption>How it fits together — pipeline → gates → install, and the evolve loop after you stop looking. <a class="link" href="assets/demo.gif">Watch a real quality-gate run</a>.</figcaption>
   </figure>
 </section>
@@ -229,23 +206,6 @@ flowchart LR
   </div>
 </footer>
 
-<style>
-  /* hero architecture diagram (mermaid renders an inline SVG) */
-  .hero__proof .mermaid {
-    background: var(--color-paper);
-    border: var(--rule-hair) solid var(--color-rule);
-    border-radius: var(--radius-md);
-    padding: 8px;
-    margin: 0;
-    overflow-x: auto;
-  }
-  .hero__proof .mermaid svg { max-width: 100%; height: auto; display: block; }
-  .hero__proof .mermaid:not([data-processed]) { visibility: hidden; min-height: 320px; }
-</style>
-<script type="module">
-  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
-  mermaid.initialize({ startOnLoad: true, theme: 'neutral', fontFamily: 'IBM Plex Sans, sans-serif' });
-</script>
 <script>
 // nav frost-on-scroll (rAF-throttled)
 (function () {

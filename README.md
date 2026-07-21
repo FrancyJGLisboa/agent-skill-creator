@@ -8,35 +8,12 @@
 [![Version](https://img.shields.io/badge/version-6.0.0-brightgreen)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)]()
 
-```mermaid
-flowchart LR
-    IN["<b>You describe</b><br/>a workflow in plain English<br/><i>(or a PDF, a link, a script)</i>"]
+<p align="center">
+  <img src="assets/architecture.png" width="820"
+       alt="Architecture: a plain-English description enters the 5-phase creator pipeline; the generated skill passes four quality gates (validate, security_scan, check_pipeline, run_evals --rollout) before installing on 17 platforms; the evolve loop feeds failure evidence back into regeneration.">
+</p>
 
-    subgraph CREATOR["Creator pipeline — SKILL.md, phases 0–5"]
-        direction LR
-        P0["0 Spec<br/>ideation"] --> P1["1 Discovery"] --> P2["2 Design<br/>+ eval spec"] --> P3["3 Architecture"] --> P4["4 Detection"] --> P5["5 Build"]
-    end
-
-    subgraph GATES["Quality gates — scripts/"]
-        direction LR
-        G1["validate.py"] --> G2["security_scan.py"] --> G3["check_pipeline.py"] --> G4["run_evals.py<br/>--rollout"]
-    end
-
-    SKILL["<b>Generated skill</b><br/>SKILL.md · scripts/run_pipeline.py<br/>evals/ · installer · plugin manifests"]
-
-    INSTALL["<b>install.sh / install.ps1</b><br/>17 platforms via scripts/platforms.py<br/>Claude Code · Cursor · Copilot · Gemini …"]
-
-    subgraph EVOLVE["Self-maintenance — scripts/evolve.py"]
-        direction LR
-        E1["staleness_check<br/>review · deps · drift"] --> E2["run_evals --rollout<br/>regression gate"] --> E3["EVOLUTION.md<br/>raw evidence"]
-    end
-
-    IN --> CREATOR --> SKILL --> GATES --> INSTALL
-    SKILL --> EVOLVE
-    E3 -. "regenerate from evidence" .-> CREATOR
-```
-
-<!-- Architecture diagram (GitHub renders mermaid natively). assets/hero.svg is the marketing flow variant; assets/demo.gif (built from assets/demo.cast, see assets/DEMO.md) shows a real quality-gate run. -->
+<!-- Architecture diagram. Source: assets/architecture.excalidraw (edit there, re-render via the excalidraw-diagram skill). assets/demo.gif (built from assets/demo.cast, see assets/DEMO.md) shows a real quality-gate run. -->
 <p align="center"><em>How it fits together: your description runs through the 5-phase creator pipeline, the generated skill must pass every quality gate before install, and the shipped evolve loop keeps it green after you stop looking. <a href="assets/demo.gif">Watch a real quality-gate run</a>.</em></p>
 
 **What you get:** describe a workflow in plain English (or hand over a PDF, a link, a script) → a complete, **validated and security-scanned** agent skill, with functional code, its own **eval spec**, and a cross-platform installer → the same skill running on **Claude Code, Cursor, Copilot, Gemini, Windsurf, and 12 more** with one command.
