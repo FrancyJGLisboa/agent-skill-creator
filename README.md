@@ -4,16 +4,40 @@
 
 [![CI](https://github.com/FrancyJGLisboa/agent-skill-creator/actions/workflows/ci.yml/badge.svg)](https://github.com/FrancyJGLisboa/agent-skill-creator/actions/workflows/ci.yml)
 [![Agent Skills Open Standard](https://img.shields.io/badge/Agent%20Skills-Open%20Standard-blue)](https://github.com/anthropics/agent-skills-spec)
-[![Platforms](https://img.shields.io/badge/installs%20on-17%20platforms-7c3aed)](#all-platforms)
+[![Platforms](https://img.shields.io/badge/installs%20on-17%20platforms-7c3aed)](docs/INSTALL.md)
 [![Version](https://img.shields.io/badge/version-6.0.0-brightgreen)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)]()
 
-<p align="center">
-  <img src="assets/demo.gif" alt="A real run of a generated skill's quality gates: validate → security scan → eval rollout, all passing." width="820">
-</p>
+```mermaid
+flowchart LR
+    IN["<b>You describe</b><br/>a workflow in plain English<br/><i>(or a PDF, a link, a script)</i>"]
 
-<!-- demo.gif is built from assets/demo.cast (see assets/DEMO.md). hero.svg is the static flow diagram, linked below as the conceptual overview / fallback. -->
-<p align="center"><em>Genuine output from a real run — <code>validate</code> → <code>security_scan</code> → eval <code>--rollout</code> on a generated skill (paced for readability). <a href="assets/hero.svg">See the flow diagram</a>.</em></p>
+    subgraph CREATOR["Creator pipeline — SKILL.md, phases 0–5"]
+        direction LR
+        P0["0 Spec<br/>ideation"] --> P1["1 Discovery"] --> P2["2 Design<br/>+ eval spec"] --> P3["3 Architecture"] --> P4["4 Detection"] --> P5["5 Build"]
+    end
+
+    subgraph GATES["Quality gates — scripts/"]
+        direction LR
+        G1["validate.py"] --> G2["security_scan.py"] --> G3["check_pipeline.py"] --> G4["run_evals.py<br/>--rollout"]
+    end
+
+    SKILL["<b>Generated skill</b><br/>SKILL.md · scripts/run_pipeline.py<br/>evals/ · installer · plugin manifests"]
+
+    INSTALL["<b>install.sh / install.ps1</b><br/>17 platforms via scripts/platforms.py<br/>Claude Code · Cursor · Copilot · Gemini …"]
+
+    subgraph EVOLVE["Self-maintenance — scripts/evolve.py"]
+        direction LR
+        E1["staleness_check<br/>review · deps · drift"] --> E2["run_evals --rollout<br/>regression gate"] --> E3["EVOLUTION.md<br/>raw evidence"]
+    end
+
+    IN --> CREATOR --> SKILL --> GATES --> INSTALL
+    SKILL --> EVOLVE
+    E3 -. "regenerate from evidence" .-> CREATOR
+```
+
+<!-- Architecture diagram (GitHub renders mermaid natively). assets/hero.svg is the marketing flow variant; assets/demo.gif (built from assets/demo.cast, see assets/DEMO.md) shows a real quality-gate run. -->
+<p align="center"><em>How it fits together: your description runs through the 5-phase creator pipeline, the generated skill must pass every quality gate before install, and the shipped evolve loop keeps it green after you stop looking. <a href="assets/demo.gif">Watch a real quality-gate run</a>.</em></p>
 
 **What you get:** describe a workflow in plain English (or hand over a PDF, a link, a script) → a complete, **validated and security-scanned** agent skill, with functional code, its own **eval spec**, and a cross-platform installer → the same skill running on **Claude Code, Cursor, Copilot, Gemini, Windsurf, and 12 more** with one command.
 
@@ -47,7 +71,7 @@ Use it:  /weekly-crm-report-skill data/crm-export.csv
   → report.pdf   → dashboard.html
 ```
 
-No clone, no `pip`, no API key to get started — just `git` and any one of 17 supported tools. Windows one-liners and single-tool installs are in [Advanced Install](#advanced-install).
+No clone, no `pip`, no API key to get started — just `git` and any one of 17 supported tools. Windows one-liners and single-tool installs are in the [Installation Guide](docs/INSTALL.md).
 
 ---
 
@@ -120,7 +144,7 @@ powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.c
 
 The installer clones to `~/.agents/skills/agent-skill-creator` and links to every detected platform (Claude Code, Copilot, Gemini CLI, Kiro, Cline, Roo Code, Kilo Code, Factory Droid, Cursor, Goose, OpenCode). To update later, run `cd ~/.agents/skills/agent-skill-creator && git pull`.
 
-> **Advanced:** Want to install to a single tool, or already have a local clone? See [Advanced Install](#advanced-install) below.
+> **Advanced:** Want to install to a single tool, or already have a local clone? See the [Installation Guide](docs/INSTALL.md).
 
 ### 2. Use it
 
@@ -178,9 +202,12 @@ Your team installs it the same way — one `git clone` to their tool's path — 
 
 ## What's new
 
-**v6 — Artifacts.** Skills can emit **interactive React artifacts** in Claude Code (and Claude.ai). When output is visualizable — time series, comparisons, KPIs, tables — Phase 2 inlines one of four bundled React templates plus the artifact protocol into the generated SKILL.md; you write no React. In hosts that don't render artifacts (Cursor, Cline, Codex CLI, Gemini CLI) the source appears as fenced code and the markdown analysis is unchanged — honest degradation. Suppress with `--no-artifact`; force a template with `--artifact <line-chart|bar-chart|kpi-cards|data-table>`. ([design notes](docs/superpowers/specs/2026-05-27-agent-skill-creator-v5-artifacts-first-design.md))
+Full detail on every entry lives in the [CHANGELOG](CHANGELOG.md).
 
-**Every skill ships its own metric.** Each generated skill carries an **eval spec** (`evals/<name>.eval.md`) plus a `scripts/run_evals.py` runner. In Phase 2 the creator derives 3–6 **binary** checks and ≥3 golden cases (seeded from your own files); you give a one-word thumbs-up. It's an instant regression test — `python3 scripts/run_evals.py` exits non-zero on failure, so it drops into CI. With a declared `run` command, `run_evals.py --rollout` executes the skill on each golden input, scores the real output, and **compares it against the promoted baseline** — divergence that slips past every command check still fails as a regression (`--rollout --promote` captures the first passing baseline; per-case `compare_ignore` handles volatile fields like timestamps). `--judge` grades `llm-judge` criteria with a judge **pinned in the spec** (model + temperature), and a known-bad canary must fail every criterion or the judge run is invalid. One golden case per skill is a `"split": "test"` **holdout** — skipped by default, scored only with `--include-holdout`, never fed to an optimization loop. Any failing run appends its raw evidence to the skill's `EVOLUTION.md`. The spec is consumable by `autoresearch-universal` for optimization with no reformatting. *Honest limits:* `--rollout` is opt-in (it runs arbitrary skill code), and `--judge` needs `ANTHROPIC_API_KEY`. On by default; skip with `--no-eval`.
+- **MCP capability audit** — `--mcp-audit <server | repo | docs>` maps a data vendor's MCP server into a ranked list of buildable skills and an explicit not-buildable list (each rejection names the missing primitive), machine-gated by `scripts/mcp_audit_validate.py`. ([guide](references/mcp-audit.md))
+- **Keyless `llm-judge` grading** — `--judge` grades through the runtime you already have (Claude Code's subscription CLI, or `$EVAL_JUDGE_CMD` for any runtime); an API key is only the last-resort fallback for bare CI. A known-bad canary must fail every criterion or the judge run is invalid.
+- **Every skill ships its own metric** — a bundled eval spec + `run_evals.py`: golden-input rollout, promoted-baseline regression gate, one held-out golden case no optimization loop ever sees, failures recorded to the skill's `EVOLUTION.md`. Skip with `--no-eval`.
+- **v6 artifacts** — visualizable output gets one of four bundled React artifact templates in hosts that render them, honest fenced-code degradation elsewhere. Suppress with `--no-artifact`, force with `--artifact <name>`.
 
 ---
 
@@ -266,254 +293,12 @@ The registry is a git repo on GitHub or GitLab. Clone it once, and every team me
 
 ---
 
-## Advanced Install
-
-If you prefer to install to a single tool, or you already cloned the repo:
-
-**Install from inside your agent — by runtime:**
-
-The repo ships native plugin/extension manifests for every runtime that has an
-in-tool install. Commands follow each runtime's official plugin docs; the
-universal installer below always works as the fallback.
-
-*Claude Code* — send as two separate prompts:
-
-```
-/plugin marketplace add FrancyJGLisboa/agent-skill-creator
-/plugin install agent-skill-creator@agent-skill-creator
-```
-
-*OpenAI Codex CLI* (plugins since v0.117):
-
-```bash
-codex plugin marketplace add FrancyJGLisboa/agent-skill-creator
-codex plugin add agent-skill-creator@agent-skill-creator
-```
-
-*GitHub Copilot CLI* — shell or the in-TUI slash equivalents:
-
-```bash
-copilot plugin marketplace add FrancyJGLisboa/agent-skill-creator
-copilot plugin install agent-skill-creator@agent-skill-creator
-```
-
-```
-/plugin marketplace add FrancyJGLisboa/agent-skill-creator
-/plugin install agent-skill-creator@agent-skill-creator
-```
-
-*Gemini CLI* (also Antigravity CLI via `agy plugin install`):
-
-```bash
-gemini extensions install https://github.com/FrancyJGLisboa/agent-skill-creator
-```
-
-*Cursor* — in-editor only (no CLI install): command palette → `/add-plugin`,
-or add the repo as a marketplace under **Customize**. The `.cursor-plugin/`
-manifests are shipped; `.cursor/rules` file-copy still works too.
-
-*opencode · Goose · everything else* — no native install verb; these read
-skills from `~/.agents/skills/` or their own skill folders, which is exactly
-what the one-line bootstrap and `install.sh` set up.
-
-| Runtime | Mechanism | Manifest shipped |
-|---|---|---|
-| Claude Code | `/plugin marketplace add` + `/plugin install` | `.claude-plugin/` |
-| Codex CLI | `codex plugin marketplace add` + `codex plugin add` | `.codex-plugin/` + `.agents/plugins/marketplace.json` |
-| Copilot CLI | `copilot plugin install` or in-TUI `/plugin` | `.github/plugin/` |
-| Gemini CLI / Antigravity | `gemini extensions install <repo-url>` | `gemini-extension.json` (context: `AGENTS.md`) |
-| Cursor | in-editor `/add-plugin` | `.cursor-plugin/` |
-| opencode, Goose, 10 more | universal path / installer | `install.sh`, `bootstrap.sh` |
-
-Skills generated by the factory ship the same Claude Code manifests, so any
-skill it builds is installable with `/plugin marketplace add <repo-or-local-path>`.
-
-**Clone to a specific tool:**
-
-```bash
-# Claude Code
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.claude/skills/agent-skill-creator
-
-# GitHub Copilot
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.copilot/skills/agent-skill-creator
-
-# Gemini CLI
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.gemini/skills/agent-skill-creator
-
-# Cursor (per-project — no global path)
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .cursor/skills/agent-skill-creator
-
-# Universal path (Codex CLI, OpenCode, Goose, and others)
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.agents/skills/agent-skill-creator
-```
-
-**Already cloned? Link to all tools:**
-
-macOS / Linux:
-```bash
-cd agent-skill-creator
-./install.sh              # Link to all detected platforms
-./install.sh --dry-run    # Preview without changes
-./install.sh --uninstall  # Remove all links
-```
-
-Windows (PowerShell):
-```powershell
-cd agent-skill-creator
-.\install.ps1              # Link to all detected platforms
-.\install.ps1 -DryRun     # Preview without changes
-.\install.ps1 -Uninstall  # Remove all links
-```
-
-See the full platform table below for every supported tool and path.
-
----
-
-## All Platforms
-
-17 platforms supported. Same skill, same invocation, same results everywhere.
-
-### How it works
-
-Every generated skill outputs both **SKILL.md** (~15 tools read it natively) and **AGENTS.md** (~15 tools read it) to maximize reach. Tools in **Tier 2** need format conversion — the installer handles it automatically.
-
-| Tier | Platforms | What happens |
-|------|-----------|-------------|
-| **Tier 1 — Native SKILL.md** | Claude Code, Copilot, Codex CLI, Gemini CLI, Kiro, Cline, Roo Code, Kilo Code, Goose, OpenCode, Factory Droid, Antigravity | Reads SKILL.md directly |
-| **Tier 2 — Auto-adapted** | Cursor, Windsurf, Trae, Junie | Installer converts SKILL.md to native format (.mdc, .md rules, guidelines) |
-| **Tier 3 — Manual** | Zed, Augment, Aider, Continue.dev | Copy skill body into tool's config file |
-
-### Global install (each tool's native path)
-
-```bash
-# Claude Code
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.claude/skills/agent-skill-creator
-
-# GitHub Copilot
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.copilot/skills/agent-skill-creator
-
-# Gemini CLI
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.gemini/skills/agent-skill-creator
-
-# Kiro
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.kiro/skills/agent-skill-creator
-
-# Cline
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.cline/skills/agent-skill-creator
-
-# Roo Code
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.roo/skills/agent-skill-creator
-
-# Kilo Code
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.kilocode/skills/agent-skill-creator
-
-# Factory Droid
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.factory/skills/agent-skill-creator
-
-# Goose
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.config/goose/skills/agent-skill-creator
-
-# OpenCode
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.config/opencode/skills/agent-skill-creator
-
-# Codex CLI / universal path (read by 7+ tools as fallback)
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.agents/skills/agent-skill-creator
-```
-
-Use each tool's own native path. The universal `~/.agents/skills/` path works as a fallback for Codex CLI, Gemini CLI, OpenCode, Goose, Cline, Roo Code, and Kilo Code.
-
-### Per-project install
-
-```bash
-# GitHub Copilot
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .github/skills/agent-skill-creator
-
-# Cursor (project only — no global path exists)
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .cursor/skills/agent-skill-creator
-
-# Windsurf
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .windsurf/rules/agent-skill-creator
-
-# Cline
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .clinerules/skills/agent-skill-creator
-
-# Kiro
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .kiro/skills/agent-skill-creator
-
-# Trae
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .trae/rules/agent-skill-creator
-
-# Roo Code
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .roo/skills/agent-skill-creator
-
-# Kilo Code
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .kilocode/skills/agent-skill-creator
-
-# Junie (JetBrains)
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .junie/skills/agent-skill-creator
-
-# Antigravity (note: .agent/ singular, NOT .agents/)
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .agent/skills/agent-skill-creator
-```
-
-### Cursor — global workaround
-
-Cursor has no global skills directory. Clone once and symlink per project:
-
-```bash
-# 1. Clone once
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/agent-skills/agent-skill-creator
-
-# 2. In any project, symlink
-mkdir -p .cursor/rules && ln -s ~/agent-skills/agent-skill-creator .cursor/rules/agent-skill-creator
-```
-
-Add a shell alias to automate this (`~/.zshrc` or `~/.bashrc`):
-
-```bash
-alias install-skills='mkdir -p .cursor/rules && ln -s ~/agent-skills/agent-skill-creator .cursor/rules/agent-skill-creator'
-```
-
-Then in any project: `install-skills`. Updates propagate automatically via the symlink.
-
-### Using the installer (for generated skills)
-
-Every skill generated by agent-skill-creator includes a cross-platform installer — both `install.sh` (macOS/Linux) and `install.ps1` (Windows):
-
-**macOS / Linux:**
-
-```bash
-./install.sh                          # Auto-detect platform
-./install.sh --platform cursor        # Force specific platform (auto-generates .mdc)
-./install.sh --all                    # Install to every detected tool at once
-./install.sh --dry-run                # Preview without installing
-```
-
-**Windows (PowerShell):**
-
-```powershell
-.\install.ps1                          # Auto-detect platform
-.\install.ps1 -Platform cursor         # Force specific platform
-.\install.ps1 -All                     # Install to every detected tool at once
-.\install.ps1 -DryRun                  # Preview without installing
-```
-
-Both installers handle all 17 platforms and create a universal `~/.agents/skills/` link after every install for cross-tool discoverability.
-
-### Claude Desktop / claude.ai
-
-```bash
-python3 scripts/export_utils.py ./agent-skill-creator/ --variant desktop
-# Then: Settings > Skills > Upload the generated .zip
-```
-
-### Update
-
-```bash
-cd ~/.agents/skills/agent-skill-creator && git pull
-```
-
-If you used the one-liner (Option A) or `./install.sh` (Option C), all symlinks update automatically — just `git pull` once from the canonical location. The skill also performs a silent git-based version check when loaded and will mention if a newer version is available.
+## Advanced Install & All 17 Platforms
+
+Everything beyond the one-liner lives in **[docs/INSTALL.md](docs/INSTALL.md)**:
+native plugin installs per runtime (Claude Code, Codex, Copilot, Gemini, Cursor),
+the full 17-platform path table (global and per-project), the Cursor global
+workaround, the universal skill installer, Claude Desktop export, and updating.
 
 ---
 
@@ -526,6 +311,7 @@ Every skill goes through automated checks before delivery and on every publish:
 | **Spec Validation** | SKILL.md structure, frontmatter format, naming rules, file references |
 | **Security Scan** | Hardcoded keys/credentials, dangerous code patterns, instruction-body prompt injection (override/concealment/exfiltration phrases, hidden unicode, encoded blobs), undeclared network endpoints |
 | **Staleness Check** | Review dates, dependency health, API schema drift |
+| **Eval Rollout** | Runs the skill on its golden inputs and diffs against the promoted baseline (`run_evals.py --rollout`); `--judge` grades subjective criteria keylessly through your runtime, with a known-bad canary that must fail; one holdout case is never fed to optimization. Rollout is opt-in — it executes the skill's real code. |
 
 Run them independently anytime:
 
@@ -634,42 +420,8 @@ python3 scripts/staleness_check.py ./skill/ --check-deps         # + dependency 
 python3 scripts/staleness_check.py ./skill/ --check-drift        # + schema drift
 python3 scripts/staleness_check.py ./skill/ --record             # append findings to EVOLUTION.md
 python3 scripts/staleness_check.py ./skill/ --json               # Machine-readable output
-```
-
-### Install Any Skill (Universal Installer)
-
-**macOS / Linux:**
-
-```bash
-# From git URL
-./scripts/install-skill.sh https://github.com/someone/sales-report-skill.git
-
-# From local path
-./scripts/install-skill.sh ./sales-report-skill
-
-# To a specific platform only
-./scripts/install-skill.sh ./sales-report-skill --platform cursor --project
-
-# Preview / remove
-./scripts/install-skill.sh ./sales-report-skill --dry-run
-./scripts/install-skill.sh ./sales-report-skill --uninstall
-```
-
-**Windows (PowerShell):**
-
-```powershell
-# From git URL
-.\scripts\install-skill.ps1 https://github.com/someone/sales-report-skill.git
-
-# From local path
-.\scripts\install-skill.ps1 .\sales-report-skill
-
-# To a specific platform only
-.\scripts\install-skill.ps1 .\sales-report-skill -Platform cursor -Project
-
-# Preview / remove
-.\scripts\install-skill.ps1 .\sales-report-skill -DryRun
-.\scripts\install-skill.ps1 .\sales-report-skill -Uninstall
+python3 scripts/mcp_audit_validate.py mcp_audit.json             # Gate an --mcp-audit report
+python3 scripts/mcp_audit_validate.py mcp_audit.json --json      # Machine-readable output
 ```
 
 ### Export
@@ -709,6 +461,9 @@ agent-skill-creator/
   CHANGELOG.md                  # Version history
   LICENSE                       # MIT
   install.sh / install.ps1      # Self-installer for cloned repos (macOS/Linux, Windows)
+  docs/
+    INSTALL.md                  # Full installation guide (17 platforms, per-tool paths)
+    index.html                  # GitHub Pages landing page
   .claude-plugin/               # plugin.json + marketplace.json (/plugin marketplace add)
   scripts/
     bootstrap.sh / .ps1 / .bat  # One-liner bootstrap (macOS/Linux, PowerShell, cmd)
@@ -784,4 +539,5 @@ MIT
 - [Cross-Platform Guide](references/cross-platform-guide.md)
 - [Architecture Guide](references/architecture-guide.md)
 - [Pipeline Phases](references/pipeline-phases.md)
+- [Installation Guide](docs/INSTALL.md)
 - [Export Guide](references/export-guide.md)
