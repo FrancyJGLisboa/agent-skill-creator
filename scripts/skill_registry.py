@@ -37,7 +37,7 @@ if str(_SCRIPTS_DIR) not in sys.path:
 from validate import validate_skill  # noqa: E402
 from skill_document import SkillDoc  # noqa: E402
 from security_scan import security_scan  # noqa: E402
-from staleness_check import DEFAULT_REVIEW_INTERVAL_DAYS  # noqa: E402
+from review_staleness import DEFAULT_REVIEW_INTERVAL_DAYS, classify_staleness  # noqa: E402
 from platforms import PLATFORMS, list_supported_platforms, project_paths, user_paths  # noqa: E402
 
 
@@ -669,8 +669,6 @@ def cmd_remove(args: argparse.Namespace) -> None:
 
 def cmd_stale(args: argparse.Namespace) -> None:
     """Report skills that are overdue for review."""
-    from datetime import timedelta
-
     registry_path = Path(args.registry).resolve()
     data = load_registry(registry_path)
     today = date.today()
@@ -704,14 +702,7 @@ def cmd_stale(args: argparse.Namespace) -> None:
         days_since = None
         status = "unknown"
         if ref_date:
-            days_since = (today - ref_date).days
-            deadline = ref_date + timedelta(days=interval)
-            if today > deadline:
-                status = "overdue"
-            elif (deadline - today).days <= 30:
-                status = "due_soon"
-            else:
-                status = "fresh"
+            status, days_since, _deadline = classify_staleness(ref_date, interval, today)
 
         results.append({
             "name": skill.get("name", ""),

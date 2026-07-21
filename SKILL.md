@@ -36,6 +36,7 @@ User invokes `/agent-skill-creator` followed by their input:
 /agent-skill-creator See scripts/invoice_processor.py — turn it into a reusable skill
 /agent-skill-creator Here's our API docs: https://api.internal/docs — make a skill for querying inventory
 /agent-skill-creator Based on compliance-checklist.pdf, create a skill for SOX audits
+/agent-skill-creator --mcp-audit https://github.com/vendor/mcp-server — we pay for this data, what skills can we build on it?
 ```
 
 The user can also drop artifacts, paste URLs, share screenshots, or provide minimal context:
@@ -181,6 +182,26 @@ not the clever one.
 
 See `references/spec-ideation.md` for the harvest → filter → shape procedure and
 its held-out bellwether.
+
+### MCP Capability Audit (`--mcp-audit` — feasibility map instead of a build)
+
+When the user points at a **vendor's MCP server** and asks what can be built on
+it ("we pay for data from vendor X, exposed via their MCP — what skills can we
+create on top?"), the deliverable is a *feasibility map*, not code. Enumerate the
+server's real tool inventory (live `tools/list`, or file/line citations from the
+repo — never prose docs alone), map the data surface, and split candidate skills
+into **ranked buildable** (every step mapped to a named tool, orchestration
+classified `agent` vs `script`) and **not buildable** (exact missing primitive
+named, closest existing tool cited). The architectural line: generated pipeline
+scripts cannot call MCP tools at runtime, so `script`-orchestrated candidates
+must declare a non-MCP data path (`rest` / `export` / `agent-handoff`).
+
+Outputs: `MCP_AUDIT.md` (human) + `mcp_audit.json` (machine), gated by
+`python3 scripts/mcp_audit_validate.py mcp_audit.json` — fix findings until
+exit 0. A chosen buildable candidate then enters Phase 1 as a normal build.
+
+See `references/mcp-audit.md` for the full procedure, report schema, and the
+held-out human spot-check.
 
 ### Phase 1: Discovery
 
@@ -766,6 +787,7 @@ The `-skill` suffix also serves as a signal to the agent: when it sees a repo or
 | File | Contents |
 |------|----------|
 | `references/spec-ideation.md` | Phase 0 front door: turn vague input / "give me a skill idea" into a grounded, skill-shaped spec |
+| `references/mcp-audit.md` | `--mcp-audit` front door: vendor MCP server → capability map, ranked buildable skills, not-buildable list with named gaps |
 | `references/pipeline-phases.md` | Detailed Phase 1-5 instructions |
 | `references/architecture-guide.md` | Simple vs Suite decision, refactoring, cross-component communication, versioning |
 | `references/templates-guide.md` | Template-based creation |

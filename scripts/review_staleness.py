@@ -54,6 +54,26 @@ def get_git_last_modified(skill_path: str) -> date | None:
         return None
 
 
+def classify_staleness(
+    reference_date: date,
+    interval_days: int,
+    today: date,
+) -> tuple[str, int, date]:
+    """Single source of truth for review-staleness status.
+
+    Returns (status, days_since, deadline) where status is "overdue",
+    "due_soon", or "fresh". Used by both the per-skill check below and the
+    registry-wide `stale` report in skill_registry.py.
+    """
+    days_since = (today - reference_date).days
+    deadline = reference_date + timedelta(days=interval_days)
+    if today > deadline:
+        return "overdue", days_since, deadline
+    if today > reference_date + timedelta(days=STALENESS_WARNING_THRESHOLD_DAYS):
+        return "due_soon", days_since, deadline
+    return "fresh", days_since, deadline
+
+
 def check_review_staleness(
     doc: SkillDoc,
     git_last_modified: date | None,
@@ -124,12 +144,11 @@ def check_review_staleness(
     days_since: int | None = None
     review_status = "unknown"
     if reference_date:
-        days_since = (today - reference_date).days
-        deadline = reference_date + timedelta(days=interval_days)
-        warning_date = reference_date + timedelta(days=STALENESS_WARNING_THRESHOLD_DAYS)
+        review_status, days_since, deadline = classify_staleness(
+            reference_date, interval_days, today
+        )
 
-        if today > deadline:
-            review_status = "overdue"
+        if review_status == "overdue":
             issues.append({
                 "level": "error",
                 "message": f"Skill is overdue for review ({days_since} days since last review)",
@@ -137,8 +156,7 @@ def check_review_staleness(
                           f"Last review: {reference_date} (source: {date_source}). "
                           f"Deadline was: {deadline}.",
             })
-        elif today > warning_date:
-            review_status = "due_soon"
+        elif review_status == "due_soon":
             days_remaining = (deadline - today).days
             issues.append({
                 "level": "warning",
@@ -146,8 +164,6 @@ def check_review_staleness(
                 "detail": f"Last review: {reference_date} (source: {date_source}). "
                           f"Deadline: {deadline}.",
             })
-        else:
-            review_status = "fresh"
 
     has_any_temporal = bool(created_str or last_reviewed_str or interval_str)
     if not has_any_temporal:
