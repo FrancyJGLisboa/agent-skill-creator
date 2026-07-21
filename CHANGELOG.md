@@ -22,6 +22,16 @@ to semantic versioning where practical.
   runners are re-synced from the template.
 
 ### Added
+- **`--mcp-audit` front door** (`references/mcp-audit.md`,
+  `scripts/mcp_audit_validate.py`): point the creator at a data vendor's MCP
+  server (live connection, repo, or docs) and get a feasibility map instead of
+  a build — verbatim tool inventory, ranked buildable skills with per-step
+  tool mappings and agent-vs-script orchestration classes, and a not-buildable
+  list where every rejection names the exact missing primitive plus the
+  closest existing tool. `mcp_audit.json` is gated by the new validator
+  (inventory provenance, no hallucinated tool names, no vague refusals,
+  script-orchestrated candidates must declare a non-MCP data path); the human
+  holdout check is deliberately never validator-graded. 21 new tests.
 - **Phase 0 spec-ideation front door** (`references/spec-ideation.md`): a
   pre-Discovery step for when the user arrives without a skill in mind — one word
   ("freight"), a shrug, "give me a skill idea", or a dumped transcript with no
