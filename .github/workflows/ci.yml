@@ -59,6 +59,11 @@ jobs:
             # and only here — never in an optimization loop.
             python3 "$runner" "$skill_dir" --rollout --include-holdout
             # The shipped self-maintenance loop must run green end-to-end.
+            # Pin last_reviewed to today in this disposable checkout first:
+            # this step tests the machinery, and must not go red on the fixed
+            # calendar day the bundled example crosses its review interval.
+            sed -i.bak "s/^  last_reviewed: .*/  last_reviewed: $(date +%F)/" "$skill_dir/SKILL.md"
+            rm -f "$skill_dir/SKILL.md.bak"
             (cd "$skill_dir" && python3 scripts/evolve.py)
             echo "::endgroup::"
           done
