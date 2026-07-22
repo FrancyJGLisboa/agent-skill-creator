@@ -116,6 +116,10 @@
         <li><b>Pinned judge</b> — subjective criteria are graded by a model pinned in
         the spec, and a known-bad canary must fail or the judge run is invalid</li>
         <li><b>Holdout</b> — one golden case is never shown to any optimization loop</li>
+        <li><b>Model comparison</b> — the same suite runs once per candidate model
+        (<code>--rollout --model A --model B</code>) and answers “which model should
+        run this task, and at what price”; cost comes only from runtime-declared
+        usage, never estimated</li>
         <li><b>Evidence, not exit codes</b> — every failure appends its raw findings
         to the skill’s <code>EVOLUTION.md</code>; <code>evolve.py</code> closes
         detect&nbsp;→&nbsp;record&nbsp;→&nbsp;re-verify from the skill’s own root</li>

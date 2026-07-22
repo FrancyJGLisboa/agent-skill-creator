@@ -34,6 +34,23 @@ Modes:
                                                  # --promote captures the first
                                                  # passing output as the baseline
                                                  # for pending-first-green cases
+    python3 scripts/run_evals.py --rollout --model A [--model B ...]
+                                                 # run the rollout once per model
+                                                 # under test and print a pass-rate
+                                                 # + cost comparison table. Each
+                                                 # model id binds the run command's
+                                                 # optional {model} placeholder and
+                                                 # is exported as $EVAL_MODEL. Cost
+                                                 # is read from an OPTIONAL sidecar
+                                                 # the pipeline may write next to
+                                                 # its output ({output}.usage.json,
+                                                 # keys: input_tokens,
+                                                 # output_tokens, cost_usd) and is
+                                                 # reported n/a when absent — never
+                                                 # estimated. Model runs never
+                                                 # promote baselines and never log
+                                                 # to EVOLUTION.md; exit 0 when at
+                                                 # least one model passes clean.
     python3 scripts/run_evals.py --json          # machine-readable result
 
 The spec's optional `run` field is a command template binding {input} (the golden
@@ -58,6 +75,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.request import Request, urlopen
@@ -66,6 +84,8 @@ VALID_TYPES = ("command", "llm-judge")
 MIN_GOLDEN_CASES = 3
 OUTPUT_PLACEHOLDER = "{output}"
 INPUT_PLACEHOLDER = "{input}"
+MODEL_PLACEHOLDER = "{model}"
+USAGE_SIDECAR_SUFFIX = ".usage.json"
 DEFAULT_ROLLOUT_TIMEOUT = 120
 
 # --- Judge harness constants ---
@@ -326,26 +346,65 @@ def _resolve_interpreter(bound: str) -> str:
     return bound
 
 
-def _run_skill(run_cmd: str, input_path: Path | None, output_path: Path, skill_dir: Path, timeout: int) -> bool:
+def _run_skill(
+    run_cmd: str,
+    input_path: Path | None,
+    output_path: Path,
+    skill_dir: Path,
+    timeout: int,
+    model: str | None = None,
+) -> bool:
     """Execute the skill's `run` command for one case.
 
     Binds {input}/{output} placeholders and runs from the skill root. Returns
     True only on exit code 0 within the timeout. Mirrors _run_one's shell form
     and the timeout= convention used elsewhere (review_staleness, export_utils).
+
+    When `model` is given it binds the optional {model} placeholder and is
+    exported as EVAL_MODEL, so pipelines can pick the model under test either
+    from argv or from the environment.
     """
     bound = run_cmd.replace(OUTPUT_PLACEHOLDER, _quote_path(output_path))
     if INPUT_PLACEHOLDER in bound:
         if input_path is None:
             return False
         bound = bound.replace(INPUT_PLACEHOLDER, _quote_path(input_path))
+    if MODEL_PLACEHOLDER in bound:
+        if model is None:
+            return False
+        bound = bound.replace(MODEL_PLACEHOLDER, _quote_path(model))
     bound = _resolve_interpreter(bound)
+    env = {**os.environ, "EVAL_MODEL": model} if model is not None else None
     try:
         proc = subprocess.run(  # noqa: S602
-            bound, shell=True, cwd=str(skill_dir), capture_output=True, timeout=timeout
+            bound, shell=True, cwd=str(skill_dir), capture_output=True,
+            timeout=timeout, env=env,
         )
     except subprocess.TimeoutExpired:
         return False
     return proc.returncode == 0
+
+
+def _read_usage(produced: Path) -> dict | None:
+    """Parse the optional usage sidecar the pipeline may write next to its
+    output ({output}.usage.json). Returns None when absent or unparseable —
+    cost is only ever reported from real pipeline-declared numbers.
+    """
+    sidecar = produced.with_name(produced.name + USAGE_SIDECAR_SUFFIX)
+    if not sidecar.exists():
+        return None
+    try:
+        data = json.loads(sidecar.read_text(encoding="utf-8"))
+    except (ValueError, UnicodeDecodeError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def _add_usage(total: float | None, value) -> float | None:
+    """Accumulate one numeric usage field; non-numeric values are ignored."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return total
+    return value if total is None else total + value
 
 
 def _baseline_matches(produced: Path, expected: Path, ignore_keys: list[str] | None = None) -> bool:
@@ -382,6 +441,7 @@ def run_rollout(
     timeout: int = DEFAULT_ROLLOUT_TIMEOUT,
     include_holdout: bool = False,
     judge=None,
+    model: str | None = None,
 ) -> dict:
     """Run the skill end-to-end on each golden input, then score the real output.
 
@@ -394,16 +454,22 @@ def run_rollout(
     `expected` baseline. Cases marked `split: "test"` are held out unless
     `include_holdout` is set, and are never promoted.
 
-    Returns {passed, failed, errors, regressions, promoted, held_out, checks}.
-    `errors` counts cases whose `run` command itself failed or timed out (their
-    checks are not scored); `regressions` counts outputs that passed the command
-    checks but diverged from the promoted baseline.
+    Returns {passed, failed, errors, regressions, promoted, held_out, checks,
+    model, cost_usd, input_tokens, output_tokens, duration_s}. `errors` counts
+    cases whose `run` command itself failed or timed out (their checks are not
+    scored); `regressions` counts outputs that passed the command checks but
+    diverged from the promoted baseline. `model` (when given) is bound into the
+    run command's optional {model} placeholder and exported as EVAL_MODEL; usage
+    figures are summed from per-case {output}.usage.json sidecars when the
+    pipeline writes them, and are None otherwise.
     """
     evals_dir = skill_dir / "evals"
     run_cmd = spec.get("run")
     judge_criteria = llm_judge_criteria(spec) if judge is not None else []
     passed = failed = errors = regressions = 0
     judge_passed = judge_failed = 0
+    cost_usd = input_tokens = output_tokens = None
+    started = time.monotonic()
     promoted: list[str] = []
     held_out: list[str] = []
     checks: list[dict] = []
@@ -421,11 +487,17 @@ def run_rollout(
 
         with tempfile.TemporaryDirectory() as td:
             produced = Path(td) / "output"
-            ok = _run_skill(run_cmd, input_path, produced, skill_dir, timeout)
+            ok = _run_skill(run_cmd, input_path, produced, skill_dir, timeout, model=model)
             if not ok or not produced.exists():
                 errors += 1
                 checks.append({"case": case_id, "criterion": "<run>", "status": "error"})
                 continue
+
+            usage = _read_usage(produced)
+            if usage:
+                cost_usd = _add_usage(cost_usd, usage.get("cost_usd"))
+                input_tokens = _add_usage(input_tokens, usage.get("input_tokens"))
+                output_tokens = _add_usage(output_tokens, usage.get("output_tokens"))
 
             scored = run_command_checks(
                 spec, skill_dir, output=produced, only_case=case_id,
@@ -485,6 +557,11 @@ def run_rollout(
         "promoted": promoted,
         "held_out": held_out,
         "checks": checks,
+        "model": model,
+        "cost_usd": cost_usd,
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "duration_s": round(time.monotonic() - started, 3),
     }
 
 
@@ -684,6 +761,35 @@ def record_failure(skill_dir: Path, mode: str, result: dict) -> None:
         fh.write(entry)
 
 
+def _fmt_cost(cost_usd: float | None) -> str:
+    """Render a summed cost, or 'n/a' when the pipeline declared none."""
+    return "n/a" if cost_usd is None else f"${cost_usd:.4f}"
+
+
+def print_model_table(results: list[dict], judged: bool) -> None:
+    """Print the per-model comparison: pass counts, declared cost, wall time."""
+    headers = ["model", "pass", "fail", "err", "regr"]
+    if judged:
+        headers.append("judge")
+    headers += ["cost", "time"]
+    rows = []
+    for r in results:
+        row = [
+            str(r.get("model")),
+            str(r["passed"]), str(r["failed"]), str(r["errors"]), str(r["regressions"]),
+        ]
+        if judged:
+            row.append(f"{r['judge_passed']}/{r['judge_passed'] + r['judge_failed']}")
+        row += [_fmt_cost(r["cost_usd"]), f"{r['duration_s']:.1f}s"]
+        rows.append(row)
+    widths = [max(len(h), *(len(row[i]) for row in rows)) for i, h in enumerate(headers)]
+    for line in [headers, *rows]:
+        cells = [line[0].ljust(widths[0])] + [
+            cell.rjust(w) for cell, w in zip(line[1:], widths[1:])
+        ]
+        print("  ".join(cells))
+
+
 def _default_skill_dir() -> Path:
     """The skill root is the parent of the scripts/ directory holding this file."""
     return Path(__file__).resolve().parent.parent
@@ -726,6 +832,20 @@ def main(argv: list[str] | None = None) -> int:
         "or the run is invalid.",
     )
     parser.add_argument(
+        "--model",
+        action="append",
+        dest="models",
+        default=None,
+        metavar="MODEL_ID",
+        help="With --rollout: run the whole rollout once under this model "
+        "(repeatable — 2+ prints a comparison table). Binds the run command's "
+        "optional {model} placeholder and exports EVAL_MODEL for the pipeline. "
+        "Cost is read from an optional {output}.usage.json sidecar the pipeline "
+        "may write (input_tokens/output_tokens/cost_usd) and shown as n/a when "
+        "absent — never estimated. Model runs never --promote baselines or log "
+        "to EVOLUTION.md; exits 0 when at least one model passes everything.",
+    )
+    parser.add_argument(
         "--include-holdout",
         action="store_true",
         help="Also score golden cases marked split='test' (normally held out; "
@@ -733,6 +853,18 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON.")
     args = parser.parse_args(argv)
+
+    if args.models and not args.rollout:
+        msg = "--model requires --rollout"
+        print(json.dumps({"error": msg}) if args.json else f"ERROR: {msg}", file=sys.stderr)
+        return 1
+    if args.models and args.promote:
+        msg = (
+            "--promote cannot be combined with --model; baselines must come "
+            "from the default pipeline run, not a model experiment"
+        )
+        print(json.dumps({"error": msg}) if args.json else f"ERROR: {msg}", file=sys.stderr)
+        return 1
 
     skill_dir = Path(args.skill_dir).resolve() if args.skill_dir else _default_skill_dir()
 
@@ -773,6 +905,13 @@ def main(argv: list[str] | None = None) -> int:
             msg = "rollout unavailable: spec has no 'run' command"
             print(json.dumps({"rollout": "unavailable", "reason": msg}) if args.json else msg)
             return 0
+        if MODEL_PLACEHOLDER in spec["run"] and not args.models:
+            msg = (
+                "spec's 'run' command has a {model} placeholder; "
+                "pass --model <id> to bind it"
+            )
+            print(json.dumps({"error": msg}) if args.json else f"ERROR: {msg}", file=sys.stderr)
+            return 1
         judge = None
         if args.judge:
             judge_cfg = spec.get("judge")
@@ -801,6 +940,44 @@ def main(argv: list[str] | None = None) -> int:
                         print(f"  [canary-invalid] {row['criterion']}: {row['reason']}", file=sys.stderr)
                 return 1
 
+        if args.models:
+            # Model-comparison mode: same suite, once per model under test.
+            # Informational by design — no baseline promotion, no EVOLUTION.md
+            # entry (a candidate model failing is data, not a skill regression).
+            # Exit 0 iff at least one model passed everything.
+            results = [
+                run_rollout(
+                    spec, skill_dir, only_case=args.case, timeout=args.timeout,
+                    include_holdout=args.include_holdout, judge=judge, model=m,
+                )
+                for m in args.models
+            ]
+            clean = [
+                r["model"] for r in results
+                if not (r["failed"] or r["errors"] or r["regressions"] or r["judge_failed"])
+            ]
+            if args.json:
+                print(json.dumps(
+                    {"models": results, "clean": clean, "llm_judge": [c["id"] for c in judges]},
+                    indent=2,
+                ))
+            else:
+                print_model_table(results, judged=judge is not None)
+                for r in results:
+                    bad = [
+                        c for c in r["checks"]
+                        if c["status"] not in ("pass", "skipped", "judge-pass")
+                    ]
+                    if bad:
+                        print(f"\n{r['model']} failing checks:")
+                        for c in bad:
+                            print(f"  [{c['status']}] {c['case']} :: {c['criterion']}")
+                print(
+                    f"\nclean under: {', '.join(clean)}" if clean
+                    else "\nno model passed every check"
+                )
+            return 0 if clean else 1
+
         result = run_rollout(
             spec, skill_dir, promote=args.promote, only_case=args.case,
             timeout=args.timeout, include_holdout=args.include_holdout,
@@ -820,6 +997,8 @@ def main(argv: list[str] | None = None) -> int:
                     f"; judge: {result['judge_passed']} passed, "
                     f"{result['judge_failed']} failed"
                 )
+            if result["cost_usd"] is not None:
+                summary += f"; cost {_fmt_cost(result['cost_usd'])}"
             print(summary)
             if result["held_out"]:
                 print(

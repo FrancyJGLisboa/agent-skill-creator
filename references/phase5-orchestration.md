@@ -66,6 +66,35 @@ if __name__ == "__main__":
 
 The SKILL.md then documents one command: `python scripts/run_pipeline.py --source <X>`.
 
+## LLM steps: pinned model + usage sidecar
+
+Some pipelines have a step that is genuinely a model call (summarize, classify,
+extract meaning from prose). When a generated step invokes an LLM, it follows
+this contract so the skill's bundled eval suite can answer *"which model should
+run this task, and at what price"* via
+`run_evals.py --rollout --model A --model B`:
+
+1. **The model id is a parameter, not a constant.** Resolve it in order:
+   `--model` argv → `$EVAL_MODEL` env → a pinned default declared once at the
+   top of the script. The eval runner exports `$EVAL_MODEL` on every
+   `--model` rollout, so honoring the env var alone is enough — no spec change
+   required.
+2. **Invoke keylessly first**, same priority order as the judge harness: the
+   host runtime's print-mode CLI (`claude -p --model <id> --output-format json`)
+   before falling back to a raw `ANTHROPIC_API_KEY` call for unattended CI.
+3. **Write the usage sidecar.** After writing the pipeline output to `<out>`,
+   write `<out>.usage.json` containing only what the runtime actually reported:
+   `input_tokens`, `output_tokens`, `cost_usd` (`claude -p --output-format json`
+   returns `usage` and `total_cost_usd` directly). Omit fields you don't have —
+   an absent sidecar honestly renders as `cost: n/a`. **Never estimate tokens
+   or price them yourself**; an invented number poisons the model comparison.
+4. **Optionally expose the knob in the eval spec.** Appending `--model {model}`
+   to the spec's `run` command makes the binding explicit in argv; the runner
+   then refuses to run without `--model`. Env-only pipelines skip this.
+
+Deterministic pipelines (no LLM call) skip all of this: they cost nothing per
+run and a sidecar would be noise.
+
 ## Verify in Phase 5
 
 Run the verifier alongside `validate.py` and `security_scan.py`:

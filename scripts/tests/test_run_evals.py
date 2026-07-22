@@ -755,5 +755,144 @@ class RolloutMainExitCodeTest(unittest.TestCase):
         self.assertEqual(main([str(skill), "--rollout"]), 0)
 
 
+# A model-aware pipeline: succeeds only when the model under test reaches it
+# BOTH via the {model} argv binding and via the EVAL_MODEL env var, so a run
+# that "passes" proves the runner actually delivered the model id. Also writes
+# the optional usage sidecar the runner sums cost from.
+_PIPELINE_MODEL_AWARE = (
+    "import argparse, json, os, pathlib, sys\n"
+    "ap = argparse.ArgumentParser()\n"
+    "ap.add_argument('--input'); ap.add_argument('--output', required=True)\n"
+    "ap.add_argument('--model', default=None)\n"
+    "a = ap.parse_args()\n"
+    "if a.model != 'model-good' or os.environ.get('EVAL_MODEL') != 'model-good':\n"
+    "    sys.exit(1)\n"
+    "pathlib.Path(a.output).write_text('{\"ok\": true}\\n')\n"
+    "pathlib.Path(a.output + '.usage.json').write_text(json.dumps(\n"
+    "    {'input_tokens': 100, 'output_tokens': 40, 'cost_usd': 0.01}))\n"
+)
+# Passes for any model, declares no usage sidecar.
+_PIPELINE_ENV_MODEL_NO_USAGE = (
+    "import argparse, os, pathlib\n"
+    "ap = argparse.ArgumentParser()\n"
+    "ap.add_argument('--input'); ap.add_argument('--output', required=True)\n"
+    "ap.add_argument('--model', default=None)\n"
+    "a = ap.parse_args()\n"
+    "pathlib.Path(a.output).write_text('{\"ok\": true}\\n')\n"
+)
+_RUN_CMD_MODEL = (
+    "python3 scripts/run_pipeline.py --input {input} --output {output} --model {model}"
+)
+
+
+class ModelComparisonTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.tmp = Path(self._tmp.name)
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def _model_skill(self, pipeline_body: str) -> Path:
+        return _make_skill(
+            self.tmp, ROLLOUT_CRITERIA, _three_golden(), run=_RUN_CMD_MODEL,
+            pipeline_body=pipeline_body,
+        )
+
+    def test_model_reaches_pipeline_via_placeholder_and_env(self) -> None:
+        skill = self._model_skill(_PIPELINE_MODEL_AWARE)
+        spec = parse_spec(find_spec(skill))
+        good = run_rollout(spec, skill, model="model-good")
+        self.assertEqual(good["errors"], 0)
+        self.assertEqual(good["failed"], 0)
+        self.assertEqual(good["model"], "model-good")
+        # A different model id must actually reach the pipeline (which rejects it).
+        bad = run_rollout(spec, skill, model="model-bad")
+        self.assertEqual(bad["errors"], 3)
+
+    def test_usage_sidecar_cost_is_summed(self) -> None:
+        skill = self._model_skill(_PIPELINE_MODEL_AWARE)
+        spec = parse_spec(find_spec(skill))
+        result = run_rollout(spec, skill, model="model-good")
+        self.assertAlmostEqual(result["cost_usd"], 0.03)  # 3 cases x 0.01
+        self.assertEqual(result["input_tokens"], 300)
+        self.assertEqual(result["output_tokens"], 120)
+
+    def test_absent_sidecar_reports_none_never_invented(self) -> None:
+        skill = self._model_skill(_PIPELINE_ENV_MODEL_NO_USAGE)
+        spec = parse_spec(find_spec(skill))
+        result = run_rollout(spec, skill, model="any-model")
+        self.assertEqual(result["failed"], 0)
+        self.assertIsNone(result["cost_usd"])
+        self.assertIsNone(result["input_tokens"])
+
+    def test_no_model_keeps_result_shape_and_passes(self) -> None:
+        skill = _make_skill(
+            self.tmp, ROLLOUT_CRITERIA, _three_golden(), run=_RUN_CMD,
+            pipeline_body=_PIPELINE_COPIES_BASELINE,
+        )
+        spec = parse_spec(find_spec(skill))
+        result = run_rollout(spec, skill)
+        self.assertEqual(result["failed"], 0)
+        self.assertIsNone(result["model"])
+        self.assertIsNone(result["cost_usd"])
+
+    def test_cli_exits_zero_when_one_model_is_clean(self) -> None:
+        skill = self._model_skill(_PIPELINE_MODEL_AWARE)
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            code = main([
+                str(skill), "--rollout", "--model", "model-good", "--model", "model-bad",
+            ])
+        self.assertEqual(code, 0)
+        out = buf.getvalue()
+        self.assertIn("model-good", out)
+        self.assertIn("$0.0300", out)
+        self.assertIn("clean under: model-good", out)
+        # Comparison runs are experiments, not skill regressions.
+        self.assertFalse((skill / "EVOLUTION.md").exists())
+
+    def test_cli_exits_one_when_no_model_is_clean(self) -> None:
+        skill = self._model_skill(_PIPELINE_MODEL_AWARE)
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            code = main([str(skill), "--rollout", "--model", "model-bad"])
+        self.assertEqual(code, 1)
+        self.assertIn("no model passed every check", buf.getvalue())
+        self.assertFalse((skill / "EVOLUTION.md").exists())
+
+    def test_cli_json_reports_per_model_results(self) -> None:
+        skill = self._model_skill(_PIPELINE_MODEL_AWARE)
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            main([
+                str(skill), "--rollout", "--json",
+                "--model", "model-good", "--model", "model-bad",
+            ])
+        payload = json.loads(buf.getvalue())
+        self.assertEqual([r["model"] for r in payload["models"]], ["model-good", "model-bad"])
+        self.assertEqual(payload["clean"], ["model-good"])
+
+    def test_model_without_rollout_is_rejected(self) -> None:
+        skill = self._model_skill(_PIPELINE_MODEL_AWARE)
+        with contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(main([str(skill), "--model", "model-good"]), 1)
+
+    def test_model_with_promote_is_rejected(self) -> None:
+        skill = self._model_skill(_PIPELINE_MODEL_AWARE)
+        with contextlib.redirect_stderr(io.StringIO()):
+            code = main([
+                str(skill), "--rollout", "--promote", "--model", "model-good",
+            ])
+        self.assertEqual(code, 1)
+
+    def test_model_placeholder_without_flag_is_rejected(self) -> None:
+        skill = self._model_skill(_PIPELINE_MODEL_AWARE)
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            self.assertEqual(main([str(skill), "--rollout"]), 1)
+        self.assertIn("{model}", err.getvalue())
+
+
 if __name__ == "__main__":
     unittest.main()
