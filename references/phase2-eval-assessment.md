@@ -152,6 +152,12 @@ Rules:
 - The `run` field is **optional**. A spec without it still validates and scores the
   golden baseline exactly as before — `--rollout` then prints "rollout unavailable"
   and exits 0 (nothing to run is not a failure).
+- `{model}` is optional in `run`: add it (e.g. `--model {model}`) when the pipeline
+  invokes an LLM, so `--rollout --model A --model B` binds each model under test.
+  Pipelines may instead read `$EVAL_MODEL` (exported on every `--model` run) with
+  no spec change. A `run` containing `{model}` refuses to execute without `--model`.
+  See `phase5-orchestration.md` "LLM steps" for the full contract (pinned default,
+  keyless invocation, `{output}.usage.json` cost sidecar).
 - For genuinely interactive/branching skills (no single deterministic command),
   omit `run` — the rollout harness is for the deterministic happy path, same
   boundary as the `run_pipeline.py` orchestrator (see `phase5-orchestration.md`).
@@ -168,7 +174,10 @@ After creation, alongside the install/share messaging, print:
 > To optimize the skill against its metric:
 > `/autoresearch-universal optimize . using evals/<skill-name>.eval.md`
 > Grade `llm-judge` checks with the pinned judge: `python3 scripts/run_evals.py --rollout --judge`
-> (needs `ANTHROPIC_API_KEY`; without `--judge` they print as a checklist.)
+> (keyless via your runtime when one is on PATH, else `ANTHROPIC_API_KEY`;
+> without `--judge` they print as a checklist.)
+> Compare models on the same suite (pass rate + cost per model):
+> `python3 scripts/run_evals.py --rollout --model claude-haiku-4-5 --model claude-sonnet-5`
 
 ## Handoff to autoresearch-universal (rule 18)
 
@@ -239,9 +248,18 @@ Now supported (previously out of scope):
   instructions inside the judged output. The `canary` is a known-bad output
   that every judge criterion must FAIL — if the judge passes it, the whole run
   is invalid (exit 1): a judge that can't reject garbage proves nothing.
-  Needs `ANTHROPIC_API_KEY`; an explicitly requested `--judge` run errors
-  rather than silently passing when the key is absent. Emit a judge block +
-  canary whenever any criterion is `llm-judge`.
+  Grading is keyless-first (the runtime's print-mode CLI, or `$EVAL_JUDGE_CMD`),
+  falling back to `ANTHROPIC_API_KEY`; an explicitly requested `--judge` run
+  errors rather than silently passing when no backend resolves. Emit a judge
+  block + canary whenever any criterion is `llm-judge`.
+- **Model-comparison rollouts** — repeatable `--model <id>` on `--rollout` runs
+  the whole suite once per model under test and prints a comparison table
+  (pass/fail/error/regression counts, cost, wall time). Each id binds the `run`
+  command's optional `{model}` placeholder and is exported as `$EVAL_MODEL`.
+  Cost is summed strictly from the pipeline-written `{output}.usage.json`
+  sidecar and shown as `n/a` when absent — never estimated. Model runs are
+  experiments, not gates: they never `--promote` baselines, never append to
+  `EVOLUTION.md`, and exit 0 when at least one model passes everything.
 - **Evidence-bearing failures** — any failed run appends the raw failing check
   rows to the skill's `EVOLUTION.md` (as does `staleness_check --record`), so
   the fix/regenerate step consumes evidence, not an exit code.

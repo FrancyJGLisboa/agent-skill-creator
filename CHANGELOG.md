@@ -22,6 +22,27 @@ to semantic versioning where practical.
   runners are re-synced from the template.
 
 ### Added
+- **Model-comparison rollouts** (`scripts/run_evals_template.py`): repeatable
+  `--model <id>` on `--rollout` runs the whole golden suite once per model
+  under test and prints a per-model comparison table — pass/fail/error/
+  regression counts, cost, wall time — answering "which model should run this
+  task, and at what price" from the skill's own eval suite. Each model id
+  binds the spec `run` command's optional `{model}` placeholder and is
+  exported as `$EVAL_MODEL`, so pipelines pick it up via argv or env with no
+  spec change required. Cost is read strictly from an optional
+  `{output}.usage.json` sidecar the pipeline may write (`input_tokens`,
+  `output_tokens`, `cost_usd`) and reported `n/a` when absent — never
+  estimated. Model runs are experiments, not gates: they never `--promote`
+  baselines and never log to `EVOLUTION.md`; exit 0 when at least one model
+  passes everything. Single-model rollout results now also carry
+  `model`/`cost_usd`/token/`duration_s` fields in `--json` output. Ten new
+  tests; the three bundled example runners re-synced from the template.
+  Phase 5 now carries an **LLM-step contract** (`references/
+  phase5-orchestration.md` "LLM steps", referenced from SKILL.md step 4 and
+  `references/phase2-eval-assessment.md`): generated pipeline steps that
+  invoke an LLM resolve the model from `--model` argv / `$EVAL_MODEL` env with
+  one pinned default, invoke keylessly first, and write the runtime-reported
+  usage sidecar — so generated skills fill the cost column automatically.
 - **`--mcp-audit` front door** (`references/mcp-audit.md`,
   `scripts/mcp_audit_validate.py`): point the creator at a data vendor's MCP
   server (live connection, repo, or docs) and get a feasibility map instead of

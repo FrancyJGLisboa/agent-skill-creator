@@ -183,7 +183,7 @@ Full detail on every entry lives in the [CHANGELOG](CHANGELOG.md).
 
 - **MCP capability audit** — `--mcp-audit <server | repo | docs>` maps a data vendor's MCP server into a ranked list of buildable skills and an explicit not-buildable list (each rejection names the missing primitive), machine-gated by `scripts/mcp_audit_validate.py`. ([guide](references/mcp-audit.md))
 - **Keyless `llm-judge` grading** — `--judge` grades through the runtime you already have (Claude Code's subscription CLI, or `$EVAL_JUDGE_CMD` for any runtime); an API key is only the last-resort fallback for bare CI. A known-bad canary must fail every criterion or the judge run is invalid.
-- **Every skill ships its own metric** — a bundled eval spec + `run_evals.py`: golden-input rollout, promoted-baseline regression gate, one held-out golden case no optimization loop ever sees, failures recorded to the skill's `EVOLUTION.md`. Skip with `--no-eval`.
+- **Every skill ships its own metric** — a bundled eval spec + `run_evals.py`: golden-input rollout, promoted-baseline regression gate, per-model pass-rate + cost comparison (`--rollout --model A --model B`), one held-out golden case no optimization loop ever sees, failures recorded to the skill's `EVOLUTION.md`. Skip with `--no-eval`.
 - **v6 artifacts** — visualizable output gets one of four bundled React artifact templates in hosts that render them, honest fenced-code degradation elsewhere. Suppress with `--no-artifact`, force with `--artifact <name>`.
 
 ---
@@ -288,7 +288,7 @@ Every skill goes through automated checks before delivery and on every publish:
 | **Spec Validation** | SKILL.md structure, frontmatter format, naming rules, file references |
 | **Security Scan** | Hardcoded keys/credentials, dangerous code patterns, instruction-body prompt injection (override/concealment/exfiltration phrases, hidden unicode, encoded blobs), undeclared network endpoints |
 | **Staleness Check** | Review dates, dependency health, API schema drift |
-| **Eval Rollout** | Runs the skill on its golden inputs and diffs against the promoted baseline (`run_evals.py --rollout`); `--judge` grades subjective criteria keylessly through your runtime, with a known-bad canary that must fail; one holdout case is never fed to optimization. Rollout is opt-in — it executes the skill's real code. |
+| **Eval Rollout** | Runs the skill on its golden inputs and diffs against the promoted baseline (`run_evals.py --rollout`); `--judge` grades subjective criteria keylessly through your runtime, with a known-bad canary that must fail; one holdout case is never fed to optimization. Repeatable `--model <id>` runs the same suite once per model under test and prints a pass-rate + cost comparison ("which model should run this task, and at what price") — cost comes only from a pipeline-declared usage sidecar, never estimated. Rollout is opt-in — it executes the skill's real code. |
 
 Run them independently anytime:
 
