@@ -14,7 +14,7 @@ from pathlib import Path
 ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from validate import validate_skill
+from validate import validate_skill  # noqa: E402
 
 GOTCHAS_HINT = "'## Gotchas' section"
 

@@ -1,0 +1,25 @@
+# Ruff configuration.
+#
+# CI runs `ruff check --target-version py310` with no explicit rule selection.
+# Until 0.16 that resolved to ruff's documented default set; a later release
+# widened what an unconfigured run applies, and the repo went from green to 222
+# findings without a single line of code changing.
+#
+# Selecting the default set explicitly pins the intent the codebase was written
+# against, so a future ruff release cannot redefine "no config" underneath CI.
+# Widening this list is a deliberate choice to make, not something to inherit.
+#
+# E4 - import conventions
+# E7 - statement-level pycodestyle errors
+# E9 - syntax/IO errors
+# F  - pyflakes (undefined names, unused imports, f-string bugs)
+#
+# Note: E402 (module-level import not at top) lives in E4 and is enabled. The
+# test suite and several scripts insert `scripts/` on sys.path before importing
+# local modules, and carry `# noqa: E402` on those imports. Those directives are
+# load-bearing under this configuration -- do not strip them.
+
+target-version = "py310"
+
+[lint]
+select = ["E4", "E7", "E9", "F"]
