@@ -92,6 +92,10 @@
         <li><b>Security scan</b> — hardcoded secrets, dangerous code patterns,
         prompt injection in the instruction body itself (override phrases, hidden
         unicode, encoded blobs), and network endpoints scripts reach but never declare</li>
+        <li><b>Gotchas</b> — every skill carries the environment-specific facts that
+        defy reasonable assumptions: the field that is a string with commas, the
+        endpoint that returns 200 on failure, the step that must run twice. The part
+        a model cannot supply on its own, captured instead of rediscovered</li>
       </ul>
     </li>
 
@@ -126,6 +130,33 @@
       </ul>
     </li>
   </ol>
+</section>
+
+<section class="limits" id="vetting">
+  <header class="head-hang">
+    <h2>Before you install a stranger’s skill</h2>
+    <p>A skill is not a document.</p>
+  </header>
+  <p>It ships executable scripts that run with your filesystem access and whatever
+  API keys are in your environment, and its instruction body is read by the agent
+  at load time — before any code runs. Installing one from the internet is running
+  someone else’s software on your machine. Treat it like any other dependency.</p>
+  <div class="codewrap">
+    <pre><code>python3 scripts/validate.py ./downloaded-skill/
+python3 scripts/security_scan.py ./downloaded-skill/</code></pre>
+  </div>
+  <ul class="limits__list">
+    <li>The same scanner that gates what this factory produces also audits what you
+    bring in: undeclared network endpoints, credential reads, and injection patterns
+    in the instruction body — override phrasing, concealment and exfiltration
+    directives, invisible unicode, encoded blobs.</li>
+    <li>Registry installs re-scan at install time rather than trusting the catalog’s
+    cached verdict. A skill published before a scanner rule existed does not get a
+    free pass.</li>
+    <li><b>A clean scan is not proof a skill is safe.</b> It means no known pattern
+    matched. A scanner cannot recognize intent, and ordinary-looking code can still
+    do the wrong thing. Read the scripts.</li>
+  </ul>
 </section>
 
 <section class="limits">
