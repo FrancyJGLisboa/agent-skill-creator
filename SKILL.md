@@ -12,9 +12,20 @@ description: >-
   template-based creation, interactive configuration, cross-platform export,
   spec validation, and security auditing of third-party skills before install.
 license: MIT
+activation: /agent-skill-creator
 metadata:
   author: Francy Lisboa Charuto
   version: 6.0.0
+  created: 2025-10-18
+  last_reviewed: 2026-08-11
+  review_interval_days: 180
+provenance:
+  maintainer: Francy Lisboa Charuto
+  version: 6.0.0
+  created: 2025-10-18
+  source_references:
+    - https://github.com/FrancyJGLisboa/agent-skill-creator
+    - https://agentskills.io
 compatibility: >-
   Works on all platforms supporting the Agent Skills Open Standard (SKILL.md):
   Claude Code, GitHub Copilot CLI, VS Code Copilot, Cursor, Windsurf, Cline,
