@@ -346,7 +346,7 @@ matplotlib>=3.7.0
 
 ## Gotchas
 
-- **The bundled `scripts/main.py` returns hardcoded mock prices, not market data.**
+- **Running the bundled `scripts/main.py` returns hardcoded mock prices, not market data.**
   `_fetch_data()` returns the same `close: 178.45` for every ticker, and
   `_calculate_indicator()` returns fixed RSI/MACD/Bollinger values. Asking for TSLA
   returns AAPL-shaped numbers. This is deliberate — it keeps the example

@@ -1029,7 +1029,9 @@ metadata:
 
 ## Available Scripts
 
-[Brief description of each script, inputs, outputs]
+[Each script: the command that RUNS it, then inputs and outputs. Lead with the
+verb — "Run `python3 scripts/x.py --input <f>`" — never a bare path, so the agent
+never has to guess whether to execute the file or read it.]
 
 ## Available Analyses
 
@@ -1053,7 +1055,8 @@ metadata:
 
 ## References
 
-[Table of reference files and what they contain]
+[Table of reference files with a "when to read this" column — these are READ on
+demand, never executed]
 ```
 
 **Keeping under 500 lines:** Move detailed content to `references/`:
@@ -1681,6 +1684,7 @@ See README.md for complete multi-platform installation instructions.
 - [ ] No TODO, no `pass`, no `NotImplementedError`, no placeholders
 - [ ] All scripts have: shebang, docstrings, type hints, error handling
 - [ ] Multi-script skill has one `scripts/run_pipeline.py` orchestrator (steps wired in code, one happy-path command)
+- [ ] Every `scripts/` mention says to RUN it and every `references/` mention says to READ it — no bare paths (`validate.py` warns on unlabeled mentions)
 - [ ] `check_pipeline.py` reports no errors (scripts compile, third-party deps declared)
 - [ ] Input validation implemented (reject bad inputs with structured JSON errors)
 - [ ] Output sanity checks implemented (warn on extreme values)
@@ -1770,6 +1774,8 @@ These standards apply across ALL phases and ALL generated files.
 | No `## Gotchas` section | Carry the Phase 1 quirks list and every correction made while verifying (`None known` if there genuinely are none) |
 | Inventing gotchas to fill the section | Only real, observed behavior — a fabricated gotcha teaches a false constraint the agent will work around |
 | Installing an imported skill unscanned | `--audit` it first; registry installs re-scan rather than trusting the cached verdict |
+| `` `scripts/fetch.py` handles auth `` | **Run** `python3 scripts/fetch.py` — a bare path leaves the agent guessing whether to execute it or read it |
+| `` `references/api-guide.md` has the endpoints `` | **Read** `references/api-guide.md` for the endpoints |
 | marketplace.json as step 0 | SKILL.md is the primary file, created first |
 | Name missing `-skill` suffix | End every skill name with `-skill`: `stock-analyzer-skill` |
 | Description over 1024 chars | Trim to essential keywords within limit |

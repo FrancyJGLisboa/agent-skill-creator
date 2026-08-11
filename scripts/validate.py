@@ -33,6 +33,34 @@ MAX_BODY_LINES_WARNING = 500
 # of an otherwise-working skill.
 GOTCHAS_HEADING_PATTERN = re.compile(r"^\s{0,3}#{1,6}\s+gotchas\b", re.IGNORECASE | re.MULTILINE)
 
+# --- Run-vs-read labeling ---
+#
+# A skill bundles two kinds of file the agent must treat differently: scripts it
+# should EXECUTE, and references it should READ. Left to inference, an agent will
+# sometimes read a script as documentation (losing the determinism the script
+# existed to provide) or try to execute a reference. The directory split alone
+# does not say which is which -- the SKILL.md has to.
+#
+# This is a heuristic on a natural-language body, so it is warning-level and
+# deliberately generous: a mention counts as labeled if an action verb appears on
+# its line or the line before. Shell fences are self-evidently executable and
+# table rows carry their verb in the column header, so both are skipped.
+SCRIPT_MENTION_PATTERN = re.compile(r"(?<![\w/])scripts/[\w./-]+\.(?:py|sh|ps1|bat)")
+REFERENCE_MENTION_PATTERN = re.compile(r"(?<![\w/])references/[\w./-]+\.md")
+RUN_VERB_PATTERN = re.compile(
+    r"\b(run|runs|running|execute|executes|executing|invoke|invokes|call|calls|"
+    r"python3?|bash|sh|copy|copies|emit|emits|write|writes|generate|generates)\b",
+    re.IGNORECASE,
+)
+READ_VERB_PATTERN = re.compile(
+    r"\b(read|reads|see|consult|consults|refer|refers|reference|guide|guidance|"
+    r"documented|documents|described|describes|detail|details|listed|explains)\b",
+    re.IGNORECASE,
+)
+SHELL_FENCE_PATTERN = re.compile(r"^\s*```\s*(\w+)?")
+SHELL_FENCE_LANGUAGES = {"bash", "sh", "shell", "console", "zsh", "powershell", "ps1"}
+MAX_REPORTED_UNLABELED = 4
+
 # Pattern for valid skill names: lowercase letters, numbers, hyphens
 NAME_PATTERN = re.compile(r"^[a-z0-9]([a-z0-9-]*[a-z0-9])?$")
 CONSECUTIVE_HYPHENS_PATTERN = re.compile(r"--")
@@ -70,6 +98,76 @@ def _extract_local_links(body: str) -> list[str]:
         if target:
             paths.append(target)
     return paths
+
+
+def _find_unlabeled_mentions(body: str) -> tuple[list[str], list[str]]:
+    """
+    Find file mentions that never say whether to run the file or read it.
+
+    Walks the body line by line, skipping shell code fences (self-evidently
+    executable) and markdown table rows (the verb lives in the column header). A
+    mention is considered labeled when an action verb appears on its own line or
+    the line immediately before it, which is where "Run `scripts/x.py`" and
+    "See `references/y.md`" both put it.
+
+    Args:
+        body: The SKILL.md body, frontmatter already stripped.
+
+    Returns:
+        (unlabeled_scripts, unlabeled_references), each formatted "line N: path".
+    """
+    lines = body.split("\n")
+    unlabeled_scripts: list[str] = []
+    unlabeled_references: list[str] = []
+    in_shell_fence = False
+    in_fence = False
+    previous_prose = ""
+
+    for index, line in enumerate(lines):
+        fence = SHELL_FENCE_PATTERN.match(line)
+        if fence:
+            if in_fence:
+                in_fence = False
+                in_shell_fence = False
+            else:
+                in_fence = True
+                in_shell_fence = (fence.group(1) or "").lower() in SHELL_FENCE_LANGUAGES
+            continue
+
+        if in_shell_fence or line.lstrip().startswith("|"):
+            continue
+
+        # The paths themselves must not supply the verb: "api-guide.md" contains
+        # "guide", "scripts/run_pipeline.py" contains "run". Strip every mention
+        # before looking for an action word.
+        stripped = REFERENCE_MENTION_PATTERN.sub(" ", SCRIPT_MENTION_PATTERN.sub(" ", line))
+        # Look back to the nearest non-blank line, so a blank line between the
+        # instruction and the path does not hide the verb.
+        context = previous_prose + " " + stripped
+        if stripped.strip():
+            previous_prose = stripped
+
+        if not RUN_VERB_PATTERN.search(context):
+            for match in SCRIPT_MENTION_PATTERN.finditer(line):
+                unlabeled_scripts.append(f"line {index + 1}: {match.group()}")
+
+        if not READ_VERB_PATTERN.search(context):
+            for match in REFERENCE_MENTION_PATTERN.finditer(line):
+                unlabeled_references.append(f"line {index + 1}: {match.group()}")
+
+    return unlabeled_scripts, unlabeled_references
+
+
+def _format_unlabeled(kind: str, directive: str, found: list[str]) -> str:
+    """Build the warning text for one class of unlabeled mention."""
+    shown = ", ".join(found[:MAX_REPORTED_UNLABELED])
+    if len(found) > MAX_REPORTED_UNLABELED:
+        shown += f", and {len(found) - MAX_REPORTED_UNLABELED} more"
+    return (
+        f"{len(found)} {kind} mention(s) do not say what to do with the file "
+        f"({shown}). Say \"{directive}\" explicitly so the agent does not have to "
+        f"guess whether to execute it or read it."
+    )
 
 
 def validate_skill(skill_path: str) -> dict:
@@ -211,6 +309,17 @@ def validate_skill(skill_path: str) -> dict:
                 "environment-specific facts that defy reasonable assumptions live — "
                 "the part a model cannot supply on its own. Write 'None known' if "
                 "the skill genuinely has none."
+            )
+
+        # Run-vs-read labeling
+        unlabeled_scripts, unlabeled_references = _find_unlabeled_mentions(body)
+        if unlabeled_scripts:
+            warnings.append(
+                _format_unlabeled("script", "Run `python3 scripts/x.py`", unlabeled_scripts)
+            )
+        if unlabeled_references:
+            warnings.append(
+                _format_unlabeled("reference", "Read `references/x.md` for ...", unlabeled_references)
             )
 
     # license field

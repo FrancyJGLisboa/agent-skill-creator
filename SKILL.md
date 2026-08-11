@@ -35,7 +35,7 @@ User invokes `/agent-skill-creator` followed by their input:
 ```
 /agent-skill-creator Every week I pull sales data, clean it, and generate a report
 /agent-skill-creator https://wiki.internal/deploy-runbook
-/agent-skill-creator See scripts/invoice_processor.py — turn it into a reusable skill
+/agent-skill-creator See src/invoice_processor.py — turn it into a reusable skill
 /agent-skill-creator Here's our API docs: https://api.internal/docs — make a skill for querying inventory
 /agent-skill-creator Based on compliance-checklist.pdf, create a skill for SOX audits
 /agent-skill-creator --mcp-audit https://github.com/vendor/mcp-server — we pay for this data, what skills can we build on it?
@@ -814,8 +814,9 @@ self-maintenance command:
 - A `"split": "test"` holdout case is scored only at release, never fed to an optimization loop
 - `evolve.py` runs staleness/dependency/drift checks + the rollout in one command; every failure appends its raw evidence to the skill's `EVOLUTION.md`, which feeds a regenerate pass
 
-`references/agentdb-integration.md` is a design sketch for a future episodic
-learning layer — it is NOT implemented; never present it as current behavior.
+Read `references/agentdb-integration.md` as a design sketch only — it describes a
+future episodic learning layer that is NOT implemented; never present it as
+current behavior.
 
 ## Quality Standards
 
@@ -825,6 +826,7 @@ learning layer — it is NOT implemented; never present it as current behavior.
 - Robust error handling
 - Real content in references (not "see docs")
 - A `## Gotchas` section carrying the environment-specific facts that defy reasonable assumptions
+- Explicit "run this" / "read this" labels — every `scripts/` mention leads with a run command, every `references/` mention with a read cue
 - Configs with real values
 
 **Never**:

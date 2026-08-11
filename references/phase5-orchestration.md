@@ -66,6 +66,33 @@ if __name__ == "__main__":
 
 The SKILL.md then documents one command: `python scripts/run_pipeline.py --source <X>`.
 
+## Say which files to run and which to read
+
+A skill bundles two kinds of file the agent must treat differently: scripts it
+should **execute**, and references it should **read**. The `scripts/` vs
+`references/` split encodes that for a human reading the tree, but the agent is
+reading prose — and left to infer, it will sometimes read a script as
+documentation (losing the determinism the script existed to provide) or try to
+execute a reference.
+
+Label every mention with the action, not just the path:
+
+| Instead of | Write |
+|---|---|
+| `` `scripts/run_pipeline.py` produces the summary `` | **Run** `python3 scripts/run_pipeline.py --input <X>` — produces the summary |
+| `` See `references/api-guide.md` `` (in a scripts section) | **Read** `references/api-guide.md` for endpoint details |
+| `` `scripts/fetch.py` handles auth `` | **Run** `python3 scripts/fetch.py` to fetch; it handles auth |
+
+Two conventions that make this automatic:
+
+- Put every runnable command inside a ```bash fence. A shell fence is
+  self-evidently an instruction to execute, and needs no verb in the prose.
+- Give the `## References` table a "when to read this" column rather than a bare
+  file list, so the read intent is stated once for the whole table.
+
+`validate.py` warns when a `scripts/` or `references/` path appears with no action
+verb on its line or the line before. Shell fences and table rows are exempt.
+
 ## LLM steps: pinned model + usage sidecar
 
 Some pipelines have a step that is genuinely a model call (summarize, classify,
