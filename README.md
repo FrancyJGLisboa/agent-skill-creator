@@ -498,6 +498,8 @@ agent-skill-creator/
   references/                   # Detailed docs (loaded by the agent on demand)
     spec-ideation.md            # Phase 0: vague input → grounded, skill-shaped spec
     mcp-audit.md                # --mcp-audit: vendor MCP server → capability map
+    skill-audit.md              # --audit: vetting a skill you didn't write
+    distribution-guide.md       # Install paths, share-with-team, registry, update check
     pipeline-phases.md          # Full 5-phase creation pipeline
     architecture-guide.md       # Skill structure decisions
     quality-standards.md        # Code and documentation standards
