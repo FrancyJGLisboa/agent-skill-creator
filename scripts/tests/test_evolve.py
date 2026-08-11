@@ -72,5 +72,98 @@ class EvolveLoopTest(unittest.TestCase):
             self.assertIn("```json", evolution.read_text(encoding="utf-8"))
 
 
+class CorrectionCaptureTest(unittest.TestCase):
+    """`--correct` is the only path by which knowledge no check can derive gets in."""
+
+    CORRECTION = "the West region files late, so Friday exports are short"
+
+    def _skill(self, tmp: Path, body: str) -> Path:
+        skill = tmp / "demo"
+        (skill / "scripts").mkdir(parents=True)
+        (skill / "SKILL.md").write_text(
+            f"---\nname: demo\ndescription: Demo.\n---\n# /demo\n\n{body}\n",
+            encoding="utf-8",
+        )
+        shutil.copy(ROOT / "scripts" / "evolve_template.py", skill / "scripts" / "evolve.py")
+        return skill
+
+    def _run(self, skill: Path, *args: str) -> subprocess.CompletedProcess:
+        return subprocess.run(
+            [sys.executable, "scripts/evolve.py", *args],
+            cwd=skill, capture_output=True, text=True, timeout=60,
+        )
+
+    def _gotchas(self, skill: Path) -> str:
+        text = (skill / "SKILL.md").read_text(encoding="utf-8")
+        return text[text.index("## Gotchas"):]
+
+    def test_replaces_none_known_placeholder(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            skill = self._skill(Path(tmp), "## Gotchas\n\nNone known.\n\n## Keywords\n\nfoo")
+            proc = self._run(skill, "--correct", self.CORRECTION)
+            self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+            self.assertEqual(
+                self._gotchas(skill),
+                f"## Gotchas\n\n- {self.CORRECTION}\n\n## Keywords\n\nfoo\n",
+            )
+
+    def test_appends_below_existing_gotchas(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            skill = self._skill(Path(tmp), "## Gotchas\n\n- Already known.\n\n## Keywords\n\nfoo")
+            self._run(skill, "--correct", self.CORRECTION)
+            self.assertEqual(
+                self._gotchas(skill),
+                f"## Gotchas\n\n- Already known.\n- {self.CORRECTION}\n\n## Keywords\n\nfoo\n",
+            )
+
+    def test_creates_the_section_when_absent(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            skill = self._skill(Path(tmp), "Body.\n\n## Keywords\n\nfoo")
+            self._run(skill, "--correct", self.CORRECTION)
+            self.assertEqual(
+                self._gotchas(skill),
+                f"## Gotchas\n\n- {self.CORRECTION}\n\n## Keywords\n\nfoo\n",
+            )
+
+    def test_creates_the_section_with_no_anchor_to_precede(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            skill = self._skill(Path(tmp), "Body only.")
+            self._run(skill, "--correct", self.CORRECTION)
+            self.assertEqual(self._gotchas(skill), f"## Gotchas\n\n- {self.CORRECTION}\n\n")
+
+    def test_records_verbatim_evidence_in_evolution(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            skill = self._skill(Path(tmp), "## Gotchas\n\nNone known.")
+            self._run(skill, "--correct", self.CORRECTION)
+            log = (skill / "EVOLUTION.md").read_text(encoding="utf-8")
+            self.assertIn("correction from use", log)
+            self.assertIn(f"> {self.CORRECTION}", log)
+
+    def test_repeated_corrections_all_survive(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            skill = self._skill(Path(tmp), "## Gotchas\n\nNone known.\n\n## Keywords\n\nfoo")
+            self._run(skill, "--correct", "first thing")
+            self._run(skill, "--correct", "second thing")
+            gotchas = self._gotchas(skill)
+            self.assertIn("- first thing", gotchas)
+            self.assertIn("- second thing", gotchas)
+            self.assertEqual((skill / "EVOLUTION.md").read_text().count("correction from use"), 2)
+
+    def test_blank_correction_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            skill = self._skill(Path(tmp), "## Gotchas\n\nNone known.")
+            proc = self._run(skill, "--correct", "   ")
+            self.assertEqual(proc.returncode, 2)
+            self.assertNotIn("- ", self._gotchas(skill))
+            self.assertFalse((skill / "EVOLUTION.md").exists())
+
+    def test_does_not_run_the_verification_steps(self):
+        """--correct is a capture command; it must not trigger evals or staleness."""
+        with tempfile.TemporaryDirectory() as tmp:
+            skill = self._skill(Path(tmp), "## Gotchas\n\nNone known.")
+            proc = self._run(skill, "--correct", self.CORRECTION)
+            self.assertNotIn("== evolve:", proc.stdout)
+
+
 if __name__ == "__main__":
     unittest.main()
