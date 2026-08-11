@@ -31,7 +31,7 @@ MAX_BODY_LINES_WARNING = 500
 # Heading that must carry the skill's environment-specific facts. Warning-level:
 # the section is required doctrine, but a missing heading should not block delivery
 # of an otherwise-working skill.
-GOTCHAS_HEADING_PATTERN = re.compile(r"^\s{0,3}#{1,6}\s+gotchas\b", re.IGNORECASE | re.MULTILINE)
+GOTCHAS_HEADING_PATTERN = re.compile(r"^[ \t]{0,3}#{1,6}[ \t]+gotchas\b", re.IGNORECASE | re.MULTILINE)
 
 # --- Run-vs-read labeling ---
 #

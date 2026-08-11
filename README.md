@@ -345,6 +345,18 @@ python3 scripts/evolve.py --judge   # also grade llm-judge criteria
 # Any failure appends its raw evidence to the skill's EVOLUTION.md
 ```
 
+### Corrections from use
+
+Automated checks catch dates, reachability, and output drift. They cannot catch the knowledge that only exists in someone's head — the region that files late, the code that means something local, the month the process runs differently.
+
+That knowledge is not obtainable by asking up front. People can't describe a process they run from muscle memory, which is why this factory reads artifacts instead of interviewing. But the same person recognizes a wrong output instantly. So capture it at that moment:
+
+```bash
+python3 scripts/evolve.py --correct "the West region files late, so Friday exports are short"
+```
+
+The sentence goes verbatim into `EVOLUTION.md` as evidence and into the skill's `## Gotchas`, so the next run already knows. A skill's gotchas should grow over its life — a section that never grows means nobody ever told it anything.
+
 The creator-repo commands below work too (for skills built before the toolkit shipped, or ad-hoc checks). Three layers, each opt-in:
 
 **Review tracking** — Every skill can declare when it was last reviewed and how often it should be. The staleness checker compares these dates and flags overdue skills. Skills without explicit dates fall back to the last git commit date on SKILL.md.

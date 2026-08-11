@@ -1084,6 +1084,23 @@ Sources, in order:
 3. Anything the user said in the form "oh, and you have to..." — those are gotchas
    the user did not think to put in the spec because they live in muscle memory.
 
+Sources 1 and 2 are yours to find. Source 3 mostly **will not arrive at creation
+time**, and you should not stall trying to extract it. A person cannot describe a
+process they run from muscle memory — that is the premise this whole factory is
+built on. What they can do is recognize a wrong output the moment they see one.
+
+So ship the skill with the gotchas you have, and tell the user how to add the rest
+as they surface:
+
+```bash
+python3 scripts/evolve.py --correct "the West region files late, so Friday exports are short"
+```
+
+That writes the sentence verbatim to `EVOLUTION.md` and appends it to `## Gotchas`,
+so the next run already knows. A skill's gotchas should grow over its life; an
+empty section on day one is honest, and a section that never grows means nobody
+ever told it anything.
+
 Format each entry as the wrong assumption followed by the real behavior:
 
 ```markdown

@@ -450,6 +450,9 @@ Every generated skill ships its own learning loop — the eval harness plus a se
 - `--judge` grades `llm-judge` criteria with a judge pinned in the spec (model + temperature); a known-bad canary must fail every criterion or the judge run is invalid
 - A `"split": "test"` holdout case is scored only at release, never fed to an optimization loop
 - `evolve.py` runs staleness/dependency/drift checks + the rollout in one command; every failure appends its raw evidence to the skill's `EVOLUTION.md`, which feeds a regenerate pass
+- `evolve.py --correct "<what it got wrong>"` captures the one thing no check can derive: a correction from someone using the skill. It writes the sentence verbatim to `EVOLUTION.md` and adds it to `## Gotchas`
+
+**Tell the user about `--correct` when you hand over a skill.** The deepest expertise in any workflow is never stated up front — people cannot describe a process they run from muscle memory, which is why this factory reads artifacts instead of interviewing. But the same person recognizes a wrong output instantly. `--correct` is the capture point for that moment, and it is how a skill's `## Gotchas` accumulates real knowledge over its life instead of being frozen at whatever could be extracted on day one.
 
 Read `references/agentdb-integration.md` as a design sketch only — it describes a future episodic learning layer that is NOT implemented; never present it as current behavior.
 
