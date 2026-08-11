@@ -91,6 +91,37 @@ def _parse_install_template_ps1(text: str) -> tuple[list[str], dict[str, str], d
     return supported, project, user
 
 
+# --- root install.sh / install.ps1 parsers ---------------------------------
+#
+# The repo's OWN self-installers, as opposed to the templates that ship into
+# generated skills. They were the one shell pair nothing compared, which is how
+# Cursor came to be listed in install.ps1 and missing from install.sh: `--all`
+# installed for Cursor on Windows and silently skipped it everywhere else.
+
+_ROOT_SH_ENTRY = re.compile(r'^\$HOME/(\S+?)\|\$HOME/(\S+?)/\$SKILL_NAME\|(.+)$')
+_ROOT_PS1_ENTRY = re.compile(
+    r'DetectDir\s*=\s*"([^"]+)"\s*;\s*InstallPath\s*=\s*"([^"]+)\\\$SkillName"\s*;\s*Display\s*=\s*"([^"]+)"'
+)
+
+
+def _parse_root_install_sh(text: str) -> dict[str, tuple[str, str]]:
+    """Display name -> (detection dir, install dir), from the heredoc table."""
+    out: dict[str, tuple[str, str]] = {}
+    for line in text.splitlines():
+        m = _ROOT_SH_ENTRY.match(line.strip())
+        if m:
+            out[m.group(3).strip()] = (m.group(1), m.group(2))
+    return out
+
+
+def _parse_root_install_ps1(text: str) -> dict[str, tuple[str, str]]:
+    """Same shape from the PowerShell hashtable list, backslashes normalised."""
+    out: dict[str, tuple[str, str]] = {}
+    for detect, install, display in _ROOT_PS1_ENTRY.findall(text):
+        out[display.strip()] = (detect.replace("\\", "/"), install.replace("\\", "/"))
+    return out
+
+
 # --- bootstrap.sh / .ps1 parsers -------------------------------------------
 
 _SH_BOOTSTRAP_DETECT = re.compile(r'platforms="\$platforms\s+([\w-]+)"')
@@ -209,12 +240,48 @@ class BootstrapParityTest(unittest.TestCase):
     def test_bootstrap_sh_subset_of_ps1(self) -> None:
         """Stronger regression gate: bootstrap.sh's detected platforms must all
         be a subset of bootstrap.ps1's. New drift where bootstrap.sh gains a
-        platform that .ps1 lacks would fail here even while the known cursor
-        finding is still xfail above."""
+        platform that .ps1 lacks would fail here."""
         self.assertTrue(
             self.sh_plats.issubset(self.ps1_plats),
             f"bootstrap.sh detects platforms .ps1 does not: {self.sh_plats - self.ps1_plats}",
         )
+
+
+class RootInstallerParityTest(unittest.TestCase):
+    """The repo's own install.sh / install.ps1 must offer the same platforms.
+
+    Every other shell pair in the repo was already compared; this one was not,
+    and it drifted. `--all` is the user-visible symptom: a platform present in
+    only one script is installed on one OS and silently skipped on the other.
+    """
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.sh = _parse_root_install_sh((ROOT / "install.sh").read_text(encoding="utf-8"))
+        cls.ps1 = _parse_root_install_ps1((ROOT / "install.ps1").read_text(encoding="utf-8"))
+
+    def test_parsers_found_entries(self) -> None:
+        """Guard the regexes: a table reformat must fail loudly, not silently
+        compare two empty dicts and pass."""
+        self.assertGreaterEqual(len(self.sh), 10, "install.sh table did not parse")
+        self.assertGreaterEqual(len(self.ps1), 10, "install.ps1 table did not parse")
+
+    def test_same_platform_set(self) -> None:
+        self.assertEqual(
+            set(self.sh),
+            set(self.ps1),
+            "install.sh and install.ps1 offer different platforms for --all",
+        )
+
+    def test_paths_match(self) -> None:
+        for display, sh_paths in self.sh.items():
+            with self.subTest(platform=display):
+                self.assertEqual(
+                    sh_paths,
+                    self.ps1.get(display),
+                    f"{display}: detection or install path drifted between "
+                    f"install.sh and install.ps1",
+                )
 
 
 if __name__ == "__main__":

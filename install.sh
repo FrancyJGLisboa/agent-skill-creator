@@ -78,6 +78,7 @@ $HOME/.cline|$HOME/.cline/skills/$SKILL_NAME|Cline
 $HOME/.roo|$HOME/.roo/skills/$SKILL_NAME|Roo Code
 $HOME/.kilocode|$HOME/.kilocode/skills/$SKILL_NAME|Kilo Code
 $HOME/.factory|$HOME/.factory/skills/$SKILL_NAME|Factory Droid
+$HOME/.cursor|$HOME/.cursor/rules/$SKILL_NAME|Cursor
 $HOME/.config/goose|$HOME/.config/goose/skills/$SKILL_NAME|Goose
 $HOME/.config/opencode|$HOME/.config/opencode/skills/$SKILL_NAME|OpenCode
 PLATFORMS
