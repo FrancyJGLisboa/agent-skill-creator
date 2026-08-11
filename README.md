@@ -299,7 +299,34 @@ python3 scripts/staleness_check.py ./my-skill/
 python3 scripts/staleness_check.py ./my-skill/ --check-deps --check-drift --record
 ```
 
-Skills that fail validation cannot be published. On publish, high-severity security issues are a hard block — `--force` only overrides duplicate-version entries, never security findings. On export, findings are reported but don't block by default — pass `--strict` to fail the export on any high-severity issue.
+Skills that fail validation cannot be published. High-severity security issues are a hard block on **both publish and install** — `--force` only overrides duplicate-version entries, never security findings. On export, findings are reported but don't block by default — pass `--strict` to fail the export on any high-severity issue.
+
+---
+
+## Vetting a Skill You Didn't Write
+
+A skill is not a document. It ships executable scripts that run with your filesystem access and whatever API keys are in your environment, and its instruction body is read by the agent at load time — before any code runs. Installing one from the internet is running a stranger's software on your machine.
+
+An audit published in 2026 scanned close to 4,000 public skills: over a third carried a security flaw of some kind, and around 13% had something critical — prompt injection or outright malware. Treat a skill the way you'd treat any other dependency. Read what it does, and check what it reaches out to.
+
+Before you install anything you didn't build:
+
+```bash
+python3 scripts/validate.py ./downloaded-skill/
+python3 scripts/security_scan.py ./downloaded-skill/
+```
+
+Or ask the agent to do it and explain the result:
+
+```
+/agent-skill-creator --audit ./downloaded-skill/
+```
+
+The scan answers the questions that matter for an untrusted skill: does it contact hosts its own frontmatter never declares, does it read credentials or reach outside its directory, and does the instruction body carry injection patterns — override phrasing, concealment or exfiltration directives, invisible unicode, encoded blobs. That last category is the one to take most seriously: it executes when the skill loads, and hidden unicode exists specifically to survive being read by a human.
+
+**A clean scan is not proof a skill is safe.** It means no known pattern matched. A scanner cannot recognize intent, and ordinary-looking code can still do the wrong thing. Read the scripts.
+
+Registry installs re-scan at install time rather than trusting the catalog's cached verdict — a skill published before a scanner rule existed, or a `registry.json` edited by hand, would otherwise land unchecked.
 
 ---
 

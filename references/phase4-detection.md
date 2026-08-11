@@ -701,7 +701,7 @@ description: >-
 - 2-3 counter-examples (what this skill is NOT for)
 - 50+ unique keywords woven into natural prose
 
-**Length:** 200-500 characters. Longer than typical but necessary for reliable activation.
+**Length:** up to 1024 characters — the spec limit, enforced as a hard error by `validate.py`. Expect to use most of it: a description long enough to carry 50+ keywords plus counter-examples typically runs 600-900 characters. Longer than feels natural, but the description is the only thing the agent sees at startup, and models under-trigger far more often than they over-trigger.
 
 ### Keyword Design Rules
 
@@ -826,7 +826,8 @@ If a test query fails to activate the skill:
 - [ ] 50+ unique keywords embedded as natural prose?
 - [ ] Action verbs included?
 - [ ] Counter-examples documented?
-- [ ] 200-500 characters length?
+- [ ] Within the 1024-character limit?
+- [ ] States both WHAT the skill does and WHEN to use it?
 
 ## Testing
 - [ ] 10+ positive test queries per capability?
@@ -852,7 +853,8 @@ If a test query fails to activate the skill:
 - [ ] Primary use case stated upfront
 - [ ] All capabilities mentioned with synonyms
 - [ ] Counter-examples documented ("Does NOT activate for")
-- [ ] 200-500 characters length
+- [ ] Within the 1024-character limit
+- [ ] States both WHAT the skill does and WHEN to use it
 
 ### Testing
 - [ ] 10+ positive test queries per capability

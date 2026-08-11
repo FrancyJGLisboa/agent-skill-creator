@@ -28,6 +28,11 @@ MAX_NAME_LENGTH = 64
 MAX_DESCRIPTION_LENGTH = 1024
 MAX_BODY_LINES_WARNING = 500
 
+# Heading that must carry the skill's environment-specific facts. Warning-level:
+# the section is required doctrine, but a missing heading should not block delivery
+# of an otherwise-working skill.
+GOTCHAS_HEADING_PATTERN = re.compile(r"^\s{0,3}#{1,6}\s+gotchas\b", re.IGNORECASE | re.MULTILINE)
+
 # Pattern for valid skill names: lowercase letters, numbers, hyphens
 NAME_PATTERN = re.compile(r"^[a-z0-9]([a-z0-9-]*[a-z0-9])?$")
 CONSECUTIVE_HYPHENS_PATTERN = re.compile(r"--")
@@ -197,6 +202,15 @@ def validate_skill(skill_path: str) -> dict:
             warnings.append(
                 f"SKILL.md body exceeds {MAX_BODY_LINES_WARNING} lines "
                 f"({body_line_count} lines). Consider moving content to references/."
+            )
+
+        # Gotchas section
+        if not GOTCHAS_HEADING_PATTERN.search(body):
+            warnings.append(
+                "SKILL.md body has no '## Gotchas' section. This is where the "
+                "environment-specific facts that defy reasonable assumptions live — "
+                "the part a model cannot supply on its own. Write 'None known' if "
+                "the skill genuinely has none."
             )
 
     # license field

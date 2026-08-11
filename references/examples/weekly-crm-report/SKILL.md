@@ -49,6 +49,20 @@ Output JSON shape:
 }
 ```
 
+## Gotchas
+
+- **`rows_after_dedup` does not reconcile with `grand_total`.** Rows with a blank
+  or missing `region` are skipped when totalling but still counted in
+  `rows_after_dedup`, so a CSV with unassigned rows reports more rows than it
+  actually summed. Do not present the two numbers as if one explains the other —
+  if they must reconcile, filter blank regions before running.
+- **An unparseable `amount` silently becomes `0.0`,** it does not raise. A column
+  of `N/A` or `—` produces a region total of `0.0` that looks like a real zero.
+  Check the input for non-numeric amounts before trusting a suspiciously low total.
+- **Dedup compares every column, not just `region` and `amount`.** Two rows with
+  identical sales data but a differing timestamp or record-ID column are both kept.
+  The "extra columns are ignored" note above applies to totalling, not to dedup.
+
 ## Anti-goals
 
 - Not a general BI tool; it totals one numeric column per region.

@@ -344,7 +344,31 @@ matplotlib>=3.7.0
 
 ---
 
+## Gotchas
+
+- **The bundled `scripts/main.py` returns hardcoded mock prices, not market data.**
+  `_fetch_data()` returns the same `close: 178.45` for every ticker, and
+  `_calculate_indicator()` returns fixed RSI/MACD/Bollinger values. Asking for TSLA
+  returns AAPL-shaped numbers. This is deliberate — it keeps the example
+  dependency-free so the eval rollout runs without yfinance/pandas/ta-lib — but any
+  output from this example is fabricated. Never present it as analysis. Wire a real
+  `DataFetcher` before the numbers mean anything.
+- **The startup banner says `Initialized with config: yahoo_finance` even though
+  nothing calls Yahoo Finance.** The config names a source the mock never contacts.
+  The log line is not evidence that a fetch happened.
+- **An unknown indicator does not fail the run.** Requesting `Fibonacci` returns
+  `{"error": "Unknown indicator: Fibonacci"}` nested inside the `indicators` map
+  while the process exits 0 and the top-level signal is still generated from
+  whatever else was requested. Check each indicator entry for an `error` key rather
+  than trusting the exit code.
+- **The "Known Limitations" list below describes the intended production build,
+  not the shipped code.** Rate limits and delayed quotes are not why the numbers
+  are wrong here; the mock is.
+
 ## Known Limitations
+
+These apply to the *production* implementation this spec describes, once a real
+`DataFetcher` replaces the mock. See Gotchas above for what the shipped example does.
 
 1. **Data Source:** Relies on Yahoo Finance (free tier has rate limits)
 2. **Historical Data:** Limited to publicly available data

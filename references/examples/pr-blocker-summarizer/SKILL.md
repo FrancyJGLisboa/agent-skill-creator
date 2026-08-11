@@ -49,6 +49,23 @@ Output JSON shape:
 }
 ```
 
+## Gotchas
+
+- **`blocked` + `ready` does not equal `total`.** A PR is `ready` only when
+  `checks` is explicitly `passing` *and* `review` is explicitly `approved`. A PR
+  with no blockers but a missing `checks` field lands in neither list and vanishes
+  from both counts. Never narrate the summary line as if the two numbers account
+  for every PR — say "N blocked, M ready" and leave the remainder unclaimed.
+- **`state` is read from the input but never filtered on.** A closed or merged PR
+  left in the export is counted in `total` and classified like any open one. Filter
+  the export before running if it may contain non-open PRs.
+- **`review: pending` counts as blocked** ("awaiting review"). A PR opened five
+  minutes ago is reported as a blocker. This is intentional for standup triage, but
+  it inflates the blocked count on teams that open PRs early.
+- **A non-numeric `age_days` silently skips the stale check** rather than erroring.
+  An export with `"age_days": "unknown"` will never flag anything stale, and the
+  digest gives no sign that the check did not run.
+
 ## Anti-goals
 
 - Does not call the GitHub API; it works on an exported PR list.

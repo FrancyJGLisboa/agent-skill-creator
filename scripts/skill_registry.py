@@ -344,6 +344,53 @@ def cmd_init(args: argparse.Namespace) -> None:
     print(f"  Skills dir: {registry_path / 'skills'}")
 
 
+def enforce_security_gate(skill_path: Path, action: str) -> dict:
+    """
+    Scan a skill and exit(1) if it carries high-severity findings.
+
+    Shared by publish and install so both sides of the registry enforce the same
+    bar. Publishing keeps bad skills out of the catalog; installing protects the
+    machine when the catalog is already wrong -- a skill published before a scanner
+    rule existed, or a registry.json edited by hand, would otherwise land unchecked.
+
+    Non-high findings are printed as warnings and do not block.
+
+    Args:
+        skill_path: Directory holding the skill's SKILL.md.
+        action: Verb used in the failure message ("publish" or "install").
+
+    Returns:
+        The full scan result, for callers that record it in the registry entry.
+    """
+    scan = security_scan(str(skill_path))
+    high_issues = [i for i in scan["issues"] if i["severity"] == "high"]
+    other_issues = [i for i in scan["issues"] if i["severity"] != "high"]
+
+    for issue in other_issues:
+        location = issue["file"]
+        if issue["line"] > 0:
+            location += f":{issue['line']}"
+        print(f"  [WARN] {location}: {issue['description']}")
+
+    if high_issues:
+        # Hard gate, deliberately NOT bypassable by --force: unreviewed
+        # ingestion is the dominant registry risk. --force only overrides
+        # duplicate-version entries, never security findings.
+        print("Security scan found high-severity issues:", file=sys.stderr)
+        for issue in high_issues:
+            location = issue["file"]
+            if issue["line"] > 0:
+                location += f":{issue['line']}"
+            print(f"  [HIGH] {location}: {issue['description']}", file=sys.stderr)
+        print(
+            f"Fix the findings and re-{action}; --force does not bypass the scan.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    return scan
+
+
 def cmd_publish(args: argparse.Namespace) -> None:
     """Publish a skill to the registry."""
     registry_path = Path(args.registry).resolve()
@@ -362,29 +409,7 @@ def cmd_publish(args: argparse.Namespace) -> None:
         sys.exit(1)
 
     # Step 2: Security scan
-    scan = security_scan(str(skill_path))
-    high_issues = [i for i in scan["issues"] if i["severity"] == "high"]
-    other_issues = [i for i in scan["issues"] if i["severity"] != "high"]
-
-    if other_issues:
-        for issue in other_issues:
-            location = issue["file"]
-            if issue["line"] > 0:
-                location += f":{issue['line']}"
-            print(f"  [WARN] {location}: {issue['description']}")
-
-    if high_issues:
-        # Hard gate, deliberately NOT bypassable by --force: unreviewed
-        # ingestion is the dominant registry risk. --force only overrides
-        # duplicate-version entries, never security findings.
-        print("Security scan found high-severity issues:", file=sys.stderr)
-        for issue in high_issues:
-            location = issue["file"]
-            if issue["line"] > 0:
-                location += f":{issue['line']}"
-            print(f"  [HIGH] {location}: {issue['description']}", file=sys.stderr)
-        print("Fix the findings and re-publish; --force does not bypass the scan.", file=sys.stderr)
-        sys.exit(1)
+    scan = enforce_security_gate(skill_path, "publish")
 
     # Step 3: Extract metadata
     metadata = extract_skill_metadata(skill_path)
@@ -564,6 +589,12 @@ def cmd_install(args: argparse.Namespace) -> None:
     if not source.exists():
         print(f"Error: skill files not found at {source}", file=sys.stderr)
         sys.exit(1)
+
+    # Re-scan at install time. The registry's cached `security.clean` field was
+    # written when the skill was published and is never revisited, so it cannot
+    # speak for scanner rules added since, or for a registry.json edited by hand.
+    # Installing is the moment the code reaches this machine -- scan it here.
+    enforce_security_gate(source, "install")
 
     if target.exists():
         shutil.rmtree(target)
