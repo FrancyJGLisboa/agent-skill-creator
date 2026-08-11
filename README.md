@@ -181,6 +181,9 @@ Your team installs it the same way — one `git clone` to their tool's path — 
 
 Full detail on every entry lives in the [CHANGELOG](CHANGELOG.md).
 
+- **Every skill carries its gotchas** — a required `## Gotchas` section holding the environment-specific facts that defy reasonable assumptions: the field that is a string with commas, the endpoint that returns 200 on failure, the step that must run twice. Sourced from Phase 1 research and from every correction made while verifying the skill, so the same correction isn't rediscovered next month. `validate.py` warns when it's missing; `None known` is valid, inventing them is not.
+- **Vet what you didn't write** — `--audit <path>` runs the same validation and security gates against a skill from anywhere else and reports what it reaches, what it can read, and whether its instruction body carries injection patterns. Registry installs now re-scan at install time instead of trusting the catalog's cached verdict. ([details](#vetting-a-skill-you-didnt-write))
+- **Leaner generated skills** — the quality standards no longer set word-count floors. A `SKILL.md` body is capped at 500 lines and measured by what it carries, not how much: anything the model already knows without being told is cut rather than moved.
 - **MCP capability audit** — `--mcp-audit <server | repo | docs>` maps a data vendor's MCP server into a ranked list of buildable skills and an explicit not-buildable list (each rejection names the missing primitive), machine-gated by `scripts/mcp_audit_validate.py`. ([guide](references/mcp-audit.md))
 - **Keyless `llm-judge` grading** — `--judge` grades through the runtime you already have (Claude Code's subscription CLI, or `$EVAL_JUDGE_CMD` for any runtime); an API key is only the last-resort fallback for bare CI. A known-bad canary must fail every criterion or the judge run is invalid.
 - **Every skill ships its own metric** — a bundled eval spec + `run_evals.py`: golden-input rollout, promoted-baseline regression gate, per-model pass-rate + cost comparison (`--rollout --model A --model B`), one held-out golden case no optimization loop ever sees, failures recorded to the skill's `EVOLUTION.md`. Skip with `--no-eval`.
@@ -285,7 +288,7 @@ Every skill goes through automated checks before delivery and on every publish:
 
 | Gate | What It Checks |
 |------|---------------|
-| **Spec Validation** | SKILL.md structure, frontmatter format, naming rules, file references |
+| **Spec Validation** | SKILL.md structure, frontmatter format, naming rules, file references, body under 500 lines, `## Gotchas` section present |
 | **Security Scan** | Hardcoded keys/credentials, dangerous code patterns, instruction-body prompt injection (override/concealment/exfiltration phrases, hidden unicode, encoded blobs), undeclared network endpoints |
 | **Staleness Check** | Review dates, dependency health, API schema drift |
 | **Eval Rollout** | Runs the skill on its golden inputs and diffs against the promoted baseline (`run_evals.py --rollout`); `--judge` grades subjective criteria keylessly through your runtime, with a known-bad canary that must fail; one holdout case is never fed to optimization. Repeatable `--model <id>` runs the same suite once per model under test and prints a pass-rate + cost comparison ("which model should run this task, and at what price") — cost comes only from a pipeline-declared usage sidecar, never estimated. Rollout is opt-in — it executes the skill's real code. |
@@ -307,7 +310,7 @@ Skills that fail validation cannot be published. High-severity security issues a
 
 A skill is not a document. It ships executable scripts that run with your filesystem access and whatever API keys are in your environment, and its instruction body is read by the agent at load time — before any code runs. Installing one from the internet is running a stranger's software on your machine.
 
-An audit published in 2026 scanned close to 4,000 public skills: over a third carried a security flaw of some kind, and around 13% had something critical — prompt injection or outright malware. Treat a skill the way you'd treat any other dependency. Read what it does, and check what it reaches out to.
+Public skill catalogs are not curated, and published surveys of them have found security flaws in a substantial fraction — including prompt injection and malware, not just sloppy code. Treat a skill the way you'd treat any other dependency. Read what it does, and check what it reaches out to.
 
 Before you install anything you didn't build:
 
@@ -405,7 +408,7 @@ python3 scripts/skill_registry.py publish ./skill/ --tags t1,t2      # Publish a
 python3 scripts/skill_registry.py list                                # Browse all skills
 python3 scripts/skill_registry.py search "query"                     # Search skills
 python3 scripts/skill_registry.py info skill-name                    # Skill details
-python3 scripts/skill_registry.py install skill-name                 # Install a skill
+python3 scripts/skill_registry.py install skill-name                 # Install a skill (re-scans before copying)
 python3 scripts/skill_registry.py install skill-name --author alice  # Disambiguate a shared name
 python3 scripts/skill_registry.py remove skill-name --force          # Remove a skill
 python3 scripts/skill_registry.py stale                              # Report stale skills
@@ -419,6 +422,8 @@ python3 scripts/validate.py ./skill/               # Spec compliance
 python3 scripts/validate.py ./skill/ --json         # Machine-readable output
 python3 scripts/security_scan.py ./skill/           # Security audit
 python3 scripts/security_scan.py ./skill/ --json    # Machine-readable output
+# Vetting a skill you didn't write — run both, or ask the agent:
+#   /agent-skill-creator --audit ./downloaded-skill/
 python3 scripts/staleness_check.py ./skill/                      # Review staleness
 python3 scripts/staleness_check.py ./skill/ --check-deps         # + dependency health
 python3 scripts/staleness_check.py ./skill/ --check-drift        # + schema drift
@@ -464,6 +469,7 @@ agent-skill-creator/
   CODE_OF_CONDUCT.md            # Contributor Covenant
   CHANGELOG.md                  # Version history
   LICENSE                       # MIT
+  ruff.toml                     # Pins ruff's default ruleset so CI can't drift
   install.sh / install.ps1      # Self-installer for cloned repos (macOS/Linux, Windows)
   docs/
     INSTALL.md                  # Full installation guide (17 platforms, per-tool paths)
@@ -490,6 +496,8 @@ agent-skill-creator/
     artifact_detector.py        # Picks a React artifact shape for a skill
     tests/                      # pytest suite (CI runs this)
   references/                   # Detailed docs (loaded by the agent on demand)
+    spec-ideation.md            # Phase 0: vague input → grounded, skill-shaped spec
+    mcp-audit.md                # --mcp-audit: vendor MCP server → capability map
     pipeline-phases.md          # Full 5-phase creation pipeline
     architecture-guide.md       # Skill structure decisions
     quality-standards.md        # Code and documentation standards
