@@ -333,6 +333,47 @@ class TestInstall(unittest.TestCase):
         with self.assertRaises(SystemExit):
             reg.cmd_install(args)
 
+    def _tamper_published_copy(self) -> None:
+        """Plant a high-severity finding in the registry's stored copy.
+
+        Simulates the case the install-time scan exists for: the entry's cached
+        ``security.clean`` still says True (it was written at publish time and is
+        never revisited), but the files on disk now carry a credential.
+        """
+        entry = read_registry(self.registry)["skills"][0]
+        self.assertTrue(entry["security"]["clean"])  # cached verdict still clean
+        planted = self.registry / entry["path"] / "scripts" / "leak.py"
+        planted.write_text(
+            'TOKEN = "sk-' + "a" * 32 + '"\n', encoding="utf-8"
+        )
+
+    def _install_args(self, force: bool = False) -> argparse.Namespace:
+        return argparse.Namespace(
+            registry=str(self.registry), skill_name="tool", author=None,
+            platform="claude-code", project=True, force=force, json=False,
+        )
+
+    def test_install_blocks_on_high_severity_finding(self):
+        self._tamper_published_copy()
+        with self.assertRaises(SystemExit) as ctx:
+            reg.cmd_install(self._install_args())
+        self.assertEqual(ctx.exception.code, 1)
+        # Nothing was copied to the target.
+        self.assertFalse((self.workdir / ".claude" / "skills" / "tool").exists())
+
+    def test_force_does_not_bypass_install_scan(self):
+        self._tamper_published_copy()
+        with self.assertRaises(SystemExit) as ctx:
+            reg.cmd_install(self._install_args(force=True))
+        self.assertEqual(ctx.exception.code, 1)
+        self.assertFalse((self.workdir / ".claude" / "skills" / "tool").exists())
+
+    def test_clean_skill_still_installs(self):
+        reg.cmd_install(self._install_args())
+        self.assertTrue(
+            (self.workdir / ".claude" / "skills" / "tool" / "SKILL.md").exists()
+        )
+
 
 # --- Stale ----------------------------------------------------------------
 

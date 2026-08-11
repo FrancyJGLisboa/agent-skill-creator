@@ -17,6 +17,20 @@
 - Concrete examples, not abstract
 - Not just external links
 
+**Non-Obvious, Not Restated**
+- The model already knows what a PDF is, what a database migration does, and that
+  errors should be handled. Writing those down spends context teaching the agent
+  something it already knows, and every line competes for attention with the rest
+  of the context window.
+- Write only what is specific to this environment: the field that is named wrong,
+  the endpoint that returns 200 on failure, the step that must run twice, the
+  column that is a string with commas in it.
+- The test: could a competent model produce this line without reading the skill?
+  If yes, cut it. If it came from a correction someone actually had to make, keep
+  it — that is the part the model cannot get to on its own.
+- "Handle errors appropriately" and "validate inputs" are not instructions. They
+  are the shape of instructions with the content removed.
+
 **Current, Not Stale**
 - Include `metadata.created` and `metadata.last_reviewed` dates in frontmatter
 - Set `metadata.review_interval_days` (default: 90 days)
@@ -210,11 +224,14 @@ def analyze_yoy(df: pd.DataFrame, commodity: str, year1: int, year2: int) -> Dic
 ```yaml
 ---
 name: agent-name
-description: [150-250 words with keywords]
+description: [<=1024 characters, packed with activation keywords, states WHAT the skill does and WHEN to use it]
 ---
 ```
 
-**2. Size**: 5000-7000 words
+**2. Size**: body under 500 lines. This is a ceiling, not a target — the body is
+loaded into the context window on every activation and competes for attention with
+everything else already there. Move detail to `references/`, which the agent loads
+only when it needs it.
 
 **3. Mandatory sections**:
 - When to use (specific triggers)
@@ -224,6 +241,7 @@ description: [150-250 words with keywords]
 - Analyses (methodologies)
 - Errors (complete handling)
 - Validations (mandatory)
+- Gotchas (environment-specific facts that defy reasonable assumptions)
 - Keywords (complete list)
 - Examples (5+ complete)
 
@@ -595,8 +613,9 @@ Ask questions about agriculture and the agent will respond.
 ### Per SKILL.md
 
 - [ ] Frontmatter with name and description
-- [ ] Description 150-250 characters with keywords
-- [ ] Size 5000+ words
+- [ ] Description <=1024 characters, states WHAT the skill does and WHEN to use it
+- [ ] Body under 500 lines (`python3 scripts/validate.py .` reports no size warning)
+- [ ] Nothing in the body that the model already knows without being told
 - [ ] "When to Use" section with specific triggers
 - [ ] "Data Source" section detailed
 - [ ] Step-by-step workflows with commands
@@ -605,12 +624,13 @@ Ask questions about agriculture and the agent will respond.
 - [ ] Errors handled (all expected)
 - [ ] Validations listed
 - [ ] Performance/cache explained
+- [ ] "Gotchas" section present (`None known` is valid; invented gotchas are not)
 - [ ] Complete keywords
 - [ ] Complete examples (5+)
 
 ### Per Reference File
 
-- [ ] 1000+ words
+- [ ] Carries knowledge the model could not supply on its own
 - [ ] Useful content (not just links)
 - [ ] Concrete examples with real values
 - [ ] Executable code blocks
@@ -646,9 +666,8 @@ Ask questions about agriculture and the agent will respond.
 - [ ] **INSTALACAO.md** with complete didactic tutorial
 - [ ] **comprehensive_{domain}_report()** implemented
 - [ ] SKILL.md with version in frontmatter metadata
-- [ ] 18+ files created
-- [ ] ~1500+ lines of Python code
-- [ ] ~10,000+ words of documentation
+- [ ] Every workflow the spec identified is implemented end to end
+- [ ] Every script the SKILL.md names exists and runs
 - [ ] 2+ configs
 - [ ] requirements.txt
 - [ ] .gitignore (if needed)
@@ -1152,12 +1171,9 @@ grep -r "^import\|^from" scripts/*.py | sort | uniq
 # Verify all libs are: stdlib, requests, pandas, numpy
 # No imports of uninstalled libs
 
-# 4. SKILL.md has frontmatter
-head -5 SKILL.md | grep "^---$"
-
-# 5. SKILL.md size
-wc -w SKILL.md
-# Should be > 5000 words
+# 4. Frontmatter, name/description limits, and body size in one pass
+python3 scripts/validate.py .
+# Must report no errors and no size warning
 ```
 
 ### Final Checklist
@@ -1165,7 +1181,7 @@ wc -w SKILL.md
 - [ ] Syntax check passed (Python, JSON)
 - [ ] No import of non-existent lib
 - [ ] No TODO or pass
-- [ ] SKILL.md > 5000 words
+- [ ] `validate.py` reports no errors and no size warning
 - [ ] References with content
 - [ ] README with complete instructions
 - [ ] DECISIONS.md created

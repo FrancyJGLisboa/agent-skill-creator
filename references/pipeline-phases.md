@@ -275,6 +275,13 @@ After deciding, dive deep into documentation via WebFetch:
 - Parallel requests
 ```
 
+**Carry the gotchas forward.** Everything under "Quirks and Gotchas" is the single
+highest-value thing this phase produces: it is the part a competent model cannot
+derive on its own, because it contradicts what the API's own docs imply. These
+entries do not stop at `references/api-guide.md` — they become the generated
+skill's `## Gotchas` section (Phase 5, Step 2). Keep the list as you go; you will
+be asked for it.
+
 ### Step 8: Document for Later Use
 
 Save everything in `references/api-guide.md` of the skill to be created.
@@ -1032,6 +1039,10 @@ metadata:
 
 [Common errors and how the skill handles them]
 
+## Gotchas
+
+[Environment-specific facts that defy reasonable assumptions]
+
 ## Keywords for Detection
 
 [Organized keyword list]
@@ -1049,6 +1060,50 @@ metadata:
 - Detailed API docs go to `references/api-guide.md`
 - Detailed methodologies go to `references/analysis-methods.md`
 - Troubleshooting goes to `references/troubleshooting.md`
+
+The cheapest way under the limit is not to move content but to delete the lines
+that restate what the model already knows. See "Non-Obvious, Not Restated" in
+`quality-standards.md`. Cut those first, then move what remains.
+
+**Writing the `## Gotchas` section:**
+
+This is the highest-value section in the body, and the one no model can write for
+you. It holds the environment-specific facts that defy reasonable assumptions —
+every place where doing the obvious thing produces the wrong result.
+
+Sources, in order:
+
+1. The "Quirks and Gotchas" list from Phase 1 Step 7.
+2. Every correction made while verifying the skill in this phase. If a script had
+   to be fixed because the real system behaved differently than expected, that
+   difference is a gotcha. Write it down now, or make the same correction again
+   next month.
+3. Anything the user said in the form "oh, and you have to..." — those are gotchas
+   the user did not think to put in the spec because they live in muscle memory.
+
+Format each entry as the wrong assumption followed by the real behavior:
+
+```markdown
+## Gotchas
+
+- **Yields come back as strings with thousands separators** (`"1,234"`), not numbers.
+  `int()` raises on them. `parse_value()` in `scripts/fetch.py` strips separators —
+  use it rather than casting.
+- **The `/summary` endpoint returns HTTP 200 with an empty `data` array** when the
+  requested year has not been published yet, instead of 404. Check `len(data)`, not
+  the status code.
+- **County-level records are suppressed** (`(D)`) when fewer than three operations
+  report. These rows must be dropped before aggregating or state totals come out low.
+```
+
+Rules:
+
+- `None known` is a valid value. Write it when the skill genuinely has no gotchas.
+- **Never invent gotchas to fill the section.** A fabricated gotcha is worse than
+  an empty one: it teaches the agent a false constraint it will then work around.
+  If it did not come from a real correction or a real observation, it does not go in.
+- Do not put generic advice here ("APIs can be slow", "always validate input").
+  That is the section with the content removed.
 
 ### Step 2.5: Write AGENTS.md (Companion Instruction File)
 
@@ -1078,13 +1133,17 @@ This skill activates when users ask about [domain keywords]. Invoke with `/skill
 
 [Brief usage instructions — what to provide, what to expect back]
 
+## Gotchas
+
+[Copy the SKILL.md `## Gotchas` entries verbatim, or `None known`]
+
 ## Implementation
 
 Full skill definition, scripts, and references are in the SKILL.md file and accompanying directories. See SKILL.md for complete instructions.
 
 ## Files
 
-- `SKILL.md` — Full skill definition (agentskills.io format)
+- `SKILL.md` — Full skill definition (agentskills.io format), including the `## Gotchas` section
 - `scripts/` — Executable code (`run_pipeline.py` orchestrator for multi-script skills, `run_evals.py` eval runner)
 - `references/` — Detailed documentation
 - `assets/` — Templates, configs
@@ -1096,6 +1155,9 @@ Full skill definition, scripts, and references are in the SKILL.md file and acco
 - Keep AGENTS.md concise (~50-100 lines). It is a pointer and summary, not a duplicate of SKILL.md.
 - Include enough context for tools that ONLY read AGENTS.md (they will not see SKILL.md).
 - Include activation keywords so description-based matching works.
+- **`## Gotchas` is the one section worth duplicating in full.** Augment, Continue.dev
+  and Zed read AGENTS.md and never open SKILL.md; a pointer to gotchas they cannot
+  follow leaves them running on assumptions the gotchas exist to correct.
 
 ### Step 3: Implement Python Scripts
 
@@ -1561,6 +1623,7 @@ Validation: PASSED
 Security Scan: PASSED
 Pipeline: PASSED (scripts compile, deps declared)
 Evals: PASSED ([N] command checks, [M] golden cases)   # or SKIPPED (--no-eval)
+Gotchas: [N] recorded                                  # or "None known"
 
 Main Decisions:
 - API: [name] ([short justification])
@@ -1586,7 +1649,7 @@ See README.md for complete multi-platform installation instructions.
 | Order | File | Notes |
 |---|---|---|
 | 1 | Directory structure | `mkdir -p skill-name/{scripts,references,assets}` |
-| 2 | `SKILL.md` | PRIMARY file, <500 lines, spec-compliant frontmatter |
+| 2 | `SKILL.md` | PRIMARY file, <500 lines, spec-compliant frontmatter, `## Gotchas` section |
 | 3 | `scripts/*.py` | Functional code; `run_pipeline.py` orchestrator for multi-script skills |
 | 4 | `references/*.md` | Detailed documentation, self-contained |
 | 5 | `assets/*.json` | Real values, validated JSON |
@@ -1610,6 +1673,9 @@ See README.md for complete multi-platform installation instructions.
 - [ ] Temporal metadata included (metadata.created, metadata.last_reviewed, metadata.review_interval_days)
 - [ ] Name is kebab-case, ends with `-skill`, matches directory
 - [ ] SKILL.md body has `## Prerequisites` section
+- [ ] SKILL.md body has `## Gotchas` section, carrying the Phase 1 quirks list plus every correction made during this phase (`None known` is valid; invented gotchas are not)
+- [ ] AGENTS.md repeats the `## Gotchas` entries in full (AGENTS.md-only tools never see SKILL.md)
+- [ ] Nothing in the SKILL.md body restates what the model already knows
 - [ ] SKILL.md anti-goals include anti-activation instruction
 - [ ] All Python scripts implemented with functional code
 - [ ] No TODO, no `pass`, no `NotImplementedError`, no placeholders
@@ -1666,12 +1732,13 @@ These standards apply across ALL phases and ALL generated files.
 **References must be:**
 - Self-contained (not just links to external docs)
 - Concrete (real values, executable examples)
-- Substantial (1000+ words for main reference files)
+- Load-bearing (carry knowledge the model could not supply on its own — length is not the measure)
 - Well-structured (headings, lists, code blocks)
 
 **SKILL.md must be:**
-- Under 500 lines (move detail to references)
+- Under 500 lines (cut what the model already knows first, then move detail to references)
 - Frontmatter-compliant (name, description, license, metadata)
+- Carrying a `## Gotchas` section (`None known` is valid; invented gotchas are not)
 - Actionable (workflows with specific commands)
 
 ## Configuration Quality
@@ -1698,7 +1765,11 @@ These standards apply across ALL phases and ALL generated files.
 | `# TODO: implement` | Implement it now |
 | `api_key: YOUR_KEY_HERE` | `api_key_env: "ENV_VAR_NAME"` with instructions |
 | `See official docs at [link]` | Include the relevant information directly |
-| SKILL.md over 500 lines | Move detail to `references/` |
+| SKILL.md over 500 lines | Cut what the model already knows, then move detail to `references/` |
+| `Handle errors appropriately` / `Validate inputs` | Name the actual failure and the actual fix, or delete the line — the model already knows the generic advice |
+| No `## Gotchas` section | Carry the Phase 1 quirks list and every correction made while verifying (`None known` if there genuinely are none) |
+| Inventing gotchas to fill the section | Only real, observed behavior — a fabricated gotcha teaches a false constraint the agent will work around |
+| Installing an imported skill unscanned | `--audit` it first; registry installs re-scan rather than trusting the cached verdict |
 | marketplace.json as step 0 | SKILL.md is the primary file, created first |
 | Name missing `-skill` suffix | End every skill name with `-skill`: `stock-analyzer-skill` |
 | Description over 1024 chars | Trim to essential keywords within limit |

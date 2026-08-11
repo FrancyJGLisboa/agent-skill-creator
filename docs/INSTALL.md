@@ -5,6 +5,18 @@ the one-liner in the [README Quick start](../README.md#quick-start): per-tool
 native plugins, per-project clones, all 17 platform paths, and the universal
 skill installer.
 
+> **Installing a skill you didn't write?** Scan it first. A skill ships executable
+> scripts that run with your filesystem access and your API keys, and its
+> instruction body is read by the agent before any code runs.
+>
+> ```bash
+> python3 scripts/validate.py ./the-skill/
+> python3 scripts/security_scan.py ./the-skill/
+> ```
+>
+> See [Vetting a Skill You Didn't Write](../README.md#vetting-a-skill-you-didnt-write).
+> Everything below assumes you trust the source.
+
 ---
 
 ## Advanced Install
