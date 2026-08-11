@@ -51,19 +51,25 @@ files — change them together or CI's parity tests will catch the drift:
 1. **`scripts/platforms.py`** — add the platform tuple (name, user-level
    install path, project-level install path, detection directory). This is
    the single source of truth the registry and installers read.
-2. **`install.sh` and `install.ps1`** — add the detection/install branch to
-   both (bash and PowerShell must stay in lockstep).
-3. **`scripts/install-template.sh` and `scripts/install-template.ps1`** —
-   the installer template bundled into generated skills; mirror the same
-   branch there.
-4. **Docs** — add the platform to the tier table in `SKILL.md` and
-   `references/cross-platform-guide.md`. If the platform needs a format
-   adapter (not native SKILL.md), document the transformation in the Tier 2
-   section.
-5. **Platform count** — the number of supported platforms is stated in
-   `README.md`, `SKILL.md`, and `references/cross-platform-guide.md`. Bump
-   it in **all three** in the same PR (and remind a maintainer to update the
-   GitHub repo description).
+2. **Four shell pairs.** Every one enumerates platforms independently, and
+   each `.sh`/`.ps1` pair is parity-gated by `test_install_parity.py`:
+   - `install.sh` / `install.ps1` — the repo's own self-installer
+   - `scripts/install-template.sh` / `.ps1` — bundled into generated skills
+   - `scripts/install-skill.sh` / `.ps1` — the universal skill installer
+   - `scripts/bootstrap.sh` / `.ps1` — the `curl | sh` one-liner
+3. **Docs** — add the platform to the tier table in
+   `references/cross-platform-guide.md` (and `docs/INSTALL.md` if it needs a
+   per-tool install path). If the platform needs a format adapter (not native
+   SKILL.md), document the transformation in the Tier 2 section.
+4. **Platform count** — the total is stated in **six** files:
+   `README.md`, `SKILL.md`, `references/cross-platform-guide.md`,
+   `docs/INSTALL.md`, `references/pipeline-phases.md`, and `docs/index.html`.
+   Bump every one in the same PR, and remind a maintainer to update the GitHub
+   repo description. Find them all with:
+
+   ```bash
+   grep -rn "17 platform\|17 tool" --include="*.md" --include="*.html" .
+   ```
 
 Then verify:
 
@@ -73,6 +79,9 @@ uv run pytest scripts/tests/test_platforms.py scripts/tests/test_install_parity.
 
 `test_platforms.py` cross-checks `platforms.py` against the shell installers,
 so a partial addition fails loudly.
+
+**Nothing checks the docs.** Steps 3 and 4 are unenforced — a stale tier table
+or a count that still says the old number passes CI. Grep before you push.
 
 ## A note on eval specs
 
