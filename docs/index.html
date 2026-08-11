@@ -47,7 +47,7 @@
   <figure class="hero__proof">
     <a href="assets/architecture.png">
       <img src="assets/architecture.png" width="820" height="525"
-           alt="Architecture diagram: a plain-English description enters the five-phase creator pipeline, the generated skill passes four quality gates before installing on 17 platforms, and the evolve loop feeds failure evidence back into regeneration.">
+           alt="Architecture diagram: a plain-English description enters the five-phase creator pipeline, the generated skill passes four quality gates before installing on 17 platforms, and the evolve loop feeds failure evidence — and corrections reported from real use — back into regeneration.">
     </a>
     <figcaption>How it fits together — pipeline → gates → install, and the evolve loop after you stop looking. <a class="link" href="assets/demo.gif">Watch a real quality-gate run</a>.</figcaption>
   </figure>
@@ -127,6 +127,14 @@
         <li><b>Evidence, not exit codes</b> — every failure appends its raw findings
         to the skill’s <code>EVOLUTION.md</code>; <code>evolve.py</code> closes
         detect&nbsp;→&nbsp;record&nbsp;→&nbsp;re-verify from the skill’s own root</li>
+        <li><b>Corrections from use</b> — the checks above catch dates, reachability
+        and output drift. They cannot catch what only exists in someone’s head: the
+        region that files late, the code that means something local. Nobody can
+        describe a process they run from muscle memory — but they recognize a wrong
+        output instantly, so that is where the skill listens.
+        <code>evolve.py --correct "…"</code> writes what they say into
+        <code>EVOLUTION.md</code> and into the skill’s <code>## Gotchas</code>, so the
+        next run already knows. A skill’s gotchas should grow over its life</li>
       </ul>
     </li>
   </ol>
