@@ -10,11 +10,11 @@
 
 <p align="center">
   <img src="assets/architecture.png" width="820"
-       alt="Architecture: a plain-English description enters the 5-phase creator pipeline; the generated skill passes four quality gates (validate, security_scan, check_pipeline, run_evals --rollout) before installing on 17 platforms; the evolve loop feeds failure evidence back into regeneration.">
+       alt="Architecture: a plain-English description enters the 5-phase creator pipeline; the generated skill passes four quality gates (validate, security_scan, check_pipeline, run_evals --rollout) before installing on 17 platforms; a maintenance loop of staleness checks and eval rollouts writes findings to EVOLUTION.md, and the person using the skill feeds corrections into the same file with evolve.py --correct — both paths regenerate the skill from evidence.">
 </p>
 
-<!-- Architecture diagram. Source: assets/architecture.excalidraw (edit there, re-render via the excalidraw-diagram skill). assets/demo.gif (built from assets/demo.cast, see assets/DEMO.md) shows a real quality-gate run. -->
-<p align="center"><em>How it fits together: your description runs through the 5-phase creator pipeline, the generated skill must pass every quality gate before install, and the shipped evolve loop keeps it green after you stop looking. <a href="assets/demo.gif">Watch a real quality-gate run</a>.</em></p>
+<!-- Architecture diagram. Source: assets/architecture.excalidraw (edit there, then re-render — see the header of assets/render_architecture.py for the two commands; no Excalidraw app or network needed). assets/demo.gif (built from assets/demo.cast, see assets/DEMO.md) shows a real quality-gate run. -->
+<p align="center"><em>How it fits together: your description runs through the 5-phase creator pipeline, the generated skill must pass every quality gate before install, and the shipped evolve loop keeps it green after you stop looking — automatically for what a check can see, and via <code>--correct</code> for what only you can. <a href="assets/demo.gif">Watch a real quality-gate run</a>.</em></p>
 
 **What you get:** describe a workflow in plain English (or hand over a PDF, a link, a script) → a complete, **validated and security-scanned** agent skill, with functional code, its own **eval spec**, and a cross-platform installer → the same skill running on **Claude Code, Cursor, Copilot, Gemini, Windsurf, and 12 more** with one command.
 
