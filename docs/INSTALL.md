@@ -1,7 +1,7 @@
 # Installation Guide
 
 Every way to install `agent-skill-creator` (and the skills it generates) beyond
-the one-liner in the [README Quick start](../README.md#quick-start): per-tool
+the chooser in [Create your first skill](../README.md#create-your-first-skill): per-tool
 native plugins, per-project clones, all 17 platform paths, and the universal
 skill installer.
 
@@ -14,7 +14,7 @@ skill installer.
 > python3 scripts/security_scan.py ./the-skill/
 > ```
 >
-> See [Vetting a Skill You Didn't Write](../README.md#vetting-a-skill-you-didnt-write).
+> See [Why the checks matter](../README.md#why-the-checks-matter).
 > Everything below assumes you trust the source.
 
 ---

@@ -30,7 +30,7 @@ launch good enough that *if* it gets seen, it converts — then maximize shots o
 - [ ] ≥3 runnable examples a visitor can try in one command.
 - [ ] CI badge is green on `main`.
 - [ ] Repo description + topics set on GitHub (see below).
-- [ ] Tag matches the README version (`v6.0.0`).
+- [ ] Tag matches the README version (`v6.1.0`).
 
 ## GitHub setup (do once, before launch)
 
@@ -45,7 +45,7 @@ launch good enough that *if* it gets seen, it converts — then maximize shots o
 ## Sequencing (a sane order)
 
 1. **T‑minus days:** render the demo GIF, set description/topics/social preview,
-   confirm CI is green, tag `v6.0.0`. Line up 3–5 people who'll genuinely engage in
+   confirm CI is green, tag `v6.1.0`. Line up 3–5 people who'll genuinely engage in
    the first hour (comments/upvotes from real users, not vote rings).
 2. **Launch day, morning (US Pacific):** post **Show HN** (title options in
    [`docs/launch/show-hn.md`](docs/launch/show-hn.md)). HN rewards a plain, honest

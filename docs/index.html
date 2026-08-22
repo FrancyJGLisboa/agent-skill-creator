@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>agent-skill-creator — describe the workflow, ship the skill</title>
-<meta name="description" content="Turn a plain-English description into a validated, security-scanned agent skill with its own eval suite — installable on 17 platforms.">
+<title>agent-skill-creator — turn existing work into a reusable skill</title>
+<meta name="description" content="Give an agent the workflow material you already have. Receive an installed, checked skill and inspect its first result.">
 <meta property="og:title" content="agent-skill-creator">
-<meta property="og:description" content="A skill factory with quality gates: validation, security scan, eval rollout, and a self-maintenance loop.">
+<meta property="og:description" content="Turn work you already do into a reusable agent workflow—and see it work once before calling it done.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -20,276 +20,239 @@
   <div class="nav__inner">
     <a class="nav__brand" href="#top">agent-skill-creator</a>
     <nav class="nav__center" aria-label="Page sections">
-      <a class="nav__link" href="#how">How it works</a>
-      <a class="nav__link" href="#gates">Gates</a>
-      <a class="nav__link" href="#start">Quick start</a>
+      <a href="#journey">How it works</a>
+      <a href="#start">Install</a>
+      <a href="#trust">Trust</a>
     </nav>
-    <div class="nav__right">
-      <a class="btn btn--accent" href="https://github.com/FrancyJGLisboa/agent-skill-creator">GitHub&nbsp;★</a>
-    </div>
+    <a class="button button--small" href="https://github.com/FrancyJGLisboa/agent-skill-creator">GitHub&nbsp;★</a>
   </div>
 </header>
 
 <main id="main">
-
-<section class="hero" id="top">
-  <div class="hero__copy">
-    <h1>Describe the workflow. Ship the skill.</h1>
-    <p class="hero__lede">A plain-English description — or a PDF, a link, a half-working
-    script — goes in. A validated, security-scanned agent skill comes out: functional
-    code, its own eval suite, a cross-platform installer. The same skill runs on
-    Claude&nbsp;Code, Cursor, Copilot, Gemini, and 13&nbsp;more.</p>
-    <div class="hero__ctas">
-      <a class="btn btn--accent btn--lg" href="https://github.com/FrancyJGLisboa/agent-skill-creator">View on GitHub</a>
-      <a class="link" href="#start">Quick start ↓</a>
+  <section class="hero" id="top">
+    <div class="hero__copy">
+      <p class="eyebrow">Your existing material is enough</p>
+      <h1>Turn work you already do into a reusable agent workflow.</h1>
+      <p class="hero__lede">Give it a sentence, spreadsheet, PDF, link, screenshot, or
+      half-working script. It reconstructs the workflow, builds the skill, checks it,
+      installs it, and safely produces one result you can judge.</p>
+      <div class="hero__actions">
+        <a class="button" href="#start">Create your first skill</a>
+        <a class="text-link" href="#journey">See the four steps</a>
+      </div>
     </div>
-  </div>
-  <figure class="hero__proof">
-    <a href="assets/architecture.png">
-      <img src="assets/architecture.png" width="820" height="532"
-           alt="Architecture diagram: a plain-English description enters the five-phase creator pipeline; the generated skill passes four quality gates before installing on 17 platforms; a maintenance loop of staleness checks and eval rollouts writes findings to EVOLUTION.md, and the person using the skill feeds corrections into the same file with evolve.py --correct — both paths regenerate the skill from evidence.">
-    </a>
-    <figcaption>How it fits together — pipeline → gates → install, and the evolve loop after you stop looking. <a class="link" href="assets/demo.gif">Watch a real quality-gate run</a>.</figcaption>
-  </figure>
-</section>
 
-<section class="stats tnum" aria-label="Project facts">
-  <div><b>1.8k+</b><span>GitHub stars</span></div>
-  <div><b>17</b><span>platforms, one install</span></div>
-  <div><b>CI</b><span>tests · lint · example rollouts, every commit</span></div>
-  <div><b>MIT</b><span>licensed, no API key to start</span></div>
-</section>
-
-<section class="stages" id="how">
-  <header class="head-hang">
-    <h2>Four stages, one command</h2>
-    <p>The factory is a pipeline. Each stage leaves something checkable behind.</p>
-  </header>
-
-  <ol class="steps">
-    <li class="step" id="describe">
-      <span class="stage">1.0</span>
-      <h3>Describe</h3>
-      <p>No spec writing, no prompt engineering. Hand it whatever exists — a sentence
-      (“every Friday I clean the CRM export and email a PDF report”), a runbook URL, a
-      compliance checklist, a screenshot next to a half-working script. The factory
-      reads the material, uncovers the implicit requirements, and writes its own
-      internal specification before generating anything.</p>
-      <p>Don’t even know what to build? Say one word — “freight” — or paste a week of
-      repeated tasks. It harvests the boring, repeated chores actually worth
-      automating, drops the ones a skill can’t ship, and shapes the rest into a spec
-      for you.</p>
-    </li>
-
-    <li class="step" id="gates">
-      <span class="stage">2.0</span>
-      <h3>Build and gate</h3>
-      <p>Five phases — discovery, design with evals, architecture, detection, build.
-      Delivery is blocked unless every gate passes:</p>
-      <ul class="gate-list">
-        <li><b>Spec validation</b> — structure, frontmatter, naming, file references</li>
-        <li><b>Pipeline check</b> — scripts compile, dependencies declared</li>
-        <li><b>Security scan</b> — hardcoded secrets, dangerous code patterns,
-        prompt injection in the instruction body itself (override phrases, hidden
-        unicode, encoded blobs), and network endpoints scripts reach but never declare</li>
-        <li><b>Gotchas</b> — every skill carries the environment-specific facts that
-        defy reasonable assumptions: the field that is a string with commas, the
-        endpoint that returns 200 on failure, the step that must run twice. The part
-        a model cannot supply on its own, captured instead of rediscovered</li>
-      </ul>
-    </li>
-
-    <li class="step" id="install">
-      <span class="stage">3.0</span>
-      <h3>Install everywhere</h3>
-      <p>One skill, seventeen targets. Claude Code gets a native
-      <code>/plugin install</code> path; Cursor gets <code>.mdc</code> rules; Copilot,
-      Gemini, Windsurf, Cline, Codex and the rest get their own native formats from
-      one auto-detecting installer. Your colleague types one command and has the same
-      skill in their tool.</p>
-    </li>
-
-    <li class="step" id="evolve">
-      <span class="stage">4.0</span>
-      <h3>Evolve</h3>
-      <p>Every skill is born with its own metric and keeps it for life:</p>
-      <ul class="gate-list">
-        <li><b>Regression gate</b> — rollout runs the skill on golden inputs and
-        diffs the output against promoted baselines; drift that passes every shape
-        check still fails</li>
-        <li><b>Pinned judge</b> — subjective criteria are graded by a model pinned in
-        the spec, and a known-bad canary must fail or the judge run is invalid</li>
-        <li><b>Holdout</b> — one golden case is never shown to any optimization loop</li>
-        <li><b>Model comparison</b> — the same suite runs once per candidate model
-        (<code>--rollout --model A --model B</code>) and answers “which model should
-        run this task, and at what price”; cost comes only from runtime-declared
-        usage, never estimated</li>
-        <li><b>Evidence, not exit codes</b> — every failure appends its raw findings
-        to the skill’s <code>EVOLUTION.md</code>; <code>evolve.py</code> closes
-        detect&nbsp;→&nbsp;record&nbsp;→&nbsp;re-verify from the skill’s own root</li>
-        <li><b>Corrections from use</b> — the checks above catch dates, reachability
-        and output drift. They cannot catch what only exists in someone’s head: the
-        region that files late, the code that means something local. Nobody can
-        describe a process they run from muscle memory — but they recognize a wrong
-        output instantly, so that is where the skill listens.
-        <code>evolve.py --correct "…"</code> writes what they say into
-        <code>EVOLUTION.md</code> and into the skill’s <code>## Gotchas</code>, so the
-        next run already knows. A skill’s gotchas should grow over its life</li>
-      </ul>
-    </li>
-  </ol>
-</section>
-
-<section class="limits" id="vetting">
-  <header class="head-hang">
-    <h2>Before you install a stranger’s skill</h2>
-    <p>A skill is not a document.</p>
-  </header>
-  <p>It ships executable scripts that run with your filesystem access and whatever
-  API keys are in your environment, and its instruction body is read by the agent
-  at load time — before any code runs. Installing one from the internet is running
-  someone else’s software on your machine. Treat it like any other dependency.</p>
-  <div class="codewrap">
-    <pre><code>python3 scripts/validate.py ./downloaded-skill/
-python3 scripts/security_scan.py ./downloaded-skill/</code></pre>
-  </div>
-  <ul class="limits__list">
-    <li>The same scanner that gates what this factory produces also audits what you
-    bring in: undeclared network endpoints, credential reads, and injection patterns
-    in the instruction body — override phrasing, concealment and exfiltration
-    directives, invisible unicode, encoded blobs.</li>
-    <li>Registry installs re-scan at install time rather than trusting the catalog’s
-    cached verdict. A skill published before a scanner rule existed does not get a
-    free pass.</li>
-    <li><b>A clean scan is not proof a skill is safe.</b> It means no known pattern
-    matched. A scanner cannot recognize intent, and ordinary-looking code can still
-    do the wrong thing. Read the scripts.</li>
-  </ul>
-</section>
-
-<section class="limits">
-  <header class="head-hang">
-    <h2>What it doesn’t claim</h2>
-    <p>The gates apply to this page too.</p>
-  </header>
-  <ul class="limits__list">
-    <li>Eval rollout is opt-in — it executes the skill’s real code, so you choose when.</li>
-    <li>Subjective <code>llm-judge</code> criteria are graded by the agent running the skill — the model your runtime already provides — so no API key is needed. Even unattended CI grades keyless through your runtime’s print mode (Claude Code <code>claude</code>, or <code>$EVAL_JUDGE_CMD</code> for any runtime); a raw API key is only a last-resort fallback when no runtime is present. It never silently passes.</li>
-    <li>Artifact signing (cosign/SLSA) is on the roadmap, not shipped.</li>
-    <li>The episodic learning layer is a design document, clearly marked not-implemented.</li>
-  </ul>
-</section>
-
-<section class="start" id="start">
-  <header class="head-hang">
-    <h2>Quick start</h2>
-    <p>No clone, no <code>pip</code>, no API key — just <code>git</code> and any one of 17 supported tools.</p>
-  </header>
-
-  <div class="start__block">
-    <p class="start__label">macOS / Linux — one line</p>
-    <div class="codewrap">
-      <pre><code id="cmd-bootstrap">curl -fsSL https://raw.githubusercontent.com/FrancyJGLisboa/agent-skill-creator/main/scripts/bootstrap.sh | sh</code></pre>
-      <button class="copybtn" type="button" data-copy="cmd-bootstrap">Copy</button>
+    <div class="result-card" aria-label="Example successful skill result">
+      <p class="result-card__status"><span aria-hidden="true">✓</span> First result verified</p>
+      <h2>Weekly sales report</h2>
+      <dl>
+        <div><dt>Input</dt><dd>Friday CRM export</dd></div>
+        <div><dt>Result</dt><dd>Regional totals PDF</dd></div>
+        <div><dt>Use it</dt><dd><code>/weekly-crm-report-skill</code></dd></div>
+      </dl>
+      <p class="result-card__checks">Validation passed · pipeline passed · scan clean · example run passed</p>
     </div>
-  </div>
+  </section>
 
-  <div class="start__block">
-    <p class="start__label">Claude Code — native plugin</p>
-    <div class="codewrap">
-      <pre><code id="cmd-plugin">/plugin marketplace add FrancyJGLisboa/agent-skill-creator
-/plugin install agent-skill-creator@agent-skill-creator</code></pre>
-      <button class="copybtn" type="button" data-copy="cmd-plugin">Copy</button>
+  <section class="proof-strip" aria-label="Project facts">
+    <div><b>1.8k+</b><span>GitHub stars</span></div>
+    <div><b>17</b><span>supported targets</span></div>
+    <div><b>4</b><span>visible steps</span></div>
+    <div><b>MIT</b><span>open source</span></div>
+  </section>
+
+  <section class="section" id="journey">
+    <header class="section__head">
+      <p class="eyebrow">The whole process</p>
+      <h2>Four steps you can follow</h2>
+      <p>The engineering stays available for inspection. It does not become homework.</p>
+    </header>
+
+    <ol class="journey">
+      <li>
+        <span>01</span>
+        <h3>Understand</h3>
+        <p>The creator reads everything and summarizes the input, work, output, and
+        definition of success. You confirm or correct one compact hypothesis.</p>
+        <small>Behind the scenes: evidence triage and discovery</small>
+      </li>
+      <li>
+        <span>02</span>
+        <h3>Build</h3>
+        <p>It chooses the implementation, writes functional scripts and instructions,
+        and packages the workflow for your agent tools.</p>
+        <small>Behind the scenes: design, architecture, detection, implementation</small>
+      </li>
+      <li>
+        <span>03</span>
+        <h3>Check</h3>
+        <p>Structure, code, dependencies, known security risks, and representative
+        examples must pass their gates.</p>
+        <small>Behind the scenes: validation, pipeline checks, scan, evals</small>
+      </li>
+      <li>
+        <span>04</span>
+        <h3>Try</h3>
+        <p>The skill installs in your detected tool and runs once using supplied
+        material or a safe local example. You inspect the result.</p>
+        <small>No real emails, publishing, purchases, or production writes for proof</small>
+      </li>
+    </ol>
+  </section>
+
+  <section class="section start" id="start">
+    <header class="section__head">
+      <p class="eyebrow">Start here</p>
+      <h2>Choose your tool</h2>
+      <p>Pick the tool you already use. The page shows where to paste one install action.</p>
+    </header>
+
+    <div class="chooser">
+      <div class="chooser__fields">
+        <label for="tool-select">AI tool
+          <select id="tool-select"></select>
+        </label>
+        <label for="os-select" id="os-label">Computer
+          <select id="os-select">
+            <option value="posix">macOS or Linux</option>
+            <option value="windows">Windows</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="install-card" aria-live="polite">
+        <p class="install-card__where">Paste in <strong id="paste-target">Terminal</strong></p>
+        <div class="codewrap">
+          <pre><code id="install-command"></code></pre>
+          <button class="copybtn" type="button" data-copy="install-command">Copy</button>
+        </div>
+        <p id="install-note" class="muted"></p>
+      </div>
+
+      <noscript>
+        <p>JavaScript is off. Use the universal macOS/Linux installer:</p>
+        <pre><code>curl -fsSL https://raw.githubusercontent.com/FrancyJGLisboa/agent-skill-creator/main/scripts/bootstrap.sh | sh</code></pre>
+        <p>Windows and single-tool commands are in the <a href="INSTALL.md">installation guide</a>.</p>
+      </noscript>
     </div>
-  </div>
 
-  <p class="start__then">Then describe what you do:</p>
-  <div class="codewrap">
-    <pre><code>/agent-skill-creator Every Friday I clean the CRM export, calculate regional totals, and email a PDF sales report.</code></pre>
-  </div>
-</section>
+    <div class="next-action">
+      <p class="eyebrow">Then paste this in your AI tool</p>
+      <div class="codewrap codewrap--light">
+        <pre><code id="first-prompt">/agent-skill-creator Every Friday I clean the CRM export, calculate regional totals, and email a PDF sales report.</code></pre>
+        <button class="copybtn copybtn--light" type="button" data-copy="first-prompt">Copy</button>
+      </div>
+      <p class="muted"><strong>Success looks like:</strong> the creator confirms the workflow, shows four progress stages, and finishes with an inspectable result or one exact verification blocker.</p>
+    </div>
+  </section>
 
-<section class="who">
-  <header class="head-hang">
-    <h2>Who it’s for</h2>
-  </header>
-  <div class="who__grid">
-    <article>
-      <h3>Developers already in AI tools</h3>
-      <p>You repeat the same workflow across sessions and tools. Turn it into a skill
-      once; install it in every tool you use; let its eval suite tell you when it
-      breaks instead of finding out mid-task.</p>
-    </article>
-    <article>
-      <h3>Teams standardizing agent work</h3>
-      <p>Skills your team publishes pass a hard security gate — no bypass flag — and
-      carry review dates, dependency health checks, and a registry with author
-      namespacing. The robustness story is enforced by code, not convention.</p>
-    </article>
-  </div>
-</section>
+  <section class="section trust" id="trust">
+    <header class="section__head">
+      <p class="eyebrow">Trust through evidence</p>
+      <h2>What the checks prove—and what they do not</h2>
+    </header>
+    <div class="trust__grid">
+      <article><h3>Structure</h3><p>The package follows the required format and names every referenced file.</p></article>
+      <article><h3>Execution</h3><p>Scripts compile, dependencies are declared, and examples can be scored again later.</p></article>
+      <article><h3>Known risks</h3><p>The scanner checks secrets, dangerous patterns, instruction injection, and undeclared endpoints.</p></article>
+      <article><h3>Honest limit</h3><p>A clean scan means no known pattern matched. It is not proof that software is safe.</p></article>
+    </div>
+    <p class="trust__audit">Received a skill from somewhere else? Ask <code>/agent-skill-creator --audit ./downloaded-skill/</code> before installing it.</p>
+  </section>
 
-<section class="closing">
-  <p class="closing__line">Every claim on this page traces to a gate, a test, or a commit.</p>
-  <a class="btn btn--accent btn--lg" href="https://github.com/FrancyJGLisboa/agent-skill-creator">Read the source</a>
-</section>
+  <section class="section advanced">
+    <header class="section__head">
+      <p class="eyebrow">Go deeper when you need it</p>
+      <h2>The technical system is still here</h2>
+    </header>
+    <div class="advanced__links">
+      <a href="https://github.com/FrancyJGLisboa/agent-skill-creator/blob/main/references/pipeline-phases.md">Five-phase pipeline</a>
+      <a href="https://github.com/FrancyJGLisboa/agent-skill-creator/blob/main/references/phase2-eval-assessment.md">Evals and evolution</a>
+      <a href="https://github.com/FrancyJGLisboa/agent-skill-creator/blob/main/references/skill-audit.md">Skill auditing</a>
+      <a href="INSTALL.md">All 17 platforms</a>
+    </div>
+  </section>
 
+  <section class="closing">
+    <h2>Your first skill is done when you can inspect its first result.</h2>
+    <a class="button" href="#start">Choose your tool</a>
+  </section>
 </main>
 
-<footer class="foot-stmt">
-  <p class="foot-stmt__line">A skill you can’t test is a skill you can’t trust.</p>
-  <div class="foot-stmt__meta">
-    <span class="foot-stmt__mark">agent-skill-creator</span>
-    <nav class="foot-stmt__links" aria-label="Footer">
-      <a class="link" href="https://github.com/FrancyJGLisboa/agent-skill-creator">GitHub</a>
-      <a class="link" href="https://github.com/FrancyJGLisboa/agent-skill-creator/blob/main/CHANGELOG.md">Changelog</a>
-      <a class="link" href="https://github.com/FrancyJGLisboa/agent-skill-creator/blob/main/CONTRIBUTING.md">Contribute</a>
-    </nav>
-    <span class="muted">MIT · 2026</span>
-  </div>
+<footer>
+  <span>agent-skill-creator · MIT · 2026</span>
+  <nav aria-label="Footer">
+    <a href="https://github.com/FrancyJGLisboa/agent-skill-creator">GitHub</a>
+    <a href="https://github.com/FrancyJGLisboa/agent-skill-creator/blob/main/CHANGELOG.md">Changelog</a>
+    <a href="https://github.com/FrancyJGLisboa/agent-skill-creator/blob/main/CONTRIBUTING.md">Contribute</a>
+  </nav>
 </footer>
 
 <script>
-// nav frost-on-scroll (rAF-throttled)
 (function () {
-  var nav = document.getElementById('nav'), ticking = false;
-  function update() { nav.classList.toggle('is-scrolled', window.scrollY > 24); ticking = false; }
-  window.addEventListener('scroll', function () {
-    if (!ticking) { requestAnimationFrame(update); ticking = true; }
-  }, { passive: true });
-  update();
-})();
+  var POSIX = 'curl -fsSL https://raw.githubusercontent.com/FrancyJGLisboa/agent-skill-creator/main/scripts/bootstrap.sh | sh';
+  var WINDOWS = 'irm https://raw.githubusercontent.com/FrancyJGLisboa/agent-skill-creator/main/scripts/bootstrap.ps1 | iex';
+  var platforms = [
+    ['claude-code', 'Claude Code'], ['copilot', 'GitHub Copilot'],
+    ['cursor', 'Cursor'], ['windsurf', 'Windsurf'], ['cline', 'Cline'],
+    ['codex', 'OpenAI Codex'], ['gemini', 'Gemini CLI'], ['kiro', 'Kiro'],
+    ['trae', 'Trae'], ['goose', 'Goose'], ['opencode', 'OpenCode'],
+    ['roo-code', 'Roo Code'], ['kilo-code', 'Kilo Code'],
+    ['factory', 'Factory Droid'], ['junie', 'Junie'],
+    ['antigravity', 'Antigravity'], ['universal', 'Universal skills path']
+  ];
+  var tool = document.getElementById('tool-select');
+  var os = document.getElementById('os-select');
+  var osLabel = document.getElementById('os-label');
+  var command = document.getElementById('install-command');
+  var target = document.getElementById('paste-target');
+  var note = document.getElementById('install-note');
 
-// stage reveal, once (IntersectionObserver; reduced-motion handled in CSS)
-(function () {
-  var steps = document.querySelectorAll('.step, .stats > div');
-  if (!('IntersectionObserver' in window)) {
-    steps.forEach(function (s) { s.classList.add('is-in'); });
-    return;
+  platforms.forEach(function (platform) {
+    var option = document.createElement('option');
+    option.value = platform[0];
+    option.textContent = platform[1];
+    tool.appendChild(option);
+  });
+
+  function updateInstall() {
+    var claude = tool.value === 'claude-code';
+    osLabel.hidden = claude;
+    target.textContent = claude ? 'Claude Code' : (os.value === 'windows' ? 'PowerShell' : 'Terminal');
+    command.textContent = claude
+      ? '/plugin marketplace add FrancyJGLisboa/agent-skill-creator\n/plugin install agent-skill-creator@agent-skill-creator'
+      : (os.value === 'windows' ? WINDOWS : POSIX);
+    note.textContent = claude
+      ? 'Run both slash commands, then open a new Claude Code session.'
+      : 'The installer detects ' + tool.options[tool.selectedIndex].text + ' and uses its native skill location.';
   }
-  var io = new IntersectionObserver(function (entries) {
-    entries.forEach(function (e) {
-      if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
-    });
-  }, { rootMargin: '0px 0px -10% 0px' });
-  steps.forEach(function (s) { io.observe(s); });
+
+  tool.addEventListener('change', updateInstall);
+  os.addEventListener('change', updateInstall);
+  updateInstall();
 })();
 
-// copy buttons — silent success, state reverts
-document.querySelectorAll('.copybtn').forEach(function (btn) {
-  btn.addEventListener('click', function () {
-    var code = document.getElementById(btn.dataset.copy);
-    navigator.clipboard.writeText(code.textContent).then(function () {
-      btn.dataset.state = 'success';
-      btn.textContent = 'Copied';
-      setTimeout(function () { btn.dataset.state = ''; btn.textContent = 'Copy'; }, 1600);
+document.querySelectorAll('.copybtn').forEach(function (button) {
+  button.addEventListener('click', function () {
+    var source = document.getElementById(button.dataset.copy);
+    navigator.clipboard.writeText(source.textContent).then(function () {
+      button.dataset.state = 'success';
+      button.textContent = 'Copied';
+      setTimeout(function () { button.dataset.state = ''; button.textContent = 'Copy'; }, 1600);
     }, function () {
-      btn.dataset.state = 'error';
-      btn.textContent = 'Select and copy manually';
-      setTimeout(function () { btn.dataset.state = ''; btn.textContent = 'Copy'; }, 2400);
+      button.dataset.state = 'error';
+      button.textContent = 'Select manually';
+      setTimeout(function () { button.dataset.state = ''; button.textContent = 'Copy'; }, 2400);
     });
   });
 });
+
+(function () {
+  var nav = document.getElementById('nav');
+  function update() { nav.classList.toggle('is-scrolled', window.scrollY > 16); }
+  window.addEventListener('scroll', update, { passive: true });
+  update();
+})();
 </script>
 </body>
 </html>

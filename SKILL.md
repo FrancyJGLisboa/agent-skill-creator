@@ -15,13 +15,13 @@ license: MIT
 activation: /agent-skill-creator
 metadata:
   author: Francy Lisboa Charuto
-  version: 6.0.0
+  version: 6.1.0
   created: 2025-10-18
   last_reviewed: 2026-08-11
   review_interval_days: 180
 provenance:
   maintainer: Francy Lisboa Charuto
-  version: 6.0.0
+  version: 6.1.0
   created: 2025-10-18
   source_references:
     - https://github.com/FrancyJGLisboa/agent-skill-creator
@@ -31,13 +31,38 @@ compatibility: >-
   Claude Code, GitHub Copilot CLI, VS Code Copilot, Cursor, Windsurf, Cline,
   OpenAI Codex CLI, Gemini CLI, and more — 17 platforms total.
 ---
-# /agent-skill-creator — Level 5 Skill Dark Factory
+# /agent-skill-creator — Turn Existing Work Into a Reusable Skill
 
-You are an autonomous skill factory. You exist because humans are cognitively incapable of writing specifications clear enough for an agent to build from without intervention. A human-written spec will never reach Level 5 — it will always be incomplete, ambiguous, and missing the requirements the human assumed were obvious. That is not a flaw to fix. That is the design constraint this factory is built around.
+The user provides whatever already represents their work — a description, document,
+link, script, screenshot, transcript, or partial example. Turn that evidence into a
+complete, production-ready, cross-platform agent skill. The user should not need to
+write a specification, understand the skill format, choose an architecture, or review
+implementation details.
 
-The user provides raw material — workflow descriptions, documentation, links, existing code, API docs, PDFs, database schemas, transcripts, compliance checklists, vague intentions, anything — and you produce a complete, production-ready, cross-platform agent skill. The human provides sources and evaluates the outcome. You handle everything in between.
+Recurring work contains tacit knowledge that people recognize more easily than they
+can document upfront. Infer that knowledge from the supplied material, confirm the
+result in plain language, build autonomously, and give the user a concrete output they
+can judge and correct.
 
-This is a Level 5 dark factory for skill creation. The user should never need to write code, review implementation details, fill out templates, or understand the skill spec. Any cognitively constrained human should be able to pass you whatever they have — a messy transcript, a GitHub link, a half-written doc — and receive back an opinionated piece of reusable software that makes them genuinely productive. You bridge the gap between what humans can articulate and what agents need to build.
+## The User Journey
+
+Use this guided-light path by default. Expose the five technical phases only when the
+user asks how the factory works or requests interactive control.
+
+1. **Understand** — read the evidence and summarize the workflow, input, output, and
+   definition of success. Ask for one confirmation or correction.
+2. **Build** — create the skill autonomously. Report progress in user language; do not
+   ask the user to select APIs, architecture, filenames, or eval mechanics unless a
+   choice changes the real-world outcome.
+3. **Check** — run validation, pipeline, security, and eval gates. A clean security
+   scan means no known pattern matched; it is not proof of safety.
+4. **Try** — auto-install the skill and exercise it once on representative input in a
+   safe local or dry-run environment. Show the output and ask whether it matches the
+   user's work.
+
+The skill is successfully created only after the representative run succeeds. If a
+safe run needs credentials, unavailable data, or permission for a consequential side
+effect, use the `verification-blocked` handoff below instead of claiming success.
 
 ## Trigger
 
@@ -112,7 +137,9 @@ Before any phase begins, triage whatever the user provided. Human input is **evi
 
 **Discovery before building**: Before constructing anything, check: Is this data already in a database the user has access to? Has a colleague built a skill for this? Is there an API that makes a scraping approach unnecessary? The best skill is sometimes "you don't need a skill — the data already exists."
 
-**Hypothesis, not questionnaire**: Never present 5 questions upfront. Present: "From your files, I understand you do X → Y → Z weekly. The output goes to [person]. Right?" The human confirms or corrects with one word.
+**Hypothesis, not questionnaire**: Never present 5 questions upfront. Present one
+compact understanding with four fields: workflow, input, output, and what a correct
+result must demonstrate. The user confirms or corrects it with one response.
 
 **Progressive refinement**: Build at 60% understanding. A concrete (possibly wrong) output that the human reacts to is faster than 15 clarifying questions. The human cannot articulate what they want from nothing, but they can instantly say "no, not that — this" when shown something tangible.
 
@@ -158,26 +185,14 @@ Phase 4: DETECTION       Craft activation description + keywords for reliable tr
 Phase 5: IMPLEMENTATION  Create all files, validate, security scan, deliver
 ```
 
-The human removes the cognitive constraint by providing the raw material. The factory removes the implementation constraint by building the skill autonomously. The quality gates remove the trust constraint by validating the output automatically.
+The user's raw material supplies the domain evidence. The factory supplies the
+implementation. The quality gates provide observable checks, while the representative
+run lets the user judge whether the result matches the work they actually do.
 
-**Output**: A self-contained skill that is installed and invoked the same way as agent-skill-creator itself:
-
-```
-skill-name/
-├── SKILL.md          # Starts with "# /skill-name" — the invocation trigger (~15 tools)
-├── AGENTS.md         # Companion instruction file — AAIF format (~15 tools)
-├── .claude-plugin/   # plugin.json + marketplace.json (/plugin install path)
-├── scripts/          # Functional code + run_pipeline.py (multi-script) + run_evals.py + evolve.py
-├── references/       # Detailed documentation (loaded on demand)
-├── assets/           # Templates, schemas, data files
-├── evals/            # Bundled eval spec: binary checks + golden cases (+ judge canary)
-├── install.sh        # Cross-platform auto-detect installer
-└── README.md         # Multi-platform installation instructions
-```
-
-(`EVOLUTION.md` appears at the skill root after the first failed check — it accumulates the raw evidence each failure leaves behind.)
-
-Once installed, anyone on any platform types `/skill-name` and the skill activates — exactly like `/agent-skill-creator` or `/clarity`. The generated skill is a first-class citizen, not a second-class output.
+**Output**: A self-contained skill with instructions, functional scripts when needed,
+evals, maintenance tools, plugin manifests, and a cross-platform installer. Once
+installed, users invoke it as `/skill-name`. See `references/architecture-guide.md`
+for the package layouts.
 
 ## Core Workflow
 
@@ -307,7 +322,13 @@ Create all files in this order:
 9. Write `README.md` (multi-platform install instructions showing the `/plugin marketplace add` path for Claude Code and `git clone` to each tool's **native** path)
 10. Run **validation** against the official spec, **security scan** for hardcoded keys, instruction-body injection, and undeclared endpoints, **`python3 <skill>/scripts/check_pipeline.py <skill>`** (no compile or undeclared-dependency errors), and — if an eval spec was emitted — `python3 <skill>/scripts/run_evals.py --validate` (must report `VALID`)
 11. **Auto-install on the current platform** (see below)
-12. Report results to user with clear next steps, including the eval/optimize one-liner from `references/phase2-eval-assessment.md`
+12. **Run one safe representative use case** using a supplied artifact when possible,
+    otherwise a local fixture. Never send messages, write production data, purchase,
+    publish, or trigger another consequential action merely to verify a skill; use a
+    dry run or sandbox. If safe execution needs missing credentials, data, or authority,
+    stop with `verification-blocked` and one exact setup action.
+13. Report the result using the handoff contract below, including one invocation and
+    one correction command. Put eval/optimization details behind an advanced label.
 
 ### Auto-Install After Creation
 
@@ -321,7 +342,9 @@ Read `references/distribution-guide.md` for the full detection table, the per-pl
 
 ### Share With Your Team (Post-Creation)
 
-After installing locally, **always ask** whether the user wants to share the skill with their team.
+After the representative run succeeds and the user can see the result, ask whether
+they want to share the skill with their team. Sharing is a separate next step, not
+part of first-skill completion.
 
 Corporate users don't know what a registry is, how to `git push`, or what `skill_registry.py` does. They just want their colleague to have the same skill. If they say yes, you do all of it: `git init`, create the remote with whichever CLI is authenticated (`gh` or `glab`), tag it `agent-skill` for org-wide discoverability, and hand back a one-line `git clone` command they can paste into Slack.
 
@@ -329,54 +352,37 @@ If they say no, that is fine — the skill is installed and working, and they ca
 
 Read `references/distribution-guide.md` for the git/`gh`/`glab` procedure, the platform-detection fallback, the shareable one-liner template, team-registry setup, and the update-check flow.
 
-### Generated SKILL.md Format
+### Completion Handoff Contract
 
-Every generated skill's SKILL.md must follow this structure:
+Use exactly one of these states:
 
-```yaml
----
-name: skill-name-skill      # 1-64 chars, must end with -skill, matches directory
-description: >-             # 1-1024 chars, activation keywords
-  Description here...
-license: MIT                # or appropriate license
-metadata:
-  author: Author Name
-  version: 1.0.0
-  created: YYYY-MM-DD                # When the skill was created
-  last_reviewed: YYYY-MM-DD          # Last time content was verified current
-  review_interval_days: 90           # Days between required reviews
-  dependencies:                      # External URLs the skill depends on (optional)
-    - url: https://api.example.com/v1
-      name: Example API
-      type: api
-  schema_expectations:               # Expected API response shapes (optional)
-    - url: https://api.example.com/v1/data
-      method: GET
-      expected_keys:
-        - id
-        - name
-        - value
----
-# /skill-name — Short Description
+- **verified** — gates passed, installation succeeded, and a representative safe run
+  produced an inspectable result.
+- **verification-blocked** — build and gates passed, but a representative run needs
+  missing credentials, data, or user authority. State the blocker and one exact action.
+- **installed** — installation succeeded but the user explicitly declined the run.
+- **failed** — a build, gate, installation, or representative run failed. State the
+  failing check and the next repair action; never use success wording.
 
-You are an expert [domain]. Your job is to [what the skill does].
+For `verified`, lead with what now works. Then show the result location or short
+preview, the exact `/skill-name` invocation, a compact list of gates passed, and:
 
-## Trigger
-
-User invokes `/skill-name` followed by their input:
-
-[examples of invocation]
-
-## [Workflow, instructions, scripts]
-
-## Gotchas
-
-[Environment-specific facts that defy reasonable assumptions — see below]
-
-## [References]
+```bash
+python3 <skill>/scripts/evolve.py --correct "what the result got wrong"
 ```
 
-The SKILL.md body must start with `# /skill-name` so the agent recognizes the slash invocation. The body must be <500 lines. Move detailed content to `references/`, and delete anything the model already knows without being told — that is cheaper than moving it.
+Do not lead with file counts, architecture, or internal phase names. Put those under
+`Advanced details` only when useful. After the handoff, ask the user to judge the
+result before offering team sharing.
+
+### Generated SKILL.md Format
+
+Generated names must end with `-skill`, match the directory, and use lowercase
+kebab-case. Frontmatter carries `name`, an activation-focused `description`, license,
+author, version, creation/review dates, and any external dependency or schema
+expectations. The body starts with `# /skill-name`, includes trigger examples and a
+`## Gotchas` section, and stays under 500 lines. Read `references/pipeline-phases.md`
+Phase 5 for the maintained template.
 
 **Every generated skill carries a `## Gotchas` section.** It holds the environment-specific facts that defy reasonable assumptions: the field that is a string with commas, the endpoint that returns 200 on failure, the step that must run twice. Sources are the Phase 1 quirks list and every correction made while verifying the skill in Phase 5. `None known` is a valid value; inventing gotchas to fill the section is not — a fabricated gotcha teaches the agent a false constraint it will then work around. `validate.py` warns when the section is missing. Full guidance in `references/pipeline-phases.md` (Phase 5, Step 2).
 
@@ -384,15 +390,9 @@ The SKILL.md body must start with `# /skill-name` so the agent recognizes the sl
 
 ## Architecture Decision
 
-| Factor | Simple Skill | Complex Suite |
-|--------|-------------|---------------|
-| Workflows | 1-2 | 3+ distinct |
-| Code size | <1000 lines | >2000 lines |
-| Maintenance | Single developer | Team |
-| Structure | Single SKILL.md | Multiple component SKILL.md files |
-| marketplace.json | Shipped by default (`.claude-plugin/`, Step 6.5) | Shipped by default (official fields only) |
-
-See `references/architecture-guide.md` for detailed decision framework.
+Use a simple skill for one or two related workflows. Use a suite for three or more
+genuinely distinct workflows or separate team ownership. Read
+`references/architecture-guide.md` for the full decision framework and layouts.
 
 ## Cross-Platform Support
 
@@ -493,6 +493,13 @@ Every generated skill name must end with `-skill`. This suffix makes skills inst
 **Suites**: `{domain}-suite` (suites are not suffixed with `-skill` — they contain skills)
 
 The `-skill` suffix also serves as a signal to the agent: when it sees a repo or directory ending in `-skill`, it knows this is installable, invocable software — not documentation or a regular project.
+
+## Gotchas
+
+- Generated skills end with `-skill`; this factory retains the historical
+  `agent-skill-creator` name for invocation and installation compatibility.
+- A representative verification run must use dry-run, sandbox, or local fixtures when
+  the real workflow has consequential external effects.
 
 ## Reference Files
 

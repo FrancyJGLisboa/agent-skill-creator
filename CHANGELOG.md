@@ -7,6 +7,14 @@ to semantic versioning where practical.
 ## [Unreleased]
 
 ### Changed
+- **First-skill success journey**: the default conversation now uses four
+  user-facing stages — Understand, Build, Check, Try — and asks users to confirm
+  only the inferred workflow and success criteria. A skill is called `verified`
+  only after auto-install and one safe representative run; missing credentials,
+  data, or authority produce an explicit `verification-blocked` handoff instead.
+  README and website onboarding now lead with a working result and a choose-your-tool
+  install path, while architecture, evals, security internals, and the 17-platform
+  matrix remain available through progressive disclosure.
 - **Keyless, subscription-based `llm-judge` grading** (`scripts/run_evals_template.py`):
   the `--judge` path no longer requires `ANTHROPIC_API_KEY`. It now resolves a
   grader in priority order — (1) `$EVAL_JUDGE_CMD`, any runtime's print-mode

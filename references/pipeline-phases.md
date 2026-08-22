@@ -1,7 +1,7 @@
 # Pipeline Phases: Complete 5-Phase Skill Creation Reference
 
-**Version:** 6.0
-**Purpose:** Consolidated reference for the autonomous 5-phase skill creation pipeline used by agent-skill-creator v6.0.
+**Version:** 6.1
+**Purpose:** Technical reference behind the guided-light skill creation journey.
 
 This document contains the detailed instructions for each phase of skill creation, following the Agent Skills Open Standard (SKILL.md-first, `-skill` suffix on generated names, spec-compliant frontmatter, cross-platform support).
 
@@ -17,7 +17,7 @@ Phase 4: DETECTION       -> Generate description + keywords for activation
 Phase 5: IMPLEMENTATION  -> Create all files, validate, security scan
 ```
 
-**Key v6.0 principles:**
+**Key principles:**
 
 - SKILL.md is the **primary file**, created first in Phase 5
 - Generated names use **kebab-case** and **must end with `-skill`**
@@ -1624,45 +1624,45 @@ python3 scripts/security_scan.py path/to/skill/
 
 **If security scan finds issues:** Fix them (replace hardcoded keys with env var references, remove `.env` files, sanitize shell inputs) and re-run.
 
-### Step 10: Report Results
+### Step 10: Install, Try, and Report
 
-After successful validation and security scan, report to the user:
+After the gates pass, auto-install the skill as described in
+`distribution-guide.md`. Then run one representative use case before using success
+wording.
+
+Prefer a user-supplied artifact. Otherwise use a local golden fixture. Verification
+must not send email or messages, publish, purchase, modify production data, or perform
+another consequential action. Use a documented `--dry-run`, sandbox destination, or
+local fixture. If no safe path exists, do not execute the side effect.
+
+Use one state in the handoff:
+
+| State | Required evidence |
+|---|---|
+| `verified` | Gates passed, installed, representative run produced an inspectable result |
+| `verification-blocked` | Build passed, but credentials, data, or authority prevent a safe run |
+| `installed` | User explicitly declined representative execution |
+| `failed` | A build, gate, install, or representative run failed |
+
+For `verified`, use this order:
 
 ```
-SKILL CREATED SUCCESSFULLY
+[Concrete result] now works.
 
-Location: ./skill-name/
+Result: [path or short preview]
+Use it: /skill-name [representative request]
 
-Statistics:
-- SKILL.md: [N] lines (<500)
-- Python code: [N] lines across [N] scripts
-- References: [N] files
-- Total files: [N]
+Checks: validation passed · pipeline passed · security scan clean · representative run passed
+Security note: clean means no known scanner pattern matched; it is not proof of safety.
 
-Validation: PASSED
-Security Scan: PASSED
-Pipeline: PASSED (scripts compile, deps declared)
-Evals: PASSED ([N] command checks, [M] golden cases)   # or SKIPPED (--no-eval)
-Gotchas: [N] recorded                                  # or "None known"
-
-Main Decisions:
-- API: [name] ([short justification])
-- Analyses: [list]
-- Structure: [simple/organized/complex]
-
-Next Steps:
-1. Get API key: [instructions or link]
-2. Configure: export API_KEY_VAR="your_key"
-3. Install: ./install.sh
-4. Test: "[example query 1]"
-
-Evals:
-- Check the skill against its golden baseline anytime: python3 scripts/run_evals.py
-- Run it end-to-end and score the real output: python3 scripts/run_evals.py --rollout
-- Optimize it against its metric: /autoresearch-universal optimize . using evals/[skill-name].eval.md
-
-See README.md for complete multi-platform installation instructions.
+If the result is wrong:
+  python3 <skill>/scripts/evolve.py --correct "what it got wrong"
 ```
+
+For `verification-blocked`, name the missing prerequisite and give one exact setup
+action. Do not print `SKILL CREATED SUCCESSFULLY`. File counts, architecture decisions,
+eval optimization, and registry commands belong under `Advanced details`, not in the
+primary handoff.
 
 ## File Creation Order Summary
 

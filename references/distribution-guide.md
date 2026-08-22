@@ -60,16 +60,27 @@ cp -R ./sales-report-skill .cursor/skills/sales-report-skill
 cp -R ./sales-report-skill ~/.gemini/skills/sales-report-skill
 ```
 
-**After installing, tell the user exactly what to do next:**
+**After installing, run a safe representative use case before claiming success.**
+Use supplied material or a local golden fixture. Use dry-run or sandbox behavior for
+skills that can send messages, publish, purchase, or write production data. If a safe
+run needs credentials, data, or authority, report `verification-blocked` with one
+exact setup action.
+
+For a verified skill, tell the user exactly what now works:
 
 ```
-Skill installed successfully.
+The weekly sales report now works from a CRM export.
+
+Result: ./output/weekly-sales-report.pdf
 
 To use it, open a new session and type:
 
   /sales-report-skill Generate the weekly report for the West region
 
-The skill is installed at: ~/.claude/skills/sales-report-skill
+Checks: validation passed · pipeline passed · security scan clean · representative run passed
+
+If the result is wrong:
+  python3 ./sales-report-skill/scripts/evolve.py --correct "what it got wrong"
 ```
 
 If you cannot detect the platform, show the user how to run the install manually:
@@ -98,7 +109,8 @@ The generated skill must be a self-contained package that anyone can install wit
 
 ## Share With Your Team (Post-Creation)
 
-After installing the skill locally, always ask:
+After the representative result is visible and the user has had a chance to judge it,
+ask:
 
 ```
 Want to share this skill with your team so they can install it too?
@@ -299,4 +311,3 @@ If both commands succeed and the hashes differ, mention to the user:
 "A newer version of agent-skill-creator is available. Run `git pull` in <path> to update."
 
 Do not block or interrupt for this. If either command fails (no git, no network, not a git repo), skip silently.
-
