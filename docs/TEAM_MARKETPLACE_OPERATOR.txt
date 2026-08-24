@@ -29,6 +29,23 @@ For VS Code Copilot Agent Mode, the primary delivery mechanism is a pinned
 gh skill install command. Plugin manifests are a secondary compatibility channel
 for supported CLI hosts.
 
+CHOOSE THE GIT PROVIDER BEFORE CONTINUING
+=========================================
+
+GitHub + VS Code Copilot Agent Mode:
+
+Use this file and team_marketplace.py. This path provides schema-v2 bundles,
+generated GitHub governance, semantic-version releases, and pinned gh skill installs.
+
+GitLab or self-managed GitLab:
+
+Use docs/GITLAB_TEAM_REGISTRY.md and skill_registry.py. The supported GitLab path
+uses merge requests, protected tags, a clone at an exact tag, and the copy-based
+installer. It does not currently provide schema-v2 bundles, generated GitLab CI,
+or gh skill installation.
+
+Do not run team_marketplace.py against GitLab and assume equivalent behavior.
+
 
 PHASE A — ONE-TIME PLATFORM SETUP
 =================================

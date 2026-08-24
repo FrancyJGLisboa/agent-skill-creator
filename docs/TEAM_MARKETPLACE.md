@@ -4,6 +4,19 @@ Use this page from top to bottom. It contains every command needed to create an
 ACME marketplace, admit individual skills, release approved bundles, install them
 in VS Code Copilot Agent Mode, and update or roll them back.
 
+## Choose the Git provider first
+
+| ACME environment | Use |
+|---|---|
+| GitHub plus VS Code Copilot Agent Mode | Continue on this page with `team_marketplace.py`. |
+| GitLab or self-managed GitLab | Follow the [GitLab registry workflow](GITLAB_TEAM_REGISTRY.md). |
+| GitHub without approved `gh skill` preview | Use the GitLab-style lightweight registry and copy-based installer. |
+
+The workflows are not equivalent today. The GitHub path provides schema-v2 bundles,
+generated governance, tagged releases, and exact `gh skill` installs. The GitLab
+path uses `skill_registry.py`, GitLab merge controls, protected tags, and installation
+from a clone at an exact tag.
+
 ```text
 ONE-TIME SETUP                         REPEATED FOR EACH CHANGE
 

@@ -11,6 +11,7 @@
 [Website](https://francyjglisboa.github.io/agent-skill-creator/) ·
 [Installation](docs/INSTALL.md) ·
 [Governed team marketplace](docs/TEAM_MARKETPLACE.md) ·
+[GitLab team registry](docs/GITLAB_TEAM_REGISTRY.md) ·
 [Changelog](CHANGELOG.md)
 
 You do not need to write a specification or understand skill engineering. Give the
@@ -203,6 +204,12 @@ is still public preview, so the copy-based installer remains available.
 The [complete marketplace timeline](docs/TEAM_MARKETPLACE.md) is the canonical
 operator page. The [distribution reference](references/distribution-guide.md#governed-github-copilot-marketplace)
 contains the factory's internal routing and fallback behavior.
+
+GitLab teams use the documented [lightweight GitLab registry workflow](docs/GITLAB_TEAM_REGISTRY.md).
+It preserves Git review, protected tags, validation, security scanning, and
+copy-based installation. It does not yet provide GitHub marketplace bundles,
+generated GitLab CI, or `gh skill` delivery; those require a future first-class
+`--provider gitlab` implementation.
 
 ## Advanced capabilities
 

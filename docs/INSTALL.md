@@ -104,6 +104,10 @@ copy-based installers documented below.
 Repository creation, schema-v1 migration, approval gates, and releases are in the
 [complete marketplace timeline](TEAM_MARKETPLACE.md).
 
+GitLab does not support this `gh skill` path. GitLab teams should follow the
+[GitLab registry workflow](GITLAB_TEAM_REGISTRY.md), which uses `skill_registry.py`,
+protected Git tags, and copy-based installation from a clone at an exact tag.
+
 **Clone to a specific tool:** every per-tool `git clone` path is in
 [Global install](#global-install-each-tools-native-path) and
 [Per-project install](#per-project-install) below — one canonical list.

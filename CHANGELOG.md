@@ -40,6 +40,9 @@ to semantic versioning where practical.
   distribution guidance, and contributor instructions now describe the shipped CLI.
   `docs/TEAM_MARKETPLACE.md` provides one canonical chronological page containing
   every setup, intake, review, release, install, update, rollback, and correction command.
+  `docs/GITLAB_TEAM_REGISTRY.md` documents the supported lightweight GitLab path,
+  protected-tag installation workflow, and the current boundary: GitLab does not
+  yet have schema-v2 bundles, generated CI, or a first-class provider adapter.
 - **Model-comparison rollouts** (`scripts/run_evals_template.py`): repeatable
   `--model <id>` on `--rollout` runs the whole golden suite once per model
   under test and prints a per-model comparison table — pass/fail/error/

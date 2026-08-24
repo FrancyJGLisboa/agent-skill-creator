@@ -46,6 +46,8 @@ python3 scripts/security_scan.py <skill-dir>
   tests, README quick start, `docs/TEAM_MARKETPLACE.md`, `docs/INSTALL.md`,
   GitHub Pages, `SKILL.md`, and
   `references/distribution-guide.md` aligned. Examples and fixtures use ACME only.
+  Provider-related changes must also update `docs/GITLAB_TEAM_REGISTRY.md` and
+  must not describe the lightweight GitLab registry as feature-equivalent.
 
 ## Changing the governed marketplace
 

@@ -253,6 +253,11 @@ several agent clients, or does not have GitHub CLI 2.90+ with `gh skill`. For a
 GitHub organization centered on VS Code Copilot Agent Mode, use the governed
 marketplace above instead.
 
+For the complete GitLab command sequence, follow
+[`docs/GITLAB_TEAM_REGISTRY.md`](../docs/GITLAB_TEAM_REGISTRY.md). Do not imply
+that the lightweight registry has schema-v2 bundles, generated GitLab CI, or
+native `gh skill` installation.
+
 The lightweight registry is a shared Git repository that acts as a catalog where
 team members publish and copy-install skills. It provides version history and
 repository permissions, but it does not generate bundle manifests, CODEOWNERS,
