@@ -352,6 +352,14 @@ If they say no, that is fine — the skill is installed and working, and they ca
 
 Read `references/distribution-guide.md` for the git/`gh`/`glab` procedure, the platform-detection fallback, the shareable one-liner template, team-registry setup, and the update-check flow.
 
+For governed GitHub organizations whose primary client is VS Code Copilot Agent
+Mode, run `python3 scripts/team_marketplace.py` instead of using the legacy flat registry. It
+creates department namespaces, bundle manifests, CODEOWNERS, PR/release workflows,
+schema-v2 quality evidence, and exact version-pinned `gh skill` installs. Runtime
+shell access must never be pre-approved in a marketplace skill. Read the governed
+marketplace section of `references/distribution-guide.md` before initializing or
+migrating a team repository.
+
 ### Completion Handoff Contract
 
 Use exactly one of these states:
@@ -510,7 +518,7 @@ Read these on demand — each one when its moment arrives, not upfront.
 | `references/spec-ideation.md` | Phase 0 front door: turn vague input / "give me a skill idea" into a grounded, skill-shaped spec |
 | `references/mcp-audit.md` | `--mcp-audit` front door: vendor MCP server → capability map, ranked buildable skills, not-buildable list with named gaps |
 | `references/skill-audit.md` | `--audit` front door: the four audit questions, verdict rules, and how to report partial coverage on a skill you did not write |
-| `references/distribution-guide.md` | After the gates pass: platform detection table and native paths, share-with-team procedure (`gh`/`glab`), team registry setup, update check |
+| `references/distribution-guide.md` | After the gates pass: platform detection, team distribution routing, and update checks. For governed marketplace operations, follow the linked `docs/TEAM_MARKETPLACE.md` command timeline. |
 | `references/pipeline-phases.md` | Detailed Phase 1-5 instructions |
 | `references/architecture-guide.md` | Simple vs Suite decision, refactoring, cross-component communication, versioning |
 | `references/templates-guide.md` | Template-based creation |

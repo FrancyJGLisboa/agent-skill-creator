@@ -21,7 +21,7 @@ Realistic framing: "10K in a month" requires a front-page hit **and** sustained
 follow-through. Treat that as the stretch goal. The controllable goal is: ship a
 launch good enough that *if* it gets seen, it converts — then maximize shots on goal.
 
-## The conversion checklist (already done — verify before launch)
+## The conversion checklist
 
 - [ ] First screen: tagline + working visual + one-liner install, no broken images.
 - [ ] A 15-second demo (render `assets/demo.cast` → `assets/demo.gif`, see
@@ -29,18 +29,24 @@ launch good enough that *if* it gets seen, it converts — then maximize shots o
 - [ ] "Why this vs alternatives" table is visible and honest.
 - [ ] ≥3 runnable examples a visitor can try in one command.
 - [ ] CI badge is green on `main`.
-- [ ] Repo description + topics set on GitHub (see below).
+- [ ] Repo description is current and topics are set on GitHub (see below).
 - [ ] Tag matches the README version (`v6.1.0`).
 
 ## GitHub setup (do once, before launch)
 
-- **Description:** "Turn any workflow into a validated agent skill that installs on
-  17 AI coding tools — no spec writing, no coding."
+- **Description:** "Turn existing work into validated agent skills with safe first-run
+  verification, 17-platform installation, and governed GitHub Copilot team releases."
 - **Topics:** `agent-skills`, `claude`, `claude-code`, `llm`, `ai-agents`,
   `developer-tools`, `cursor`, `copilot`, `cross-platform`, `mcp`.
 - **Social preview image:** upload a PNG of `assets/hero.svg`
   (Settings → Social preview) so shared links render a card, not a generic icon.
 - Pin the repo on your profile; enable Discussions.
+
+Live repository check on 2026-08-24: GitHub Pages is enabled and points to
+`https://francyjglisboa.github.io/agent-skill-creator/`; the repository has no
+topics and Discussions is disabled. Treat those two settings as open actions, not
+completed launch work. GitHub Pages updates after the documentation changes reach
+`main`; editing `docs/index.html` locally does not publish the page.
 
 ## Sequencing (a sane order)
 

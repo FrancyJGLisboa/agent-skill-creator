@@ -8,6 +8,11 @@
 [![Version](https://img.shields.io/badge/version-6.1.0-brightgreen)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)]()
 
+[Website](https://francyjglisboa.github.io/agent-skill-creator/) ·
+[Installation](docs/INSTALL.md) ·
+[Governed team marketplace](docs/TEAM_MARKETPLACE.md) ·
+[Changelog](CHANGELOG.md)
+
 You do not need to write a specification or understand skill engineering. Give the
 creator a sentence, spreadsheet, PDF, link, screenshot, transcript, or half-working
 script. It reconstructs the workflow, confirms what a correct result means, builds and
@@ -151,12 +156,60 @@ python3 scripts/run_pipeline.py --input evals/golden/case-1/input.csv --output /
 python3 scripts/run_evals.py --rollout
 ```
 
+## Governed team marketplace
+
+Follow the [complete marketplace timeline](docs/TEAM_MARKETPLACE.md) for every
+command in operational order: prerequisites, initialization, GitHub protection,
+skill intake, review, release, installation, update, rollback, and correction.
+
+Create a central GitHub repository for department-owned skills, reviewed bundles,
+and version-pinned installs in VS Code Copilot Agent Mode:
+
+```bash
+python3 scripts/team_marketplace.py init \
+  --name "ACME Skills" \
+  --repository ACME/acme-skills \
+  --marketplace ./acme-skills
+
+python3 scripts/team_marketplace.py add ./report-skill \
+  --department finance \
+  --bundle analyst-starter \
+  --marketplace ./acme-skills
+```
+
+The generated repository includes `registry.json` schema v2, departmental skill
+paths, bundle manifests, `CATALOG.md`, `CODEOWNERS`, governance instructions, and
+GitHub Actions for pull-request and release checks. `add` blocks failed validation,
+security, pipeline, or eval gates. It also rejects path traversal, duplicate skill
+identities, undeclared network endpoints, embedded secrets, instruction injection,
+and pre-approved `shell` or `bash` access.
+
+Install an approved bundle at an immutable release:
+
+```bash
+python3 scripts/team_marketplace.py install \
+  --bundle analyst-starter \
+  --scope user \
+  --pin v1.2.0 \
+  --marketplace ./acme-skills
+```
+
+Use `--scope project` for a repository-local install. Update by installing a newer
+tag; roll back by reinstalling the previous tag with `--force`. The command uses
+exact `gh skill install ACME/acme-skills skills/<department>/<skill>` paths and
+targets `github-copilot` explicitly. GitHub CLI 2.90 or newer is required; `gh skill`
+is still public preview, so the copy-based installer remains available.
+
+The [complete marketplace timeline](docs/TEAM_MARKETPLACE.md) is the canonical
+operator page. The [distribution reference](references/distribution-guide.md#governed-github-copilot-marketplace)
+contains the factory's internal routing and fallback behavior.
+
 ## Advanced capabilities
 
 - [MCP capability audit](references/mcp-audit.md): map a vendor MCP server into buildable and missing skill opportunities.
 - [Cross-platform export](references/export-guide.md): adapt an existing skill for supported tools.
 - [Multi-agent suites](references/multi-agent-guide.md): create coordinated skills for genuinely distinct workflows.
-- [Team distribution](references/distribution-guide.md): publish, install, update, and maintain a shared registry.
+- [Team distribution](references/distribution-guide.md): choose the governed Copilot marketplace or lightweight cross-Git registry.
 - [Eval and evolution](references/phase2-eval-assessment.md): inspect golden cases, rollouts, holdouts, judges, and model comparisons.
 
 ## Contributing

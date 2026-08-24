@@ -9,6 +9,61 @@ procedures, and message templates they need.
 
 ---
 
+## Governed GitHub Copilot Marketplace
+
+The public operator guide is
+[`docs/TEAM_MARKETPLACE.md`](../docs/TEAM_MARKETPLACE.md). It places every command
+in chronological order. Keep this internal routing reference consistent with it.
+
+Use this path for a centrally governed organization whose analysts work primarily
+in VS Code Copilot Agent Mode. GitHub is the control plane; `gh skill` is the
+preview/install/release mechanism. The copy-based installer later in this guide is
+the fallback while `gh skill` remains in public preview.
+
+1. Initialize a new ACME-only repository scaffold:
+
+   ```bash
+   python3 scripts/team_marketplace.py init --name "ACME Skills" --repository ACME/acme-skills --marketplace ./acme-skills
+   ```
+
+   To migrate an existing schema-v1 registry, add
+   `--from-registry ./legacy-registry`. Migrated entries remain `draft` until
+   department, platform, and security owners review them.
+
+2. Add a reviewed skill to a department and bundle:
+
+   ```bash
+   python3 scripts/team_marketplace.py add ./report-skill --department finance --bundle analyst-starter --marketplace ./acme-skills
+   ```
+
+   Add runs validation, security, pipeline, and eval gates before copying.
+   The source `SKILL.md` must declare `metadata.owners`,
+   `metadata.approval_status: approved`, author, and version. `allowed-tools` may
+   not pre-approve `shell` or `bash`; Copilot asks for runtime permission.
+
+3. Require the generated `governed-marketplace` check and CODEOWNER approval on
+   the protected default branch. Apply a restricted `v*.*.*` tag ruleset using
+   the exact settings in `GOVERNANCE.md`.
+
+4. Check and publish an immutable release:
+
+   ```bash
+   python3 scripts/team_marketplace.py check --marketplace ./acme-skills
+   python3 scripts/team_marketplace.py release --tag v1.2.0 --marketplace ./acme-skills
+   ```
+
+5. Install a bundle at an exact release for Copilot:
+
+   ```bash
+   python3 scripts/team_marketplace.py install --bundle analyst-starter --scope user --pin v1.2.0 --marketplace ./acme-skills
+   python3 scripts/team_marketplace.py install --bundle analyst-starter --scope project --pin v1.2.0 --marketplace ./acme-skills
+   ```
+
+   Updating means explicitly installing a newer pin. Rollback uses the same
+   command with the previous tag and `--force`. Corrections go through the
+   skill's `scripts/evolve.py`, its gates, and a pull request—never by editing an
+   installed copy.
+
 ## Auto-Install After Creation
 
 After the skill passes validation and security scan, install it immediately on the user's current platform. Do not ask the user to run `install.sh` manually — you are already running inside their environment and can detect their platform.
@@ -191,9 +246,17 @@ The goal: the user who created the skill sends a one-liner to their colleague on
 
 **If the user says no**, that's fine — the skill is already installed locally and working. They can always share later.
 
-## Set Up a Team Skill Registry
+## Set Up a Lightweight Cross-Git Registry
 
-When a user mentions a team, organization, or colleagues — or when they ask about sharing skills at scale — offer to create a **team skill registry**. This is a shared git repo that acts as the central catalog where all team members publish and install skills.
+Use this legacy-compatible path when the team needs GitLab support, works across
+several agent clients, or does not have GitHub CLI 2.90+ with `gh skill`. For a
+GitHub organization centered on VS Code Copilot Agent Mode, use the governed
+marketplace above instead.
+
+The lightweight registry is a shared Git repository that acts as a catalog where
+team members publish and copy-install skills. It provides version history and
+repository permissions, but it does not generate bundle manifests, CODEOWNERS,
+protected release workflows, or immutable managed installs.
 
 This is the model for AI consultants enabling corporate teams:
 1. The consultant teaches each team member to install and use agent-skill-creator
@@ -285,14 +348,16 @@ install them — like an internal app store for agent skills.
    ──────────────────────────────────────────────
    ```
 
-**When to offer registry setup:**
-- User mentions "team", "organization", "department", "colleagues", "company"
-- User asks about sharing or distributing skills at scale
-- User is an AI consultant or admin setting up infrastructure for others
+**When to use this registry:**
+- The organization uses GitLab or another Git host instead of GitHub.
+- The team needs the existing copy-based 17-platform installer.
+- `gh skill` preview is unavailable or not approved.
 
 **When NOT to offer:**
 - User is creating a single personal skill
 - A registry already exists (check for `~/team-skills-registry` or similar)
+- The team requested governed GitHub Copilot distribution; use
+  `scripts/team_marketplace.py` for that case.
 
 The registry is a git repo. Version history, access control, and review workflows come free from GitHub/GitLab. No servers, no databases, no new tools.
 

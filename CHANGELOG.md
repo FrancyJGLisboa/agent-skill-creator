@@ -30,6 +30,16 @@ to semantic versioning where practical.
   runners are re-synced from the template.
 
 ### Added
+- **Governed GitHub Copilot team marketplace** (`scripts/team_marketplace.py`):
+  schema-v2 departmental catalog, explicit schema-v1 migration, reviewed bundles,
+  generated `CATALOG.md`/`CODEOWNERS`/governance guidance, pull-request and tagged
+  release workflows, exact `gh skill` paths, user/project scopes, immutable pins,
+  and rollback through a previous tag. Adds release-blocking validation, security,
+  pipeline, eval, ownership, approval, duplicate-identity, manifest-consistency,
+  path-traversal, and pre-approved shell gates. README, GitHub Pages, install docs,
+  distribution guidance, and contributor instructions now describe the shipped CLI.
+  `docs/TEAM_MARKETPLACE.md` provides one canonical chronological page containing
+  every setup, intake, review, release, install, update, rollback, and correction command.
 - **Model-comparison rollouts** (`scripts/run_evals_template.py`): repeatable
   `--model <id>` on `--rollout` runs the whole golden suite once per model
   under test and prints a per-model comparison table — pass/fail/error/

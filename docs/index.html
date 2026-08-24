@@ -9,7 +9,7 @@
 <meta property="og:description" content="Turn work you already do into a reusable agent workflow—and see it work once before calling it done.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
 <link rel="stylesheet" href="tokens.css">
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -22,6 +22,7 @@
     <nav class="nav__center" aria-label="Page sections">
       <a href="#journey">How it works</a>
       <a href="#start">Install</a>
+      <a href="#teams">Teams</a>
       <a href="#trust">Trust</a>
     </nav>
     <a class="button button--small" href="https://github.com/FrancyJGLisboa/agent-skill-creator">GitHub&nbsp;★</a>
@@ -55,7 +56,7 @@
   </section>
 
   <section class="proof-strip" aria-label="Project facts">
-    <div><b>1.8k+</b><span>GitHub stars</span></div>
+    <div><b>v2</b><span>governed registry schema</span></div>
     <div><b>17</b><span>supported targets</span></div>
     <div><b>4</b><span>visible steps</span></div>
     <div><b>MIT</b><span>open source</span></div>
@@ -132,7 +133,7 @@
       <noscript>
         <p>JavaScript is off. Use the universal macOS/Linux installer:</p>
         <pre><code>curl -fsSL https://raw.githubusercontent.com/FrancyJGLisboa/agent-skill-creator/main/scripts/bootstrap.sh | sh</code></pre>
-        <p>Windows and single-tool commands are in the <a href="INSTALL.md">installation guide</a>.</p>
+        <p>Windows and single-tool commands are in the <a href="INSTALL.html">installation guide</a>.</p>
       </noscript>
     </div>
 
@@ -143,6 +144,24 @@
         <button class="copybtn copybtn--light" type="button" data-copy="first-prompt">Copy</button>
       </div>
       <p class="muted"><strong>Success looks like:</strong> the creator confirms the workflow, shows four progress stages, and finishes with an inspectable result or one exact verification blocker.</p>
+    </div>
+  </section>
+
+  <section class="section" id="teams">
+    <header class="section__head">
+      <p class="eyebrow">Governed team distribution</p>
+      <h2>One reviewed marketplace for VS Code Copilot</h2>
+      <p>Create department-owned skills, approved bundles, and immutable release pins
+      in a central GitHub repository.</p>
+    </header>
+    <div class="next-action">
+      <p class="eyebrow">Initialize an ACME marketplace</p>
+      <div class="codewrap codewrap--light">
+        <pre><code id="marketplace-command">python3 scripts/team_marketplace.py init --name "ACME Skills" --repository ACME/acme-skills --marketplace ./acme-skills</code></pre>
+        <button class="copybtn copybtn--light" type="button" data-copy="marketplace-command">Copy</button>
+      </div>
+      <p class="muted"><strong>What it creates:</strong> department namespaces, bundle manifests, a generated catalog, CODEOWNERS, governance instructions, and GitHub Actions. Releases block draft skills, failed gates, inconsistent manifests, duplicate identities, and pre-approved shell access.</p>
+      <p><a class="text-link" href="TEAM_MARKETPLACE.html">Open the complete command timeline</a></p>
     </div>
   </section>
 
@@ -169,7 +188,8 @@
       <a href="https://github.com/FrancyJGLisboa/agent-skill-creator/blob/main/references/pipeline-phases.md">Five-phase pipeline</a>
       <a href="https://github.com/FrancyJGLisboa/agent-skill-creator/blob/main/references/phase2-eval-assessment.md">Evals and evolution</a>
       <a href="https://github.com/FrancyJGLisboa/agent-skill-creator/blob/main/references/skill-audit.md">Skill auditing</a>
-      <a href="INSTALL.md">All 17 platforms</a>
+      <a href="TEAM_MARKETPLACE.html">Team marketplace timeline</a>
+      <a href="INSTALL.html">All 17 platforms</a>
     </div>
   </section>
 

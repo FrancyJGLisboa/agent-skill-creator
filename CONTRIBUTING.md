@@ -42,6 +42,24 @@ python3 scripts/security_scan.py <skill-dir>
 - **Single source of truth:** SKILL.md parsing lives in `scripts/skill_document.py`
   and the install-target list in `scripts/platforms.py` — extend those rather than
   re-implementing parsing or hardcoding platform paths.
+- **Marketplace contract:** changes to `scripts/team_marketplace.py` must keep its
+  tests, README quick start, `docs/TEAM_MARKETPLACE.md`, `docs/INSTALL.md`,
+  GitHub Pages, `SKILL.md`, and
+  `references/distribution-guide.md` aligned. Examples and fixtures use ACME only.
+
+## Changing the governed marketplace
+
+Run the focused suite first:
+
+```bash
+uv run pytest scripts/tests/test_team_marketplace.py -q
+python3 scripts/team_marketplace.py --help
+```
+
+Keep schema-v1 migration explicit and non-approving. Remote installs require a
+semantic-version pin and exact repository skill paths. `--force` may overwrite an
+installation; it must never bypass validation, security, pipeline, eval, ownership,
+or approval gates.
 
 ## Adding a new platform
 
