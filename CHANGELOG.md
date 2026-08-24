@@ -30,7 +30,7 @@ to semantic versioning where practical.
   runners are re-synced from the template.
 
 ### Added
-- **Governed GitHub Copilot team marketplace** (`scripts/team_marketplace.py`):
+- **Governed GitHub and GitLab Copilot team marketplace** (`scripts/team_marketplace.py`):
   schema-v2 departmental catalog, explicit schema-v1 migration, reviewed bundles,
   generated `CATALOG.md`/`CODEOWNERS`/governance guidance, pull-request and tagged
   release workflows, exact `gh skill` paths, user/project scopes, immutable pins,
@@ -40,9 +40,9 @@ to semantic versioning where practical.
   distribution guidance, and contributor instructions now describe the shipped CLI.
   `docs/TEAM_MARKETPLACE.md` provides one canonical chronological page containing
   every setup, intake, review, release, install, update, rollback, and correction command.
-  `docs/GITLAB_TEAM_REGISTRY.md` documents the supported lightweight GitLab path,
-  protected-tag installation workflow, and the current boundary: GitLab does not
-  yet have schema-v2 bundles, generated CI, or a first-class provider adapter.
+  A provider abstraction supplies GitHub and GitLab backends. GitLab adds generated
+  CI, `glab` releases, nested/self-managed repository support, and exact-tag
+  copy-based Copilot installs while preserving schema-v2 bundles and governance.
 - **Model-comparison rollouts** (`scripts/run_evals_template.py`): repeatable
   `--model <id>` on `--rollout` runs the whole golden suite once per model
   under test and prints a per-model comparison table — pass/fail/error/

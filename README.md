@@ -163,8 +163,8 @@ Follow the [complete marketplace timeline](docs/TEAM_MARKETPLACE.md) for every
 command in operational order: prerequisites, initialization, GitHub protection,
 skill intake, review, release, installation, update, rollback, and correction.
 
-Create a central GitHub repository for department-owned skills, reviewed bundles,
-and version-pinned installs in VS Code Copilot Agent Mode:
+Create a central GitHub or GitLab repository for department-owned skills, reviewed
+bundles, and version-pinned installs in VS Code Copilot Agent Mode:
 
 ```bash
 python3 scripts/team_marketplace.py init \
@@ -180,7 +180,8 @@ python3 scripts/team_marketplace.py add ./report-skill \
 
 The generated repository includes `registry.json` schema v2, departmental skill
 paths, bundle manifests, `CATALOG.md`, `CODEOWNERS`, governance instructions, and
-GitHub Actions for pull-request and release checks. `add` blocks failed validation,
+provider-native CI. Add `--provider gitlab` and, for self-managed instances,
+`--host gitlab.acme.test` during `init`. `add` blocks failed validation,
 security, pipeline, or eval gates. It also rejects path traversal, duplicate skill
 identities, undeclared network endpoints, embedded secrets, instruction injection,
 and pre-approved `shell` or `bash` access.
@@ -196,20 +197,17 @@ python3 scripts/team_marketplace.py install \
 ```
 
 Use `--scope project` for a repository-local install. Update by installing a newer
-tag; roll back by reinstalling the previous tag with `--force`. The command uses
-exact `gh skill install ACME/acme-skills skills/<department>/<skill>` paths and
-targets `github-copilot` explicitly. GitHub CLI 2.90 or newer is required; `gh skill`
-is still public preview, so the copy-based installer remains available.
+tag; roll back by reinstalling the previous tag with `--force`. GitHub uses exact
+`gh skill install` paths. GitLab clones the exact protected tag and copies the
+bundle into Copilot's user or project skill directory.
 
 The [complete marketplace timeline](docs/TEAM_MARKETPLACE.md) is the canonical
 operator page. The [distribution reference](references/distribution-guide.md#governed-github-copilot-marketplace)
 contains the factory's internal routing and fallback behavior.
 
-GitLab teams use the documented [lightweight GitLab registry workflow](docs/GITLAB_TEAM_REGISTRY.md).
-It preserves Git review, protected tags, validation, security scanning, and
-copy-based installation. It does not yet provide GitHub marketplace bundles,
-generated GitLab CI, or `gh skill` delivery; those require a future first-class
-`--provider gitlab` implementation.
+GitLab teams use the first-class [GitLab marketplace backend](docs/GITLAB_TEAM_REGISTRY.md),
+including generated GitLab CI, `glab` releases, schema-v2 bundles, nested groups,
+self-managed hosts, and pinned copy-based Copilot installation.
 
 ## Advanced capabilities
 

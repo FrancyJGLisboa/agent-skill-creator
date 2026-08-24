@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Build and operate a governed, Git-backed team skill marketplace.
+"""Build and operate a governed, provider-neutral team skill marketplace.
 
-The marketplace targets GitHub Copilot Agent Mode and delegates installation and
-release transport to ``gh skill``. Governance remains repository-native:
+The marketplace targets GitHub Copilot Agent Mode with GitHub and GitLab
+repository backends. Governance remains repository-native:
 department paths, CODEOWNERS, pull-request checks, immutable version pins, and
 machine-readable quality evidence in ``registry.json``.
 """
@@ -15,6 +15,8 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
+from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -48,6 +50,141 @@ class MarketplaceError(RuntimeError):
     """A user-correctable marketplace or governance failure."""
 
 
+class MarketplaceProvider(ABC):
+    """Repository-host-specific transport and generated governance files."""
+
+    name: str
+    default_host: str
+
+    @abstractmethod
+    def generate_files(self, root: Path) -> None:
+        """Generate provider-specific CI and governance files."""
+
+    @abstractmethod
+    def install(
+        self, root: Path, data: dict[str, Any], paths: list[str], scope: str,
+        pin: str | None, force: bool, from_local: bool,
+    ) -> list[list[str]]:
+        """Install a bundle and return executed transport commands."""
+
+    @abstractmethod
+    def release(self, root: Path, tag: str) -> None:
+        """Publish a checked marketplace release."""
+
+
+class GitHubProvider(MarketplaceProvider):
+    name = "github"
+    default_host = "github.com"
+
+    def generate_files(self, root: Path) -> None:
+        workflows = root / ".github/workflows"
+        workflows.mkdir(parents=True, exist_ok=True)
+        (workflows / "marketplace-check.yml").write_text(_CHECK_WORKFLOW, encoding="utf-8")
+        (workflows / "marketplace-release.yml").write_text(_RELEASE_WORKFLOW, encoding="utf-8")
+
+    def install(
+        self, root: Path, data: dict[str, Any], paths: list[str], scope: str,
+        pin: str | None, force: bool, from_local: bool,
+    ) -> list[list[str]]:
+        source = str(root.resolve()) if from_local else data["marketplace"]["repository"]
+        commands: list[list[str]] = []
+        for path in paths:
+            selector = Path(path).name if from_local else path
+            command = ["gh", "skill", "install", source, selector]
+            if from_local:
+                command.append("--from-local")
+            command += ["--agent", "github-copilot", "--scope", scope]
+            if pin:
+                command += ["--pin", pin]
+            if force:
+                command.append("--force")
+            result = subprocess.run(command, cwd=root, text=True, check=False)
+            if result.returncode:
+                raise MarketplaceError(f"gh skill install failed for {path}")
+            commands.append(command)
+        return commands
+
+    def release(self, root: Path, tag: str) -> None:
+        command = ["gh", "skill", "publish", str(root.resolve()), "--tag", tag]
+        result = subprocess.run(command, cwd=root, text=True, check=False)
+        if result.returncode:
+            raise MarketplaceError("gh skill publish failed")
+
+
+class GitLabProvider(MarketplaceProvider):
+    name = "gitlab"
+    default_host = "gitlab.com"
+
+    def generate_files(self, root: Path) -> None:
+        (root / ".gitlab-ci.yml").write_text(_GITLAB_CI, encoding="utf-8")
+
+    def install(
+        self, root: Path, data: dict[str, Any], paths: list[str], scope: str,
+        pin: str | None, force: bool, from_local: bool,
+    ) -> list[list[str]]:
+        source_root = root
+        commands: list[list[str]] = []
+        temporary: tempfile.TemporaryDirectory[str] | None = None
+        try:
+            if not from_local:
+                marketplace = data["marketplace"]
+                clone_url = f"https://{marketplace['host']}/{marketplace['repository']}.git"
+                temporary = tempfile.TemporaryDirectory(prefix="acme-marketplace-")
+                source_root = Path(temporary.name) / "repository"
+                command = [
+                    "git", "clone", "--depth", "1", "--branch", str(pin),
+                    clone_url, str(source_root),
+                ]
+                result = subprocess.run(command, text=True, check=False)
+                if result.returncode:
+                    raise MarketplaceError(f"git clone failed for {clone_url} at {pin}")
+                commands.append(command)
+            destination_root = (
+                Path.home() / ".copilot/skills" if scope == "user"
+                else Path.cwd() / ".github/skills"
+            )
+            destination_root.mkdir(parents=True, exist_ok=True)
+            for path in paths:
+                source = _contained(source_root, path)
+                if not source.is_dir():
+                    raise MarketplaceError(f"pinned release is missing bundle skill: {path}")
+                destination = destination_root / Path(path).name
+                if destination.exists():
+                    if not force:
+                        raise MarketplaceError(
+                            f"skill already installed: {destination}; use --force to replace it"
+                        )
+                    shutil.rmtree(destination)
+                shutil.copytree(source, destination, ignore=COPY_IGNORE_PATTERNS)
+            return commands
+        finally:
+            if temporary is not None:
+                temporary.cleanup()
+
+    def release(self, root: Path, tag: str) -> None:
+        command = [
+            "glab", "release", "create", tag, "--ref", "HEAD",
+            "--notes", f"Governed marketplace release {tag}",
+        ]
+        result = subprocess.run(command, cwd=root, text=True, check=False)
+        if result.returncode:
+            raise MarketplaceError("glab release create failed")
+
+
+PROVIDERS: dict[str, MarketplaceProvider] = {
+    "github": GitHubProvider(),
+    "gitlab": GitLabProvider(),
+}
+
+
+def _provider(data: dict[str, Any]) -> MarketplaceProvider:
+    name = str(data.get("marketplace", {}).get("provider", "github")).lower()
+    try:
+        return PROVIDERS[name]
+    except KeyError as exc:
+        raise MarketplaceError(f"unsupported marketplace provider: {name}") from exc
+
+
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
@@ -79,6 +216,10 @@ def load_manifest(root: Path) -> dict[str, Any]:
         raise MarketplaceError(f"invalid registry.json: {exc}") from exc
     if data.get("schema_version") != SCHEMA_VERSION:
         raise MarketplaceError("marketplace requires schema_version 2; migrate schema-v1 explicitly")
+    marketplace = data.setdefault("marketplace", {})
+    marketplace.setdefault("provider", "github")
+    provider = _provider(data)
+    marketplace.setdefault("host", provider.default_host)
     return data
 
 
@@ -90,7 +231,9 @@ def save_manifest(root: Path, data: dict[str, Any]) -> None:
     temporary.replace(path)
 
 
-def migrate_v1_registry(source: Path, repository: str) -> dict[str, Any]:
+def migrate_v1_registry(
+    source: Path, repository: str, provider: str = "github", host: str | None = None,
+) -> dict[str, Any]:
     """Convert a legacy skill_registry.py manifest without silently approving it."""
     try:
         old = json.loads((source / "registry.json").read_text(encoding="utf-8"))
@@ -135,6 +278,8 @@ def migrate_v1_registry(source: Path, repository: str) -> dict[str, Any]:
         "marketplace": {
             "name": registry.get("name", "ACME Skills"),
             "repository": repository,
+            "provider": provider,
+            "host": host or PROVIDERS[provider].default_host,
             "created": registry.get("created", _now()),
             "migrated_at": _now(),
         },
@@ -150,18 +295,25 @@ def _legacy_department(item: dict[str, Any]) -> str:
 
 
 def init_marketplace(
-    root: Path, name: str, repository: str, from_registry: Path | None = None
+    root: Path, name: str, repository: str, from_registry: Path | None = None,
+    *, provider: str = "github", host: str | None = None,
 ) -> dict[str, Any]:
     """Create the repository scaffold, optionally importing schema-v1 files."""
-    if not re.fullmatch(r"[^/\s]+/[^/\s]+", repository):
-        raise MarketplaceError("repository must use OWNER/REPO format")
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)+", repository):
+        raise MarketplaceError("repository must use OWNER/REPO or GROUP/SUBGROUP/REPO format")
+    provider = provider.lower()
+    if provider not in PROVIDERS:
+        raise MarketplaceError(f"unsupported marketplace provider: {provider}")
+    resolved_host = (host or PROVIDERS[provider].default_host).strip().lower()
+    if not re.fullmatch(r"[a-z0-9.-]+(?::\d+)?", resolved_host):
+        raise MarketplaceError("host must be a hostname, optionally followed by a port")
     if (root / "registry.json").exists():
         raise MarketplaceError(f"marketplace already exists at {root}")
     root.mkdir(parents=True, exist_ok=True)
     (root / "skills").mkdir(exist_ok=True)
     (root / "bundles").mkdir(exist_ok=True)
     if from_registry:
-        data = migrate_v1_registry(from_registry, repository)
+        data = migrate_v1_registry(from_registry, repository, provider, resolved_host)
         data["marketplace"]["name"] = name
         for entry in data["skills"]:
             source = _contained(from_registry, entry["provenance"]["legacy_path"])
@@ -172,7 +324,10 @@ def init_marketplace(
     else:
         data = {
             "schema_version": SCHEMA_VERSION,
-            "marketplace": {"name": name, "repository": repository, "created": _now()},
+            "marketplace": {
+                "name": name, "repository": repository, "provider": provider,
+                "host": resolved_host, "created": _now(),
+            },
             "skills": [],
             "bundles": {},
         }
@@ -317,6 +472,10 @@ def check_marketplace(root: Path, *, refresh: bool = True) -> list[str]:
     """Return every release-blocking inconsistency; an empty list is releasable."""
     data = load_manifest(root)
     errors: list[str] = []
+    try:
+        _provider(data)
+    except MarketplaceError as exc:
+        errors.append(str(exc))
     identities: set[tuple[str, str]] = set()
     known_paths: set[str] = set()
     for entry in data["skills"]:
@@ -380,7 +539,7 @@ def check_marketplace(root: Path, *, refresh: bool = True) -> list[str]:
 
 
 def generate_repository_files(root: Path, data: dict[str, Any]) -> None:
-    """Regenerate catalog, bundles, CODEOWNERS, and GitHub workflow files."""
+    """Regenerate catalog, bundles, CODEOWNERS, and provider CI files."""
     (root / "bundles").mkdir(exist_ok=True)
     for name, paths in sorted(data.get("bundles", {}).items()):
         payload = {"name": name, "skills": sorted(paths)}
@@ -398,16 +557,16 @@ def generate_repository_files(root: Path, data: dict[str, Any]) -> None:
             lines.append(f"| [{item['name']}]({item['path']}) | {item['version']} | {item['approval_status']} | {owners} |")
         lines.append("")
     (root / "CATALOG.md").write_text("\n".join(lines), encoding="utf-8")
-    owner_lines = ["# Generated from registry.json; repository admins own governance files.", "/registry.json @acme-platform @acme-security", "/bundles/ @acme-platform @acme-security", "/.github/ @acme-platform @acme-security"]
+    provider = _provider(data)
+    governance_path = "/.github/" if provider.name == "github" else "/.gitlab-ci.yml"
+    owner_lines = ["# Generated from registry.json; repository admins own governance files.", "/registry.json @acme-platform @acme-security", "/bundles/ @acme-platform @acme-security", f"{governance_path} @acme-platform @acme-security"]
     for item in sorted(data["skills"], key=lambda value: value["path"]):
         owners = " ".join(f"@{owner.lstrip('@')}" for owner in item.get("owners", []))
         owner_lines.append(f"/{item['path']}/ {owners} @acme-platform @acme-security")
     (root / "CODEOWNERS").write_text("\n".join(owner_lines) + "\n", encoding="utf-8")
-    (root / "GOVERNANCE.md").write_text(_GOVERNANCE, encoding="utf-8")
-    workflows = root / ".github/workflows"
-    workflows.mkdir(parents=True, exist_ok=True)
-    (workflows / "marketplace-check.yml").write_text(_CHECK_WORKFLOW, encoding="utf-8")
-    (workflows / "marketplace-release.yml").write_text(_RELEASE_WORKFLOW, encoding="utf-8")
+    governance = _GITHUB_GOVERNANCE if provider.name == "github" else _GITLAB_GOVERNANCE
+    (root / "GOVERNANCE.md").write_text(governance, encoding="utf-8")
+    provider.generate_files(root)
 
 
 _CHECK_WORKFLOW = """name: Marketplace checks
@@ -446,7 +605,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 """
 
-_GOVERNANCE = """# ACME marketplace governance
+_GITHUB_GOVERNANCE = """# ACME marketplace governance
 
 Configure the default branch ruleset to require pull requests, CODEOWNER review,
 the `governed-marketplace` status check, and approval from both department owners
@@ -461,56 +620,85 @@ Skills remain unapproved after schema-v1 migration. Review their scripts, update
 needed, and merge changes through a pull request. Do not edit installed copies.
 """
 
+_GITLAB_CI = """stages:
+  - check
+  - release
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_TAG
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+marketplace-check:
+  stage: check
+  image: python:3.12
+  script:
+    - python3 scripts/team_marketplace.py check --marketplace .
+
+marketplace-release:
+  stage: release
+  image: registry.gitlab.com/gitlab-org/cli:latest
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v[0-9]+\\.[0-9]+\\.[0-9]+/
+  script:
+    - echo "Creating governed marketplace release $CI_COMMIT_TAG"
+  release:
+    tag_name: $CI_COMMIT_TAG
+    name: "Release $CI_COMMIT_TAG"
+    description: "Governed ACME skill marketplace release $CI_COMMIT_TAG"
+"""
+
+_GITLAB_GOVERNANCE = """# ACME marketplace governance
+
+Protect the default branch and require merge requests, CODEOWNER approval, a
+successful `marketplace-check` pipeline, and approval from both department owners
+and the ACME platform/security teams. Disable force pushes.
+
+Protect `v*.*.*` tags so only release administrators can create them. Releases
+install by immutable semantic-version tag; advancing or rolling back a team uses
+a new managed `install --pin` command.
+
+Skills remain unapproved after schema-v1 migration. Review their scripts, update
+`approval_status` to `approved`, run `scripts/evolve.py` when corrections are
+needed, and merge changes through a merge request. Do not edit installed copies.
+"""
+
 
 def install_bundle(
     root: Path, bundle: str, scope: str, pin: str | None, *, force: bool = False,
     from_local: bool = False,
 ) -> list[list[str]]:
-    """Install every exact skill path in a bundle through ``gh skill``."""
+    """Install every exact skill path through the configured provider."""
     data = load_manifest(root)
     paths = data.get("bundles", {}).get(bundle)
     if paths is None:
         raise MarketplaceError(f"bundle not found: {bundle}")
     if not from_local and not pin:
         raise MarketplaceError("managed remote installs require --pin vX.Y.Z")
-    source = str(root.resolve()) if from_local else data["marketplace"]["repository"]
-    commands: list[list[str]] = []
-    for path in paths:
-        selector = Path(path).name if from_local else path
-        command = ["gh", "skill", "install", source, selector]
-        if from_local:
-            command.append("--from-local")
-        command += ["--agent", "github-copilot", "--scope", scope]
-        if pin:
-            command += ["--pin", pin]
-        if force:
-            command.append("--force")
-        result = subprocess.run(command, cwd=root, text=True, check=False)
-        if result.returncode:
-            raise MarketplaceError(f"gh skill install failed for {path}")
-        commands.append(command)
-    return commands
+    if scope not in {"user", "project"}:
+        raise MarketplaceError("scope must be user or project")
+    return _provider(data).install(root, data, paths, scope, pin, force, from_local)
 
 
 def release_marketplace(root: Path, tag: str) -> None:
-    """Run governance gates and publish a semantic-versioned GitHub release."""
+    """Run governance gates and publish a provider-native semantic release."""
     if not SEMVER_TAG_RE.fullmatch(tag):
         raise MarketplaceError("release tag must be a protected semantic version such as v1.2.0")
     errors = check_marketplace(root)
     if errors:
         raise MarketplaceError("release refused:\n- " + "\n- ".join(errors))
-    command = ["gh", "skill", "publish", str(root.resolve()), "--tag", tag]
-    result = subprocess.run(command, cwd=root, text=True, check=False)
-    if result.returncode:
-        raise MarketplaceError("gh skill publish failed")
+    _provider(load_manifest(root)).release(root, tag)
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Governed GitHub Copilot team skill marketplace")
+    parser = argparse.ArgumentParser(description="Governed Git-backed Copilot team skill marketplace")
     sub = parser.add_subparsers(dest="command", required=True)
     init = sub.add_parser("init")
     init.add_argument("--name", required=True)
     init.add_argument("--repository", required=True)
+    init.add_argument("--provider", choices=tuple(PROVIDERS), default="github")
+    init.add_argument("--host", help="provider hostname; defaults to github.com or gitlab.com")
     init.add_argument("--from-registry")
     init.add_argument("--marketplace", default=".")
     add = sub.add_parser("add")
@@ -538,7 +726,11 @@ def main(argv: list[str] | None = None) -> int:
     root = Path(args.marketplace).resolve()
     try:
         if args.command == "init":
-            init_marketplace(root, args.name, args.repository, Path(args.from_registry).resolve() if args.from_registry else None)
+            init_marketplace(
+                root, args.name, args.repository,
+                Path(args.from_registry).resolve() if args.from_registry else None,
+                provider=args.provider, host=args.host,
+            )
             print(f"Marketplace initialized at {root}")
         elif args.command == "add":
             entry = add_skill(root, Path(args.skill_path).resolve(), args.department, args.bundle)

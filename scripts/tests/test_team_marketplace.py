@@ -58,12 +58,50 @@ def test_init_generates_governance_scaffold(tmp_path: Path) -> None:
     data = market.load_manifest(repo)
     assert data["schema_version"] == 2
     assert data["marketplace"]["repository"] == "ACME/skills"
+    assert data["marketplace"]["provider"] == "github"
+    assert data["marketplace"]["host"] == "github.com"
     assert (repo / "CATALOG.md").exists()
     assert (repo / "CODEOWNERS").exists()
     assert (repo / "GOVERNANCE.md").exists()
     assert (repo / "scripts/team_marketplace.py").exists()
     assert (repo / ".github/workflows/marketplace-check.yml").exists()
     assert (repo / ".github/workflows/marketplace-release.yml").exists()
+
+
+def test_gitlab_init_generates_provider_scaffold(tmp_path: Path) -> None:
+    repo = tmp_path / "marketplace"
+    market.init_marketplace(
+        repo, "ACME Skills", "acme-platform/skills", provider="gitlab",
+        host="gitlab.acme.test",
+    )
+    data = market.load_manifest(repo)
+    assert data["marketplace"]["provider"] == "gitlab"
+    assert data["marketplace"]["host"] == "gitlab.acme.test"
+    assert (repo / ".gitlab-ci.yml").exists()
+    assert not (repo / ".github/workflows/marketplace-check.yml").exists()
+    assert "merge request" in (repo / "GOVERNANCE.md").read_text().lower()
+    assert "/.gitlab-ci.yml" in (repo / "CODEOWNERS").read_text()
+
+
+def test_gitlab_init_accepts_nested_group_path(tmp_path: Path) -> None:
+    repo = tmp_path / "marketplace"
+    data = market.init_marketplace(
+        repo, "ACME Skills", "acme/data-platform/skills", provider="gitlab",
+    )
+    assert data["marketplace"]["repository"] == "acme/data-platform/skills"
+
+
+def test_schema_v2_without_provider_defaults_to_github(tmp_path: Path) -> None:
+    repo = tmp_path / "marketplace"
+    repo.mkdir()
+    (repo / "registry.json").write_text(json.dumps({
+        "schema_version": 2,
+        "marketplace": {"name": "ACME Skills", "repository": "ACME/skills"},
+        "skills": [], "bundles": {},
+    }), encoding="utf-8")
+    data = market.load_manifest(repo)
+    assert data["marketplace"]["provider"] == "github"
+    assert data["marketplace"]["host"] == "github.com"
 
 
 def test_v1_migration_preserves_registry_entries(tmp_path: Path) -> None:
@@ -228,9 +266,56 @@ def test_release_requires_semver_and_passed_checks(tmp_path: Path, monkeypatch: 
     assert calls[-1] == ["gh", "skill", "publish", str(repo), "--tag", "v1.2.0"]
 
 
+def test_gitlab_release_uses_glab(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    repo = tmp_path / "marketplace"
+    market.init_marketplace(repo, "ACME Skills", "acme/skills", provider="gitlab")
+    market.add_skill(repo, make_skill(tmp_path, "report-skill"), "finance", "base")
+    calls: list[list[str]] = []
+    monkeypatch.setattr(market.subprocess, "run", lambda command, **kwargs: calls.append(command) or subprocess.CompletedProcess(command, 0))
+    market.release_marketplace(repo, "v1.2.0")
+    assert calls[-1] == [
+        "glab", "release", "create", "v1.2.0", "--ref", "HEAD",
+        "--notes", "Governed marketplace release v1.2.0",
+    ]
+
+
+def test_gitlab_install_clones_pin_and_copies_bundle(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    repo = tmp_path / "marketplace"
+    market.init_marketplace(repo, "ACME Skills", "acme/skills", provider="gitlab")
+    market.add_skill(repo, make_skill(tmp_path, "report-skill"), "finance", "base")
+    calls: list[list[str]] = []
+
+    def fake_run(command: list[str], **_: object) -> subprocess.CompletedProcess[str]:
+        calls.append(command)
+        clone_root = Path(command[-1])
+        shutil.copytree(repo / "skills", clone_root / "skills")
+        shutil.copy2(repo / "registry.json", clone_root / "registry.json")
+        return subprocess.CompletedProcess(command, 0)
+
+    monkeypatch.setattr(market.subprocess, "run", fake_run)
+    target = tmp_path / "consumer"
+    target.mkdir()
+    monkeypatch.chdir(target)
+    commands = market.install_bundle(repo, "base", "project", "v1.2.0")
+    assert commands[0][:6] == [
+        "git", "clone", "--depth", "1", "--branch", "v1.2.0",
+    ]
+    assert "https://gitlab.com/acme/skills.git" in commands[0]
+    assert (target / ".github/skills/report-skill/SKILL.md").exists()
+
+
 def test_cli_init_accepts_from_registry() -> None:
     args = market.build_parser().parse_args([
         "init", "--name", "ACME Skills", "--repository", "ACME/skills",
         "--from-registry", "./legacy",
     ])
     assert args.command == "init" and args.from_registry == "./legacy"
+
+
+def test_cli_init_accepts_provider_and_host() -> None:
+    args = market.build_parser().parse_args([
+        "init", "--name", "ACME Skills", "--repository", "acme/skills",
+        "--provider", "gitlab", "--host", "gitlab.acme.test",
+    ])
+    assert args.provider == "gitlab"
+    assert args.host == "gitlab.acme.test"

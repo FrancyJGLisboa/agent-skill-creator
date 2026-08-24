@@ -352,10 +352,10 @@ If they say no, that is fine — the skill is installed and working, and they ca
 
 Read `references/distribution-guide.md` for the git/`gh`/`glab` procedure, the platform-detection fallback, the shareable one-liner template, team-registry setup, and the update-check flow.
 
-For governed GitHub organizations whose primary client is VS Code Copilot Agent
+For governed GitHub or GitLab organizations whose primary client is VS Code Copilot Agent
 Mode, run `python3 scripts/team_marketplace.py` instead of using the legacy flat registry. It
-creates department namespaces, bundle manifests, CODEOWNERS, PR/release workflows,
-schema-v2 quality evidence, and exact version-pinned `gh skill` installs. Runtime
+creates department namespaces, bundle manifests, CODEOWNERS, provider-native review/release workflows,
+schema-v2 quality evidence, and exact version-pinned installs. Runtime
 shell access must never be pre-approved in a marketplace skill. Read the governed
 marketplace section of `references/distribution-guide.md` before initializing or
 migrating a team repository.

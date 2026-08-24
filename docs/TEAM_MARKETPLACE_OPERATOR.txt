@@ -39,12 +39,10 @@ generated GitHub governance, semantic-version releases, and pinned gh skill inst
 
 GitLab or self-managed GitLab:
 
-Use docs/GITLAB_TEAM_REGISTRY.md and skill_registry.py. The supported GitLab path
-uses merge requests, protected tags, a clone at an exact tag, and the copy-based
-installer. It does not currently provide schema-v2 bundles, generated GitLab CI,
-or gh skill installation.
-
-Do not run team_marketplace.py against GitLab and assume equivalent behavior.
+Use team_marketplace.py with --provider gitlab. The first-class backend generates
+GitLab CI and CODEOWNERS, preserves schema-v2 bundles, releases with glab, and
+installs from an immutable tag. Follow docs/GITLAB_TEAM_REGISTRY.md for every
+GitLab.com, nested-group, and self-managed-host command in chronological order.
 
 
 PHASE A — ONE-TIME PLATFORM SETUP

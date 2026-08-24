@@ -95,18 +95,15 @@ python3 scripts/team_marketplace.py install \
 ```
 
 Use `--scope project` to install under the current repository. To roll back,
-repeat the command with the previous tag and `--force`. The marketplace wrapper
-selects exact `skills/<department>/<skill>` paths and passes
-`--agent github-copilot` to `gh skill install`; it never relies on interactive
-selection. Because `gh skill` is public preview, the generated skills retain the
-copy-based installers documented below.
+repeat the command with the previous tag and `--force`. GitHub selects exact skill
+paths through `gh skill`. GitLab shallow-clones the configured repository at the
+exact tag and copies only the bundle's declared paths into Copilot.
 
 Repository creation, schema-v1 migration, approval gates, and releases are in the
 [complete marketplace timeline](TEAM_MARKETPLACE.md).
 
-GitLab does not support this `gh skill` path. GitLab teams should follow the
-[GitLab registry workflow](GITLAB_TEAM_REGISTRY.md), which uses `skill_registry.py`,
-protected Git tags, and copy-based installation from a clone at an exact tag.
+GitLab setup, release, install, update, and rollback commands are in the
+[GitLab marketplace workflow](GITLAB_TEAM_REGISTRY.md).
 
 **Clone to a specific tool:** every per-tool `git clone` path is in
 [Global install](#global-install-each-tools-native-path) and

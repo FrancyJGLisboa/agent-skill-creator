@@ -1,3 +1,7 @@
+---
+permalink: /TEAM_MARKETPLACE.html
+---
+
 # Governed Team Skill Marketplace — Complete Timeline
 
 Use this page from top to bottom. It contains every command needed to create an
@@ -8,14 +12,14 @@ in VS Code Copilot Agent Mode, and update or roll them back.
 
 | ACME environment | Use |
 |---|---|
-| GitHub plus VS Code Copilot Agent Mode | Continue on this page with `team_marketplace.py`. |
-| GitLab or self-managed GitLab | Follow the [GitLab registry workflow](GITLAB_TEAM_REGISTRY.md). |
-| GitHub without approved `gh skill` preview | Use the GitLab-style lightweight registry and copy-based installer. |
+| GitHub plus VS Code Copilot Agent Mode | Use the default `github` backend below. |
+| GitLab.com | Add `--provider gitlab`; use the [GitLab command timeline](GITLAB_TEAM_REGISTRY.md). |
+| Self-managed GitLab | Add `--provider gitlab --host <hostname>`; nested groups are supported. |
 
-The workflows are not equivalent today. The GitHub path provides schema-v2 bundles,
-generated governance, tagged releases, and exact `gh skill` installs. The GitLab
-path uses `skill_registry.py`, GitLab merge controls, protected tags, and installation
-from a clone at an exact tag.
+Both backends use the same schema-v2 bundles, quality gates, catalog, approval
+evidence, CODEOWNERS, and immutable version pins. GitHub generates Actions and uses
+`gh skill`; GitLab generates `.gitlab-ci.yml`, releases with `glab`, and installs
+from a shallow clone at the exact tag.
 
 ```text
 ONE-TIME SETUP                         REPEATED FOR EACH CHANGE
@@ -33,11 +37,11 @@ Correction ← Use ← Pinned install ← Approved semantic-version tag
 |---|---|
 | `agent-skill-creator` | Creates and verifies one individual skill from workflow evidence. |
 | Governed Git repository | Catalogs skills by department, runs gates, records approval, and builds bundles. |
-| `gh skill` | Installs exact approved skill paths from a pinned repository release. |
+| Provider backend | Uses `gh skill` on GitHub or tagged Git clone and copy on GitLab. |
 | ACME device management | Runs the managed install command on approved endpoints. |
 
 Plugins are a secondary compatibility channel for supported CLI hosts. For VS Code
-Copilot Agent Mode, the primary path is a pinned `gh skill install` operation.
+Copilot Agent Mode, use the provider's pinned bundle install operation.
 
 ## Phase A — One-time platform setup
 

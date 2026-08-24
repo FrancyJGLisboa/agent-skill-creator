@@ -47,7 +47,7 @@ python3 scripts/security_scan.py <skill-dir>
   GitHub Pages, `SKILL.md`, and
   `references/distribution-guide.md` aligned. Examples and fixtures use ACME only.
   Provider-related changes must also update `docs/GITLAB_TEAM_REGISTRY.md` and
-  must not describe the lightweight GitLab registry as feature-equivalent.
+  preserve behavioral parity for governance gates and immutable pins.
 
 ## Changing the governed marketplace
 

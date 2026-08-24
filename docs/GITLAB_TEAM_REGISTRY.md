@@ -1,196 +1,150 @@
-# GitLab Team Skill Registry — Supported Workflow
+---
+permalink: /GITLAB_TEAM_REGISTRY.html
+---
 
-Use this workflow when ACME stores code in GitLab or cannot use GitHub CLI's
-public-preview `gh skill` command.
+# Governed GitLab Team Skill Marketplace
 
-## Current support boundary
+This is the GitLab backend for the same schema-v2 departmental marketplace used
+on GitHub. It generates GitLab CI, preserves bundles and quality evidence, creates
+GitLab releases with `glab`, and installs from an exact protected tag.
 
-| Capability | GitHub governed marketplace | GitLab workflow today |
+## Provider differences
+
+| Operation | GitHub backend | GitLab backend |
 |---|---|---|
-| Central private Git repository | Yes | Yes |
-| Validation and security intake | Yes | Yes, through `skill_registry.py` |
-| Department bundles and schema-v2 catalog | Yes | Not implemented |
-| Generated CI and governance files | GitHub Actions and CODEOWNERS | Not generated; configure GitLab separately |
-| Protected semantic-version releases | Yes | Git tags plus GitLab protected-tag settings |
-| Copilot installation | Exact pinned `gh skill install` | Copy-based install from a clone at an exact tag |
+| Initialize | `--provider github` (default) | `--provider gitlab` |
+| CI | `.github/workflows/` | `.gitlab-ci.yml` |
+| Release transport | `gh skill publish` | `glab release create` |
+| Pinned install | `gh skill install --pin` | Shallow Git clone at the tag, then copy |
+| Copilot user scope | Managed by `gh skill` | `~/.copilot/skills/<skill>` |
+| Copilot project scope | Managed by `gh skill` | `.github/skills/<skill>` in the current directory |
 
-`team_marketplace.py` is currently a GitHub provider. It generates GitHub Actions,
-stores a GitHub `OWNER/REPO`, publishes through `gh skill`, and installs through
-`gh skill install`. Do not run it against GitLab and assume equivalent behavior.
+The governance and intake gates are identical. Only repository hosting, release,
+CI, and installation transport differ.
 
-## Phase A — Create the GitLab registry
-
-### A1. Initialize locally
+## 1. Check prerequisites
 
 ```bash
-mkdir -p ~/work
-cd ~/work/agent-skill-creator
-
-python3 scripts/skill_registry.py init \
-  --name "ACME Skills" \
-  --registry ~/work/acme-skills-gitlab
+python3 --version
+git --version
+glab --version
+glab auth status
 ```
 
-The lightweight registry contains `registry.json` plus its `skills/` tree. It
-retains the existing 17-platform copy-based installer.
+Use Python 3.10 or newer and an authenticated `glab` session with permission to
+create the project, push branches, and create releases.
 
-### A2. Create the GitLab remote
+## 2. Initialize the GitLab marketplace
 
-Create a private empty project named `ACME/acme-skills` in GitLab. Then run:
-
-```bash
-cd ~/work/acme-skills-gitlab
-
-git init
-git add -A
-git commit -m "feat: initialize ACME GitLab skill registry"
-git branch -M main
-git remote add origin git@gitlab.com:ACME/acme-skills.git
-git push -u origin main
-```
-
-For self-managed GitLab, replace `gitlab.com` with the approved instance hostname.
-
-### A3. Configure GitLab governance
-
-In GitLab repository settings:
-
-- Protect `main` and require merge requests.
-- Configure approval rules for department, platform, and security reviewers.
-- Add a root `CODEOWNERS` file when the GitLab tier supports required Code Owner approval.
-- Protect tags matching `v*.*.*` and restrict tag creation to release maintainers.
-
-The current factory does not generate `.gitlab-ci.yml`. If ACME requires automated
-registry checks in GitLab CI, the platform team must add and maintain that pipeline.
-
-## Phase B — Publish an individual skill
-
-### B1. Run the individual gates
-
-```bash
-cd ~/work/agent-skill-creator
-
-python3 scripts/validate.py ~/work/report-skill
-python3 scripts/security_scan.py ~/work/report-skill
-python3 scripts/check_pipeline.py ~/work/report-skill
-python3 ~/work/report-skill/scripts/run_evals.py
-```
-
-Do not publish when a required gate fails.
-
-### B2. Publish into the registry
-
-```bash
-python3 scripts/skill_registry.py publish ~/work/report-skill \
-  --registry ~/work/acme-skills-gitlab \
-  --tags finance,reports
-```
-
-`skill_registry.py publish` reruns validation and its security gate before copying.
-It does not create department bundles, schema-v2 approval evidence, or GitLab CI.
-
-### B3. Submit a merge request
-
-```bash
-cd ~/work/acme-skills-gitlab
-
-git switch -c feat/add-acme-finance-report-skill
-git add -A
-git commit -m "feat: add ACME finance report skill"
-git push -u origin feat/add-acme-finance-report-skill
-```
-
-Open the GitLab merge request, obtain the configured approvals, and merge it into
-protected `main` after the GitLab pipeline passes.
-
-## Phase C — Tag and distribute a reviewed version
-
-### C1. Create an immutable tag
-
-```bash
-cd ~/work/acme-skills-gitlab
-
-git switch main
-git pull --ff-only
-git tag -a v1.2.0 -m "ACME skill registry v1.2.0"
-git push origin v1.2.0
-```
-
-The protected-tag rule is the enforcement boundary. Never move or reuse the tag.
-A GitLab release record may be created from this tag through the GitLab UI or the
-organization's approved `glab release create` workflow.
-
-### C2. Install from the exact tag
-
-```bash
-git clone \
-  --branch v1.2.0 \
-  --depth 1 \
-  git@gitlab.com:ACME/acme-skills.git \
-  ~/work/acme-skills-v1.2.0
-
-python3 ~/work/agent-skill-creator/scripts/skill_registry.py install report-skill \
-  --registry ~/work/acme-skills-v1.2.0 \
-  --platform copilot \
-  --force
-```
-
-This installs one named skill. The lightweight GitLab registry does not currently
-implement named bundles, so ACME deployment automation must enumerate the approved
-skills for a release.
-
-## Phase D — Update, roll back, and correct
-
-### Update
-
-Clone the new tag into a new directory and install from that registry:
-
-```bash
-git clone --branch v1.3.0 --depth 1 \
-  git@gitlab.com:ACME/acme-skills.git \
-  ~/work/acme-skills-v1.3.0
-
-python3 ~/work/agent-skill-creator/scripts/skill_registry.py install report-skill \
-  --registry ~/work/acme-skills-v1.3.0 \
-  --platform copilot \
-  --force
-```
-
-### Roll back
-
-Reinstall from the previous immutable clone:
-
-```bash
-python3 ~/work/agent-skill-creator/scripts/skill_registry.py install report-skill \
-  --registry ~/work/acme-skills-v1.2.0 \
-  --platform copilot \
-  --force
-```
-
-### Correct
-
-Never edit an installed copy:
-
-```bash
-python3 ~/work/report-skill/scripts/evolve.py \
-  --correct "ACME UK revenue closes one business day later"
-```
-
-Then rerun the gates, publish the corrected skill, submit a merge request, create a
-new tag, and reinstall from that new tag.
-
-## Future first-class GitLab provider
-
-Equivalent GitHub/GitLab governance requires a new provider interface such as:
+GitLab.com:
 
 ```bash
 python3 scripts/team_marketplace.py init \
   --provider gitlab \
   --name "ACME Skills" \
-  --repository ACME/acme-skills \
+  --repository acme/acme-skills \
   --marketplace ./acme-skills
 ```
 
-That option does not exist today. A complete implementation must generate GitLab CI,
-use GitLab repository URLs and release operations, preserve schema-v2 bundles and
-approvals, and replace `gh skill install` with a pinned GitLab-compatible installer.
+Self-managed GitLab or a nested group:
+
+```bash
+python3 scripts/team_marketplace.py init \
+  --provider gitlab \
+  --host gitlab.acme.test \
+  --name "ACME Skills" \
+  --repository acme/data-platform/acme-skills \
+  --marketplace ./acme-skills
+```
+
+The provider and host are recorded in `registry.json`. Existing schema-v2
+registries without those fields remain backward-compatible and default to GitHub.
+
+## 3. Create and push the project
+
+```bash
+cd ./acme-skills
+git init
+git add -A
+git commit -m "feat: initialize governed ACME skill marketplace"
+glab repo create acme/acme-skills --private --defaultBranch main
+git remote add origin git@gitlab.com:acme/acme-skills.git
+git branch -M main
+git push -u origin main
+```
+
+For self-managed GitLab, authenticate `glab` against that host and replace the
+remote hostname. If `glab repo create` adds `origin`, omit `git remote add`.
+
+## 4. Configure governance
+
+Follow the generated `GOVERNANCE.md`:
+
+1. Protect the default branch and require merge requests.
+2. Require Code Owner, department, platform, and security approval.
+3. Require the `marketplace-check` pipeline.
+4. Protect `v*.*.*` tags so only release administrators can create them.
+
+The generated `.gitlab-ci.yml` runs marketplace checks for merge requests, the
+default branch, and tags. GitLab settings remain the enforcement boundary.
+
+## 5. Add and review a skill
+
+```bash
+python3 scripts/team_marketplace.py add ./report-skill \
+  --department finance \
+  --bundle analyst-starter \
+  --marketplace ./acme-skills
+
+python3 scripts/team_marketplace.py check --marketplace ./acme-skills
+```
+
+Commit the generated skill, registry, bundle, catalog, and ownership changes on a
+branch. Merge only after the pipeline and required approvals pass.
+
+## 6. Release an immutable version
+
+```bash
+python3 scripts/team_marketplace.py release \
+  --tag v1.2.0 \
+  --marketplace ./acme-skills
+```
+
+The command reruns every gate, then runs `glab release create v1.2.0 --ref HEAD`
+with governed release notes. Never move or reuse a release tag.
+
+## 7. Install, update, or roll back a bundle
+
+Run a project-scope install from the consuming repository:
+
+```bash
+python3 /path/to/acme-skills/scripts/team_marketplace.py install \
+  --bundle analyst-starter \
+  --scope project \
+  --pin v1.2.0 \
+  --marketplace /path/to/acme-skills
+```
+
+Use `--scope user` for `~/.copilot/skills`. The backend shallow-clones
+`https://<host>/<repository>.git` at the exact tag, copies only bundle paths, and
+removes the temporary clone.
+
+Update with a newer tag and `--force`. Roll back with the previous tag:
+
+```bash
+python3 /path/to/acme-skills/scripts/team_marketplace.py install \
+  --bundle analyst-starter \
+  --scope project \
+  --pin v1.1.0 \
+  --force \
+  --marketplace /path/to/acme-skills
+```
+
+Private HTTPS clones use the machine's Git credential helper. Device management
+must provision credentials before managed installation.
+
+## Legacy fallback
+
+`scripts/skill_registry.py` remains available for older flat registries and
+non-Copilot platforms. New governed GitLab marketplaces should use
+`team_marketplace.py --provider gitlab`.
