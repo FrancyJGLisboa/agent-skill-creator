@@ -194,4 +194,3 @@ python3 scripts/team_marketplace.py init \
 That option does not exist today. A complete implementation must generate GitLab CI,
 use GitLab repository URLs and release operations, preserve schema-v2 bundles and
 approvals, and replace `gh skill install` with a pinned GitLab-compatible installer.
-
