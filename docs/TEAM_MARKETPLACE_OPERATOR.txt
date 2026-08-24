@@ -1,0 +1,477 @@
+ACME TEAM SKILL MARKETPLACE — DEVELOPER OPERATING PROCEDURE
+===========================================================
+
+Purpose
+-------
+
+This file is the practical command guide for the developer responsible for:
+
+1. Maintaining agent-skill-creator.
+2. Creating and validating individual skills.
+3. Maintaining the governed ACME marketplace.
+4. Releasing and distributing approved skills to VS Code Copilot users.
+
+
+REPOSITORIES
+============
+
+Keep the factory and marketplace in separate repositories:
+
+~/work/
+├── agent-skill-creator/   Factory source and marketplace tooling
+└── acme-skills/           ACME skills, bundles, approvals, and releases
+
+agent-skill-creator creates and validates individual skills.
+
+acme-skills catalogs, reviews, bundles, versions, and releases approved skills.
+
+For VS Code Copilot Agent Mode, the primary delivery mechanism is a pinned
+gh skill install command. Plugin manifests are a secondary compatibility channel
+for supported CLI hosts.
+
+
+PHASE A — ONE-TIME PLATFORM SETUP
+=================================
+
+A1. Clone and verify agent-skill-creator
+----------------------------------------
+
+mkdir -p ~/work
+cd ~/work
+
+git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git
+cd agent-skill-creator
+
+python3 -m pytest scripts/tests -q
+gh auth status
+gh skill --help
+
+Required state:
+
+- Python 3.10 or newer.
+- Authenticated GitHub CLI 2.90 or newer.
+- gh skill available. It remains a public-preview command.
+- Permission to create and protect the ACME marketplace repository.
+
+
+A2. Initialize the marketplace
+------------------------------
+
+cd ~/work/agent-skill-creator
+
+python3 scripts/team_marketplace.py init \
+  --name "ACME Skills" \
+  --repository ACME/acme-skills \
+  --marketplace ~/work/acme-skills
+
+This creates:
+
+acme-skills/
+├── skills/<department>/<skill>/
+├── bundles/
+├── scripts/team_marketplace.py
+├── registry.json
+├── CATALOG.md
+├── CODEOWNERS
+├── GOVERNANCE.md
+└── .github/workflows/
+
+To migrate an existing schema-v1 registry:
+
+python3 scripts/team_marketplace.py init \
+  --name "ACME Skills" \
+  --repository ACME/acme-skills \
+  --from-registry ./legacy-registry \
+  --marketplace ~/work/acme-skills
+
+Migration never grants approval. Migrated skills remain draft until reviewed.
+
+
+A3. Create the GitHub repository
+--------------------------------
+
+cd ~/work/acme-skills
+
+git init
+git add -A
+git commit -m "feat: initialize governed ACME skill marketplace"
+
+gh repo create ACME/acme-skills \
+  --private \
+  --source=. \
+  --push
+
+
+A4. Configure GitHub governance
+-------------------------------
+
+Open GOVERNANCE.md in the generated repository.
+
+Configure the default branch ruleset to require:
+
+- Pull requests and CODEOWNER review.
+- The governed-marketplace status check.
+- Department-owner plus platform/security approval.
+- No force pushes or branch deletion.
+
+Configure a tag ruleset for v*.*.* that restricts tag creation, updates, and
+deletion to release administrators.
+
+These are GitHub repository settings. Local checks cannot prove that ACME applied
+the rulesets correctly.
+
+
+PHASE B — CREATE AND ADMIT AN INDIVIDUAL SKILL
+==============================================
+
+B1. Create one skill
+--------------------
+
+In an installed agent environment, invoke the factory with real workflow evidence:
+
+/agent-skill-creator Create a skill from the attached ACME monthly reporting workflow.
+
+Expected source package:
+
+~/work/report-skill/
+├── SKILL.md
+├── AGENTS.md
+├── scripts/
+├── evals/
+├── references/
+└── install.sh
+
+The skill is ready for marketplace intake only after it produces a representative
+result and passes its required gates.
+
+
+B2. Confirm marketplace metadata
+-------------------------------
+
+The skill's SKILL.md must include real metadata values:
+
+metadata:
+  author: ACME Finance
+  version: 1.2.0
+  approval_status: approved
+  owners: [acme-finance-skills]
+
+Do not declare:
+
+allowed-tools: shell
+
+or:
+
+allowed-tools: bash
+
+Copilot must request runtime permission when an approved script needs execution.
+
+
+B3. Run the individual skill gates
+----------------------------------
+
+cd ~/work/agent-skill-creator
+
+python3 scripts/validate.py ~/work/report-skill
+python3 scripts/security_scan.py ~/work/report-skill
+python3 scripts/check_pipeline.py ~/work/report-skill
+python3 ~/work/report-skill/scripts/run_evals.py
+
+Do not proceed if a required gate fails.
+
+
+B4. Update the marketplace clone
+-------------------------------
+
+cd ~/work/acme-skills
+
+git switch main
+git pull --ff-only
+
+
+B5. Add the skill to a department and bundle
+--------------------------------------------
+
+cd ~/work/agent-skill-creator
+
+python3 scripts/team_marketplace.py add ~/work/report-skill \
+  --department finance \
+  --bundle analyst-starter \
+  --marketplace ~/work/acme-skills
+
+A successful add updates:
+
+skills/finance/report-skill/
+bundles/analyst-starter.json
+registry.json
+CATALOG.md
+CODEOWNERS
+
+The add command runs validation, security, pipeline, and eval gates before copying.
+
+
+B6. Check the complete marketplace
+----------------------------------
+
+python3 scripts/team_marketplace.py check \
+  --marketplace ~/work/acme-skills
+
+The check rejects:
+
+- Draft or unapproved skills.
+- Failed validation, security, pipeline, or eval gates.
+- Duplicate skill identities.
+- Missing owners.
+- Unsafe shell or bash pre-approval.
+- Path traversal.
+- Inconsistent metadata or bundle manifests.
+
+
+B7. Submit the marketplace pull request
+---------------------------------------
+
+cd ~/work/acme-skills
+
+git switch -c feat/add-finance-report-skill
+git add -A
+git commit -m "feat: add ACME finance report skill"
+git push -u origin feat/add-finance-report-skill
+gh pr create --fill
+
+Required review:
+
+- Finance or department owner.
+- Platform owner.
+- Security reviewer for executable scripts.
+- Successful marketplace checks.
+
+After approval:
+
+gh pr merge --squash --delete-branch
+git switch main
+git pull --ff-only
+
+
+PHASE C — RELEASE AND DISTRIBUTE
+================================
+
+C1. Publish an immutable release
+-------------------------------
+
+Run after the approved pull request reaches the protected main branch:
+
+cd ~/work/acme-skills
+
+python3 scripts/team_marketplace.py release \
+  --tag v1.2.0 \
+  --marketplace .
+
+The release command:
+
+- Reruns the marketplace gates.
+- Requires a semantic-version tag.
+- Calls gh skill publish.
+- Refuses draft, unsafe, failed, duplicate, or inconsistent skills.
+
+Never reuse or move an existing release tag.
+
+
+C2. Install a bundle at user scope
+----------------------------------
+
+python3 scripts/team_marketplace.py install \
+  --bundle analyst-starter \
+  --scope user \
+  --pin v1.2.0 \
+  --marketplace ~/work/acme-skills
+
+User scope makes the approved skills available across the analyst's projects.
+
+
+C3. Install a bundle at project scope
+-------------------------------------
+
+python3 scripts/team_marketplace.py install \
+  --bundle analyst-starter \
+  --scope project \
+  --pin v1.2.0 \
+  --marketplace ~/work/acme-skills
+
+Project scope installs the approved skills only for the current repository.
+
+The wrapper issues one exact command per bundled skill, equivalent to:
+
+gh skill install ACME/acme-skills skills/finance/report-skill \
+  --agent github-copilot \
+  --scope user \
+  --pin v1.2.0
+
+The marketplace controls what may be installed. ACME endpoint management controls
+how the pinned installation command reaches 200 managed devices.
+
+
+PHASE D — ROUTINE MAINTENANCE
+=============================
+
+D1. Update installed skills
+---------------------------
+
+First approve and publish the new marketplace release. Then install its exact pin:
+
+python3 scripts/team_marketplace.py install \
+  --bundle analyst-starter \
+  --scope user \
+  --pin v1.3.0 \
+  --force \
+  --marketplace ~/work/acme-skills
+
+
+D2. Roll back installed skills
+------------------------------
+
+Reinstall the last known-good release:
+
+python3 scripts/team_marketplace.py install \
+  --bundle analyst-starter \
+  --scope user \
+  --pin v1.2.0 \
+  --force \
+  --marketplace ~/work/acme-skills
+
+There is no moving latest channel in the governed workflow. Every managed change
+names the exact release that should be installed.
+
+
+D3. Correct a skill
+-------------------
+
+Never edit an installed copy. Capture the correction in the source skill:
+
+python3 ~/work/report-skill/scripts/evolve.py \
+  --correct "ACME UK revenue closes one business day later"
+
+Then repeat the governed lifecycle:
+
+test
+→ add
+→ check
+→ pull request
+→ review
+→ release a new semantic version
+→ install the new pin
+
+
+D4. Retire a skill
+------------------
+
+The current marketplace CLI does not provide a dedicated remove command.
+
+Retire a skill through a governed pull request:
+
+1. Delete skills/<department>/<skill>/.
+2. Remove its registry.json entry.
+3. Remove it from every bundle manifest.
+4. Run team_marketplace.py check.
+5. Submit the deletion through normal review.
+
+
+D5. Update the factory
+----------------------
+
+cd ~/work/agent-skill-creator
+
+git switch main
+git pull --ff-only
+python3 -m pytest scripts/tests -q
+
+Changes to the factory do not automatically update existing marketplace copies.
+
+
+D6. Update marketplace tooling
+------------------------------
+
+Copy the reviewed marketplace dependencies from the updated factory:
+
+cp ~/work/agent-skill-creator/scripts/team_marketplace.py \
+  ~/work/acme-skills/scripts/
+
+cp ~/work/agent-skill-creator/scripts/check_pipeline.py \
+  ~/work/acme-skills/scripts/
+
+cp ~/work/agent-skill-creator/scripts/security_scan.py \
+  ~/work/acme-skills/scripts/
+
+cp ~/work/agent-skill-creator/scripts/skill_document.py \
+  ~/work/acme-skills/scripts/
+
+cp ~/work/agent-skill-creator/scripts/validate.py \
+  ~/work/acme-skills/scripts/
+
+Verify and submit the tooling update:
+
+cd ~/work/acme-skills
+
+python3 scripts/team_marketplace.py check --marketplace .
+
+git switch -c chore/update-marketplace-tooling
+git add scripts/
+git commit -m "chore: update marketplace tooling"
+git push -u origin chore/update-marketplace-tooling
+gh pr create --fill
+
+
+COMMAND TIMELINE
+================
+
+ONE-TIME:
+
+team_marketplace.py init
+→ git repository creation
+→ GitHub branch and tag protection
+
+FOR EACH INDIVIDUAL SKILL:
+
+/agent-skill-creator
+→ validate
+→ security scan
+→ pipeline check
+→ evals
+→ team_marketplace.py add
+→ team_marketplace.py check
+→ pull request
+→ owner, platform, and security review
+
+FOR EACH APPROVED RELEASE:
+
+merge to protected main
+→ team_marketplace.py release --tag vX.Y.Z
+→ team_marketplace.py install --pin vX.Y.Z
+
+FOR EACH CORRECTION:
+
+evolve.py --correct
+→ tests
+→ add
+→ check
+→ pull request
+→ new release
+→ install new pin
+
+FOR ROLLBACK:
+
+team_marketplace.py install --pin <previous-tag> --force
+
+
+PRIMARY OPERATIONAL RULE
+========================
+
+Never change an installed skill directly.
+
+All changes flow through:
+
+source skill
+→ evidence and tests
+→ governed marketplace pull request
+→ approved semantic-version release
+→ exact pinned installation
+
