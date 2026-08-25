@@ -43,7 +43,41 @@ None known.
         encoding="utf-8",
     )
     (skill / "scripts" / "main.py").write_text("print('ok')\n", encoding="utf-8")
+    (skill / "scripts" / "run_evals.py").write_text(
+        "raise SystemExit(0)\n", encoding="utf-8",
+    )
+    subprocess.run(["git", "init", "-q", str(skill)], check=True)
+    subprocess.run(["git", "-C", str(skill), "add", "."], check=True)
+    subprocess.run(
+        ["git", "-C", str(skill), "-c", "user.name=Test", "-c",
+         "user.email=test@example.invalid", "commit", "-qm", "fixture"], check=True,
+    )
+    market.attest_skill(skill, "test-representative-run", "2026-08-25T12:00:00Z")
     return skill
+
+
+def recommit_and_attest(skill: Path, *, run_gates: bool = True) -> None:
+    subprocess.run(["git", "-C", str(skill), "add", "."], check=True)
+    subprocess.run(
+        ["git", "-C", str(skill), "-c", "user.name=Test", "-c",
+         "user.email=test@example.invalid", "commit", "-qm", "test change"], check=True,
+    )
+    if run_gates:
+        market.attest_skill(skill, "test-representative-run", "2026-08-25T12:00:00Z")
+        return
+    commit = subprocess.run(
+        ["git", "-C", str(skill), "rev-parse", "HEAD"], capture_output=True,
+        text=True, check=True,
+    ).stdout.strip()
+    artifact = market.create_attestation(
+        skill_name=skill.name, skill_version="1.2.3", commit_sha=commit,
+        eval_evidence={"runner": "scripts/run_evals.py", "executable": True,
+                       "validation_passed": True, "run_passed": True,
+                       "checked_at": "2026-08-25T12:00:00Z"},
+        representative_run={"passed": True, "run_id": "test", "completed_at": "2026-08-25T12:00:00Z"},
+        issued_at="2026-08-25T12:00:00Z",
+    )
+    (skill / market.ATTESTATION_FILE).write_text(json.dumps(artifact), encoding="utf-8")
 
 
 def init_marketplace(base: Path) -> Path:
@@ -162,6 +196,7 @@ def test_add_rejects_security_hazards(tmp_path: Path, hazard: str) -> None:
     else:
         endpoint = "https" + "://api.undeclared-host.test/v1"
         (skill / "scripts/main.py").write_text(f'URL = "{endpoint}"\n', encoding="utf-8")
+    recommit_and_attest(skill, run_gates=False)
     with pytest.raises(market.MarketplaceError, match="security gate failed"):
         market.add_skill(repo, skill, "finance", "base")
 
@@ -174,6 +209,24 @@ def test_add_rejects_invalid_eval_spec(tmp_path: Path) -> None:
     (skill / "scripts/run_evals.py").write_text(
         (ROOT / "scripts/run_evals_template.py").read_text(encoding="utf-8"), encoding="utf-8"
     )
+    subprocess.run(["git", "-C", str(skill), "add", "."], check=True)
+    subprocess.run(
+        ["git", "-C", str(skill), "-c", "user.name=Test", "-c",
+         "user.email=test@example.invalid", "commit", "-qm", "invalid eval"], check=True,
+    )
+    commit = subprocess.run(
+        ["git", "-C", str(skill), "rev-parse", "HEAD"], capture_output=True,
+        text=True, check=True,
+    ).stdout.strip()
+    artifact = market.create_attestation(
+        skill_name="report-skill", skill_version="1.2.3", commit_sha=commit,
+        eval_evidence={"runner": "scripts/run_evals.py", "executable": True,
+                       "validation_passed": True, "run_passed": True,
+                       "checked_at": "2026-08-25T12:00:00Z"},
+        representative_run={"passed": True, "run_id": "test", "completed_at": "2026-08-25T12:00:00Z"},
+        issued_at="2026-08-25T12:00:00Z",
+    )
+    (skill / market.ATTESTATION_FILE).write_text(json.dumps(artifact), encoding="utf-8")
     with pytest.raises(market.MarketplaceError, match="evals gate failed"):
         market.add_skill(repo, skill, "finance", "base")
 
@@ -185,6 +238,24 @@ def test_add_rejects_failed_eval_gate(tmp_path: Path) -> None:
         "import sys\nraise SystemExit(0 if '--validate' in sys.argv else 1)\n",
         encoding="utf-8",
     )
+    subprocess.run(["git", "-C", str(skill), "add", "."], check=True)
+    subprocess.run(
+        ["git", "-C", str(skill), "-c", "user.name=Test", "-c",
+         "user.email=test@example.invalid", "commit", "-qm", "failed eval"], check=True,
+    )
+    commit = subprocess.run(
+        ["git", "-C", str(skill), "rev-parse", "HEAD"], capture_output=True,
+        text=True, check=True,
+    ).stdout.strip()
+    artifact = market.create_attestation(
+        skill_name="report-skill", skill_version="1.2.3", commit_sha=commit,
+        eval_evidence={"runner": "scripts/run_evals.py", "executable": True,
+                       "validation_passed": True, "run_passed": True,
+                       "checked_at": "2026-08-25T12:00:00Z"},
+        representative_run={"passed": True, "run_id": "test", "completed_at": "2026-08-25T12:00:00Z"},
+        issued_at="2026-08-25T12:00:00Z",
+    )
+    (skill / market.ATTESTATION_FILE).write_text(json.dumps(artifact), encoding="utf-8")
     with pytest.raises(market.MarketplaceError, match="evals gate failed"):
         market.add_skill(repo, skill, "finance", "base")
 
@@ -262,6 +333,7 @@ def test_release_requires_semver_and_passed_checks(tmp_path: Path, monkeypatch: 
     monkeypatch.setattr(market.subprocess, "run", lambda command, **kwargs: calls.append(command) or subprocess.CompletedProcess(command, 0))
     with pytest.raises(market.MarketplaceError, match="semantic version"):
         market.release_marketplace(repo, "latest")
+    market.transition_skill(repo, "finance", "report-skill", "published")
     market.release_marketplace(repo, "v1.2.0")
     assert calls[-1] == ["gh", "skill", "publish", str(repo), "--tag", "v1.2.0"]
 
@@ -270,6 +342,7 @@ def test_gitlab_release_uses_glab(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
     repo = tmp_path / "marketplace"
     market.init_marketplace(repo, "ACME Skills", "acme/skills", provider="gitlab")
     market.add_skill(repo, make_skill(tmp_path, "report-skill"), "finance", "base")
+    market.transition_skill(repo, "finance", "report-skill", "published")
     calls: list[list[str]] = []
     monkeypatch.setattr(market.subprocess, "run", lambda command, **kwargs: calls.append(command) or subprocess.CompletedProcess(command, 0))
     market.release_marketplace(repo, "v1.2.0")
@@ -319,3 +392,95 @@ def test_cli_init_accepts_provider_and_host() -> None:
     ])
     assert args.provider == "gitlab"
     assert args.host == "gitlab.acme.test"
+
+
+def test_intake_rejects_missing_and_commit_mismatched_attestation(tmp_path: Path) -> None:
+    repo = init_marketplace(tmp_path)
+    skill = make_skill(tmp_path, "report-skill")
+    (skill / market.ATTESTATION_FILE).unlink()
+    with pytest.raises(market.MarketplaceError, match="attestation is required"):
+        market.add_skill(repo, skill, "finance", "base")
+    market.attest_skill(skill, "run", "2026-08-25T12:00:00Z")
+    artifact = json.loads((skill / market.ATTESTATION_FILE).read_text())
+    artifact["commit_sha"] = "b" * 40
+    (skill / market.ATTESTATION_FILE).write_text(json.dumps(artifact), encoding="utf-8")
+    with pytest.raises(market.MarketplaceError, match="attestation gate failed"):
+        market.add_skill(repo, skill, "finance", "base")
+
+
+def test_lifecycle_quarantine_blocks_install(tmp_path: Path) -> None:
+    repo = init_marketplace(tmp_path)
+    market.add_skill(repo, make_skill(tmp_path, "report-skill"), "finance", "base")
+    market.transition_skill(repo, "finance", "report-skill", "published")
+    market.transition_skill(repo, "finance", "report-skill", "quarantined")
+    with pytest.raises(market.MarketplaceError, match="non-installable"):
+        market.install_bundle(repo, "base", "project", "v1.2.3")
+
+
+def test_init_generates_scheduled_health_and_skill_pages(tmp_path: Path) -> None:
+    repo = init_marketplace(tmp_path)
+    market.add_skill(repo, make_skill(tmp_path, "report-skill"), "finance", "base")
+    workflow = (repo / ".github/workflows/marketplace-health.yml").read_text()
+    assert "schedule:" in workflow and "team_marketplace.py health" in workflow
+    assert (repo / "skill-pages/finance--report-skill.md").exists()
+
+
+def test_metrics_require_consent_then_summarize_install(tmp_path: Path) -> None:
+    repo = init_marketplace(tmp_path)
+    assert market.record_marketplace_event(repo, "install", "report-skill", True) is False
+    assert not (repo / ".marketplace-state/metrics.jsonl").exists()
+    market.configure_metrics_consent(
+        repo, "2099-01-01T00:00:00Z",
+        approved_at=market.datetime(2026, 8, 25, tzinfo=market.timezone.utc),
+    )
+    assert market.record_marketplace_event(repo, "install", "report-skill", True)
+    assert market.summarize_marketplace_metrics(repo)["counts"]["events"]["install"] == 1
+
+
+def test_certification_enables_filtered_search_and_distribution_plan(tmp_path: Path) -> None:
+    repo = init_marketplace(tmp_path)
+    skill = make_skill(tmp_path, "report-skill")
+    (skill / "discovery.json").write_text(json.dumps({
+        "outcome": "Prepare monthly revenue reporting",
+        "support_tier": "supported",
+        "compatibility": {"declared": ["codex"]},
+    }), encoding="utf-8")
+    recommit_and_attest(skill)
+    market.add_skill(repo, skill, "finance", "base")
+    evidence = {
+        "platform": "codex", "skill_version": "1.2.3",
+        "adapter": "native-skill", "adapter_version": "1.0.0",
+        "checks": [{"name": "representative-load", "passed": True}],
+    }
+    market.certify_skill(
+        repo, "finance", "report-skill", "codex", evidence,
+        timestamp=market.datetime(2026, 8, 25, tzinfo=market.timezone.utc),
+    )
+    market.transition_skill(repo, "finance", "report-skill", "published")
+    assert market.check_marketplace(repo) == []
+    assert market.search_marketplace(repo, "revenue reporting", platform="codex")[0]["name"] == "report-skill"
+    plan = market.plan_distribution(
+        repo, "finance", "report-skill", ["codex"], "project", "v1.2.3",
+        remote=True, home=tmp_path / "home", project_root=tmp_path / "project",
+    )
+    assert plan["mutates"] is False and plan["targets"][0]["platform"] == "codex"
+
+
+def test_add_persists_discovery_compatibility_for_health_governance(tmp_path: Path) -> None:
+    repo = init_marketplace(tmp_path)
+    skill = make_skill(tmp_path, "report-skill")
+    (skill / "discovery.json").write_text(json.dumps({
+        "outcome": "Prepare monthly revenue reporting",
+        "support_tier": "supported",
+        "compatibility": {"declared": ["codex", "cursor"]},
+    }), encoding="utf-8")
+    recommit_and_attest(skill)
+    market.add_skill(repo, skill, "finance", "base")
+    data = market.load_manifest(repo)
+    entry = data["skills"][0]
+    assert entry["compatibility"]["declared"] == ["codex", "cursor"]
+    report = market.health_marketplace(repo, active_owners={"acme-report-skill"})
+    assert any(
+        finding["dimension"] == "compatibility" and "codex" in finding["reason"] and "cursor" in finding["reason"]
+        for finding in report["findings"]
+    )

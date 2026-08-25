@@ -322,6 +322,11 @@ Create all files in this order:
 5. Write references (detailed documentation the skill loads on demand)
 6. Write assets (templates, configs)
 7. **Emit the eval spec** (skip if `--no-eval`): write `evals/<name>.eval.md` (the binary checks + golden cases derived in Phase 2, one marked `"split": "test"` as the holdout, plus a `judge` block with a pinned model and known-bad canary when any criterion is `llm-judge`) and copy `scripts/run_evals_template.py` → the generated skill's `scripts/run_evals.py`. See `references/phase2-eval-assessment.md`
+7.5. Write **`discovery.json`** with the real-world outcome, intended users, input
+   types, output artifacts, use cases, invocation examples, permissions/systems,
+   typical completion time, declared platform compatibility, and support tier. Read
+   `references/discovery-metadata.md`. This is required for governed marketplace
+   discovery; do not invent compatibility certification during creation.
 8. Generate `install.sh` from `scripts/install-template.sh` (replace `{{SKILL_NAME}}` with actual name, `chmod +x`)
 8.5. Generate `.claude-plugin/plugin.json` + `marketplace.json` from `scripts/claude-plugin-template/` (placeholders from frontmatter — makes the skill installable via `/plugin marketplace add`), and **ship the evolution toolkit and local success ledger**: copy `scripts/evolve_template.py` → `scripts/evolve.py`, `scripts/success_ledger.py`, plus the staleness/drift/dep-health modules. See `references/pipeline-phases.md` Steps 6.5–6.6
 9. Write `README.md` (multi-platform install instructions showing the `/plugin marketplace add` path for Claude Code and `git clone` to each tool's **native** path)
@@ -553,3 +558,4 @@ Read these on demand — each one when its moment arrives, not upfront.
 | `references/phase5-orchestration.md` | Phase 5 pipeline orchestration: single run_pipeline.py entry-point, deterministic sequencing, check_pipeline.py |
 | `references/skill-graph.md` | Normalized artifact graph, blocking reachability constraints, parallel gates, and content-addressed caching |
 | `references/product-success.md` | Local lifecycle event schema, privacy boundary, Durable Active Skills definition, and metric formulas |
+| `references/discovery-metadata.md` | Generated discovery.json schema used by governed marketplace search and skill pages |

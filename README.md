@@ -14,6 +14,10 @@
 [GitLab team registry](docs/GITLAB_TEAM_REGISTRY.md) ·
 [Changelog](CHANGELOG.md)
 
+The governed marketplace includes commit-bound trust attestations, seven-state
+lifecycle policy, scheduled health reports, outcome-based search, consent-gated
+product metrics, and cross-platform distribution certification.
+
 You do not need to write a specification or understand skill engineering. Give the
 creator a sentence, spreadsheet, PDF, link, screenshot, transcript, or half-working
 script. It reconstructs the workflow, confirms what a correct result means, builds and

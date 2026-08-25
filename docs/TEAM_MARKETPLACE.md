@@ -204,7 +204,15 @@ the generated GitHub Actions checks and required reviews pass.
 
 ### C1. Release an immutable version
 
-After the approved pull request reaches the protected default branch:
+Before the release pull request merges, record the reviewed release authorization:
+
+```bash
+python3 scripts/team_marketplace.py lifecycle report-skill \
+  --department finance --to published --marketplace .
+```
+
+Commit that generated registry and catalog change through the normal review path.
+After the pull request reaches the protected default branch:
 
 ```bash
 git switch main
@@ -301,3 +309,102 @@ release.
 | Before PR/release | `team_marketplace.py check` | Verifies the complete marketplace state. |
 | After approved merge | `team_marketplace.py release --tag vX.Y.Z` | Publishes an immutable approved release. |
 | Deployment/update/rollback | `team_marketplace.py install --pin vX.Y.Z` | Installs exact bundled skills for Copilot. |
+
+## Trust evidence and lifecycle
+
+Marketplace intake now requires executable evals and a representative-run
+attestation bound to the exact, clean Git commit being submitted. After committing
+the skill, create the evidence:
+
+```bash
+python3 scripts/team_marketplace.py attest ./report-skill \
+  --run-id representative-2026-08-25 \
+  --completed-at 2026-08-25T15:00:00Z
+```
+
+The skill lifecycle is `draft → in-review → approved → published`. Incident and
+retirement paths add `quarantined`, `deprecated`, and `retired`. Only an authorized
+transition is accepted:
+
+```bash
+python3 scripts/team_marketplace.py lifecycle report-skill \
+  --department finance --to quarantined --marketplace ./acme-skills
+```
+
+Quarantined, deprecated, and retired skills cannot be installed. The
+`approved → published` transition is committed before release so GitHub and GitLab
+publish the exact reviewed registry state.
+
+## Maintenance health control plane
+
+GitHub marketplaces include a weekly `marketplace-health` workflow. GitLab includes
+the equivalent scheduled-pipeline job. Run the same five checks locally:
+
+```bash
+python3 scripts/team_marketplace.py health --marketplace ./acme-skills \
+  --output MARKETPLACE_HEALTH.md --json-output marketplace-health.json
+```
+
+The report covers review staleness, dependency evidence, eval regressions, active
+owners, and current-version compatibility certification. Critical findings make the
+command fail so scheduled automation can alert maintainers.
+
+## Outcome-based discovery
+
+Add `discovery.json` to each skill with its outcome, intended users, input and
+output types, use cases, examples, permissions/systems, completion time,
+compatibility claims, and support tier (`supported`, `community`, or `deprecated`).
+Intake validates this metadata and generates one page under `skill-pages/`.
+
+```bash
+python3 scripts/team_marketplace.py search "monthly revenue review" \
+  --platform codex --support-tier supported --marketplace ./acme-skills
+```
+
+Search ranks outcome matches first and returns only published skills. Platform
+filters require current-version certification rather than an unverified claim.
+
+## Consented product measurement
+
+Organizational metrics are off by default. Enable the closed, privacy-safe event
+vocabulary with an expiring consent artifact:
+
+```bash
+python3 scripts/team_marketplace.py metrics-consent \
+  --expires-at 2027-08-25T00:00:00Z --marketplace ./acme-skills
+```
+
+The local ledger records only salted skill IDs, event type, UTC time, success,
+optional duration, and an allowlisted platform. It stores no prompts, inputs,
+outputs, paths, people, or organization identifiers. Record activation and use from
+approved runtime automation, then inspect aggregates:
+
+```bash
+python3 scripts/team_marketplace.py metrics-record activation \
+  --skill report-skill --platform codex --marketplace ./acme-skills
+python3 scripts/team_marketplace.py metrics-summary --marketplace ./acme-skills
+```
+
+## Distribution plans and compatibility certification
+
+Generate a non-mutating plan before managed distribution. Remote plans require an
+immutable tag matching the skill version or a full commit SHA:
+
+```bash
+python3 scripts/team_marketplace.py plan-install report-skill \
+  --department finance --platforms codex,cursor,github-copilot \
+  --scope user --release-ref v1.2.3 --marketplace ./acme-skills
+```
+
+Certification evidence names the platform, skill version, adapter and adapter
+version, plus unique explicit checks whose `passed` values are true. Persist verified
+evidence with:
+
+```bash
+python3 scripts/team_marketplace.py certify report-skill \
+  --department finance --platform codex --evidence codex-evidence.json \
+  --marketplace ./acme-skills
+```
+
+The adapters use `scripts/platforms.py` as the canonical platform registry. Native
+and adapted artifact plans therefore stay aligned with the factory installers.
