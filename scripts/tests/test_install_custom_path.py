@@ -4,12 +4,16 @@ from __future__ import annotations
 
 import os
 import subprocess
+import sys
 from pathlib import Path
+
+import pytest
 
 
 ROOT = Path(__file__).parent.parent.parent
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX shell installer")
 def test_posix_custom_path_is_the_only_install_destination(tmp_path: Path) -> None:
     skill = tmp_path / "contained-skill"
     skill.mkdir()
@@ -39,6 +43,7 @@ def test_posix_custom_path_is_the_only_install_destination(tmp_path: Path) -> No
     assert not (isolated_home / ".agents").exists()
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX shell installer")
 def test_posix_custom_path_rejects_all_platforms(tmp_path: Path) -> None:
     skill = tmp_path / "contained-skill"
     skill.mkdir()

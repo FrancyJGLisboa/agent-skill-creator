@@ -1551,7 +1551,9 @@ def build_parser() -> argparse.ArgumentParser:
     plan_install.add_argument("--scope", choices=("user", "project"), required=True)
     plan_install.add_argument("--release-ref")
     plan_install.add_argument("--local", action="store_true")
-    plan_install.add_argument("--home", default=str(Path.home()))
+    # Resolve the home directory only when plan-install actually needs it.
+    # Some clean/subprocess environments intentionally omit HOME/USERPROFILE.
+    plan_install.add_argument("--home")
     plan_install.add_argument("--project-root", default=str(Path.cwd()))
     plan_install.add_argument("--marketplace", default=".")
     certify = sub.add_parser("certify")
@@ -1654,7 +1656,8 @@ def main(argv: list[str] | None = None) -> int:
                 root, args.department, args.skill_name,
                 [item.strip() for item in args.platforms.split(",") if item.strip()],
                 args.scope, args.release_ref, remote=not args.local,
-                home=Path(args.home), project_root=Path(args.project_root),
+                home=Path(args.home) if args.home else Path.home(),
+                project_root=Path(args.project_root),
             )
             print(json.dumps(plan, indent=2, sort_keys=True))
         elif args.command == "certify":
