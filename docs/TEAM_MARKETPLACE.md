@@ -295,10 +295,20 @@ python3 ./report-skill/scripts/evolve.py \
   --correct "ACME UK revenue closes one business day later"
 ```
 
-Then repeat Phase B: run the skill's tests, add the corrected version, open a pull
-request, obtain approval, publish a new semantic-version release, and install the new
-pin. Corrections therefore follow the same evidence and governance path as the first
-release.
+Commit and attest the corrected source, then update the existing marketplace entry:
+
+```bash
+python3 scripts/team_marketplace.py update ./report-skill \
+  --department finance --marketplace ./acme-skills
+```
+
+`update` requires a strictly newer semantic version and reruns validation, security,
+pipeline, eval, clean-commit, and representative-run attestation gates before it
+replaces any files. It preserves bundle membership, resets lifecycle to `approved`,
+and clears compatibility certification because evidence from an older version cannot
+certify the new payload. Open a pull request, obtain approval, re-certify supported
+platforms, transition to `published`, release a new semantic-version tag, and install
+the new pin.
 
 ## Command map
 
@@ -306,6 +316,7 @@ release.
 |---|---|---|
 | Once | `team_marketplace.py init` | Creates the governed repository scaffold. |
 | Every intake | `team_marketplace.py add` | Gates and copies one skill into a department and bundle. |
+| Every new version | `team_marketplace.py update` | Re-gates a strictly newer version and preserves its bundles. |
 | Before PR/release | `team_marketplace.py check` | Verifies the complete marketplace state. |
 | After approved merge | `team_marketplace.py release --tag vX.Y.Z` | Publishes an immutable approved release. |
 | Deployment/update/rollback | `team_marketplace.py install --pin vX.Y.Z` | Installs exact bundled skills for Copilot. |

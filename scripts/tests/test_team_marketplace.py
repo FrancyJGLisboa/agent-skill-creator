@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import subprocess
 import sys
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
@@ -70,7 +73,7 @@ def recommit_and_attest(skill: Path, *, run_gates: bool = True) -> None:
         text=True, check=True,
     ).stdout.strip()
     artifact = market.create_attestation(
-        skill_name=skill.name, skill_version="1.2.3", commit_sha=commit,
+        skill_name=skill.name, skill_version=market._metadata(skill)["version"], commit_sha=commit,
         eval_evidence={"runner": "scripts/run_evals.py", "executable": True,
                        "validation_passed": True, "run_passed": True,
                        "checked_at": "2026-08-25T12:00:00Z"},
@@ -78,6 +81,13 @@ def recommit_and_attest(skill: Path, *, run_gates: bool = True) -> None:
         issued_at="2026-08-25T12:00:00Z",
     )
     (skill / market.ATTESTATION_FILE).write_text(json.dumps(artifact), encoding="utf-8")
+
+
+def update_skill_version(skill: Path, version: str) -> None:
+    skill_md = (skill / "SKILL.md").read_text(encoding="utf-8")
+    skill_md = re.sub(r"(?m)^  version: \S+$", f"  version: {version}", skill_md)
+    (skill / "SKILL.md").write_text(skill_md, encoding="utf-8")
+    recommit_and_attest(skill)
 
 
 def init_marketplace(base: Path) -> Path:
@@ -99,6 +109,26 @@ def test_init_generates_governance_scaffold(tmp_path: Path) -> None:
     assert (repo / "scripts/team_marketplace.py").exists()
     assert (repo / ".github/workflows/marketplace-check.yml").exists()
     assert (repo / ".github/workflows/marketplace-release.yml").exists()
+
+
+def test_generated_marketplace_cli_runs_without_factory_source_tree(tmp_path: Path) -> None:
+    """The copied control plane must carry every local import it needs at runtime."""
+    repo = init_marketplace(tmp_path)
+    consumer = tmp_path / "isolated-consumer"
+    consumer.mkdir()
+    result = subprocess.run(
+        [
+            sys.executable, str(repo / "scripts/team_marketplace.py"),
+            "search", "csv quality", "--marketplace", str(repo),
+        ],
+        cwd=consumer,
+        env={"PATH": str(Path(sys.executable).parent)},
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "No matching published skills."
 
 
 def test_gitlab_init_generates_provider_scaffold(tmp_path: Path) -> None:
@@ -168,6 +198,93 @@ def test_add_namespaces_skill_builds_bundle_and_catalog(tmp_path: Path) -> None:
     catalog = (repo / "CATALOG.md").read_text()
     assert "Finance" in catalog and "report-skill" in catalog
     assert "@acme-report-skill" in (repo / "CODEOWNERS").read_text()
+
+
+def test_concurrent_admissions_preserve_every_registry_entry(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repo = init_marketplace(tmp_path)
+    first = make_skill(tmp_path, "report-skill")
+    second = make_skill(tmp_path, "risk-skill")
+    original_save = market.save_manifest
+    admission_saves = threading.Barrier(2)
+
+    def synchronized_save(root: Path, data: dict[str, object]) -> None:
+        try:
+            admission_saves.wait(timeout=0.5)
+        except threading.BrokenBarrierError:
+            pass
+        original_save(root, data)
+
+    monkeypatch.setattr(market, "save_manifest", synchronized_save)
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        futures = [
+            executor.submit(market.add_skill, repo, first, "finance", "base"),
+            executor.submit(market.add_skill, repo, second, "risk", "base"),
+        ]
+        entries = [future.result() for future in futures]
+
+    data = market.load_manifest(repo)
+    assert {entry["name"] for entry in entries} == {"report-skill", "risk-skill"}
+    assert {entry["name"] for entry in data["skills"]} == {"report-skill", "risk-skill"}
+    assert data["bundles"]["base"] == [
+        "skills/finance/report-skill", "skills/risk/risk-skill",
+    ]
+
+
+def test_update_replaces_with_strictly_newer_version_and_preserves_bundle(tmp_path: Path) -> None:
+    repo = init_marketplace(tmp_path)
+    skill = make_skill(tmp_path, "report-skill")
+    market.add_skill(repo, skill, "finance", "base")
+    market.transition_skill(repo, "finance", "report-skill", "published")
+    update_skill_version(skill, "1.3.0")
+    (skill / "scripts/main.py").write_text("print('v1.3.0')\n", encoding="utf-8")
+    recommit_and_attest(skill)
+
+    entry = market.update_skill(repo, skill, "finance")
+
+    data = market.load_manifest(repo)
+    assert entry["version"] == "1.3.0"
+    assert entry["lifecycle"] == "approved"
+    assert entry["compatibility"]["certified"] == []
+    assert len(data["skills"]) == 1
+    assert data["bundles"]["base"] == ["skills/finance/report-skill"]
+    assert (repo / entry["path"] / "scripts/main.py").read_text() == "print('v1.3.0')\n"
+
+
+@pytest.mark.parametrize("version", ["1.2.3", "1.2.2", "1.1.9"])
+def test_update_rejects_equal_or_older_version_without_mutation(
+    tmp_path: Path, version: str,
+) -> None:
+    repo = init_marketplace(tmp_path)
+    skill = make_skill(tmp_path, "report-skill")
+    market.add_skill(repo, skill, "finance", "base")
+    update_skill_version(skill, version)
+    before = (repo / "registry.json").read_bytes()
+
+    with pytest.raises(market.MarketplaceError, match="strictly newer"):
+        market.update_skill(repo, skill, "finance")
+
+    assert (repo / "registry.json").read_bytes() == before
+    assert market.load_manifest(repo)["skills"][0]["version"] == "1.2.3"
+
+
+def test_update_gate_failure_keeps_existing_registry_and_payload(tmp_path: Path) -> None:
+    repo = init_marketplace(tmp_path)
+    skill = make_skill(tmp_path, "report-skill")
+    original = market.add_skill(repo, skill, "finance", "base")
+    update_skill_version(skill, "1.2.4")
+    (skill / "scripts/run_evals.py").write_text("raise SystemExit(1)\n", encoding="utf-8")
+    recommit_and_attest(skill, run_gates=False)
+    manifest_before = (repo / "registry.json").read_bytes()
+    payload_before = (repo / original["path"] / "scripts/main.py").read_bytes()
+
+    with pytest.raises(market.MarketplaceError, match="evals gate failed"):
+        market.update_skill(repo, skill, "finance")
+
+    assert (repo / "registry.json").read_bytes() == manifest_before
+    assert (repo / original["path"] / "scripts/main.py").read_bytes() == payload_before
 
 
 @pytest.mark.parametrize("department", ["../finance", ".", "Finance Team", "a/b"])
@@ -302,10 +419,17 @@ def test_install_builds_exact_pinned_commands_for_both_scopes(tmp_path: Path, mo
 def test_local_install_uses_from_local_for_integration(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     repo = init_marketplace(tmp_path)
     market.add_skill(repo, make_skill(tmp_path, "report-skill"), "finance", "base")
-    calls: list[list[str]] = []
-    monkeypatch.setattr(market.subprocess, "run", lambda command, **kwargs: calls.append(command) or subprocess.CompletedProcess(command, 0))
+    consumer = tmp_path / "consumer"
+    consumer.mkdir()
+    monkeypatch.chdir(consumer)
+    calls: list[tuple[list[str], dict[str, object]]] = []
+    monkeypatch.setattr(
+        market.subprocess, "run",
+        lambda command, **kwargs: calls.append((command, kwargs)) or subprocess.CompletedProcess(command, 0),
+    )
     market.install_bundle(repo, "base", "project", None, from_local=True)
-    assert calls[0][:6] == ["gh", "skill", "install", str(repo), "report-skill", "--from-local"]
+    assert calls[0][0][:6] == ["gh", "skill", "install", str(repo), "report-skill", "--from-local"]
+    assert calls[0][1]["cwd"] == consumer
 
 
 @pytest.mark.skipif(shutil.which("gh") is None, reason="GitHub CLI is not installed")
@@ -314,13 +438,17 @@ def test_real_gh_local_install_for_user_and_project_scopes(tmp_path: Path, monke
     market.add_skill(repo, make_skill(tmp_path, "report-skill"), "finance", "base")
     market.add_skill(repo, make_skill(tmp_path, "risk-skill"), "risk", "base")
     subprocess.run(["git", "init", "-q", str(repo)], check=True)
+    consumer = tmp_path / "consumer"
+    consumer.mkdir()
+    subprocess.run(["git", "init", "-q", str(consumer)], check=True)
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
     monkeypatch.setenv("USERPROFILE", str(fake_home))
+    monkeypatch.chdir(consumer)
     market.install_bundle(repo, "base", "project", None, from_local=True)
     market.install_bundle(repo, "base", "user", None, from_local=True)
-    project_installs = list((repo / ".agents/skills").glob("*/SKILL.md"))
+    project_installs = list((consumer / ".agents/skills").glob("*/SKILL.md"))
     user_installs = list((fake_home / ".copilot/skills").glob("*/SKILL.md"))
     assert len(project_installs) == 2
     assert len(user_installs) == 2
@@ -336,6 +464,26 @@ def test_release_requires_semver_and_passed_checks(tmp_path: Path, monkeypatch: 
     market.transition_skill(repo, "finance", "report-skill", "published")
     market.release_marketplace(repo, "v1.2.0")
     assert calls[-1] == ["gh", "skill", "publish", str(repo), "--tag", "v1.2.0"]
+
+
+def test_release_grade_check_does_not_dirty_committed_marketplace(tmp_path: Path) -> None:
+    repo = init_marketplace(tmp_path)
+    market.add_skill(repo, make_skill(tmp_path, "report-skill"), "finance", "base")
+    market.transition_skill(repo, "finance", "report-skill", "published")
+    subprocess.run(["git", "init", "-q", "-b", "main", str(repo)], check=True)
+    subprocess.run(["git", "-C", str(repo), "add", "."], check=True)
+    subprocess.run(
+        ["git", "-C", str(repo), "-c", "user.name=Test", "-c",
+         "user.email=test@example.invalid", "commit", "-qm", "release candidate"], check=True,
+    )
+
+    assert market.check_marketplace(repo, require_published=True) == []
+
+    status = subprocess.run(
+        ["git", "-C", str(repo), "status", "--porcelain", "--untracked-files=all"],
+        capture_output=True, text=True, check=True,
+    )
+    assert status.stdout == ""
 
 
 def test_gitlab_release_uses_glab(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -377,6 +525,55 @@ def test_gitlab_install_clones_pin_and_copies_bundle(tmp_path: Path, monkeypatch
     assert (target / ".github/skills/report-skill/SKILL.md").exists()
 
 
+def test_consumer_can_update_then_rollback_to_exact_marketplace_tag(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repo = tmp_path / "marketplace"
+    market.init_marketplace(repo, "ACME Skills", "acme/skills", provider="gitlab")
+    skill = make_skill(tmp_path, "report-skill")
+    market.add_skill(repo, skill, "finance", "base")
+    market.transition_skill(repo, "finance", "report-skill", "published")
+    subprocess.run(["git", "init", "-q", "-b", "main", str(repo)], check=True)
+    subprocess.run(["git", "-C", str(repo), "add", "."], check=True)
+    subprocess.run(
+        ["git", "-C", str(repo), "-c", "user.name=Test", "-c",
+         "user.email=test@example.invalid", "commit", "-qm", "release v1.2.3"], check=True,
+    )
+    subprocess.run(["git", "-C", str(repo), "tag", "v1.2.3"], check=True)
+
+    consumer = tmp_path / "consumer"
+    consumer.mkdir()
+    monkeypatch.chdir(consumer)
+    market.install_bundle(repo, "base", "project", None, from_local=True)
+    installed = consumer / ".github/skills/report-skill/scripts/main.py"
+    assert installed.read_text() == "print('ok')\n"
+    first = subprocess.run([sys.executable, str(installed)], capture_output=True, text=True, check=True)
+    second = subprocess.run([sys.executable, str(installed)], capture_output=True, text=True, check=True)
+    assert first.stdout == second.stdout == "ok\n"
+
+    update_skill_version(skill, "1.3.0")
+    (skill / "scripts/main.py").write_text("print('v1.3.0')\n", encoding="utf-8")
+    recommit_and_attest(skill)
+    market.update_skill(repo, skill, "finance")
+    market.transition_skill(repo, "finance", "report-skill", "published")
+    subprocess.run(["git", "-C", str(repo), "add", "."], check=True)
+    subprocess.run(
+        ["git", "-C", str(repo), "-c", "user.name=Test", "-c",
+         "user.email=test@example.invalid", "commit", "-qm", "release v1.3.0"], check=True,
+    )
+    subprocess.run(["git", "-C", str(repo), "tag", "v1.3.0"], check=True)
+    market.install_bundle(repo, "base", "project", None, from_local=True, force=True)
+    assert installed.read_text() == "print('v1.3.0')\n"
+
+    rollback = tmp_path / "rollback-v1.2.3"
+    subprocess.run(
+        ["git", "clone", "-q", "--branch", "v1.2.3", "--depth", "1", str(repo), str(rollback)],
+        check=True,
+    )
+    market.install_bundle(rollback, "base", "project", None, from_local=True, force=True)
+    assert installed.read_text() == "print('ok')\n"
+
+
 def test_cli_init_accepts_from_registry() -> None:
     args = market.build_parser().parse_args([
         "init", "--name", "ACME Skills", "--repository", "ACME/skills",
@@ -392,6 +589,23 @@ def test_cli_init_accepts_provider_and_host() -> None:
     ])
     assert args.provider == "gitlab"
     assert args.host == "gitlab.acme.test"
+
+
+def test_attest_cli_runs_without_marketplace_argument(tmp_path: Path) -> None:
+    skill = make_skill(tmp_path, "report-skill")
+    result = subprocess.run(
+        [
+            sys.executable, str(ROOT / "scripts/team_marketplace.py"), "attest", str(skill),
+            "--run-id", "cli-representative-run",
+            "--completed-at", "2026-08-25T12:00:00Z",
+        ],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "Wrote trust attestation" in result.stdout
 
 
 def test_intake_rejects_missing_and_commit_mismatched_attestation(tmp_path: Path) -> None:

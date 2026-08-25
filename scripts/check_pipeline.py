@@ -32,7 +32,6 @@ from __future__ import annotations
 import argparse
 import ast
 import json
-import py_compile
 import sys
 from pathlib import Path
 
@@ -59,9 +58,9 @@ def compile_failures(files: list[Path]) -> list[str]:
     failures: list[str] = []
     for f in files:
         try:
-            py_compile.compile(str(f), doraise=True)
-        except py_compile.PyCompileError as exc:
-            failures.append(f"{f}: {exc.msg}")
+            compile(f.read_text(encoding="utf-8"), str(f), "exec")
+        except (SyntaxError, UnicodeDecodeError, OSError) as exc:
+            failures.append(f"{f}: {exc}")
     return failures
 
 

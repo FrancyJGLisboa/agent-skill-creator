@@ -17,8 +17,11 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
 from datetime import date, datetime, timezone
+from functools import wraps
 from pathlib import Path
 from typing import Any
 
@@ -60,13 +63,54 @@ SCAFFOLD_SCRIPTS = (
     "skill_document.py", "validate.py", "marketplace_trust.py", "marketplace_health.py",
     "marketplace_discovery.py",
     "marketplace_metrics.py",
-    "marketplace_distribution.py", "platforms.py",
+    "marketplace_distribution.py", "platforms.py", "review_staleness.py",
 )
 ATTESTATION_FILE = "marketplace-attestation.json"
 
 
 class MarketplaceError(RuntimeError):
     """A user-correctable marketplace or governance failure."""
+
+
+@contextmanager
+def _marketplace_lock(root: Path, *, timeout_seconds: float = 30.0):
+    """Serialize marketplace mutations across threads and CLI processes."""
+    lock = root / ".marketplace-mutation.lock"
+    deadline = time.monotonic() + timeout_seconds
+    while True:
+        try:
+            lock.mkdir()
+            break
+        except FileExistsError:
+            try:
+                stale = time.time() - lock.stat().st_mtime > 300
+            except FileNotFoundError:
+                continue
+            if stale:
+                try:
+                    lock.rmdir()
+                except OSError:
+                    pass
+                continue
+            if time.monotonic() >= deadline:
+                raise MarketplaceError(f"timed out waiting for marketplace mutation lock: {lock}")
+            time.sleep(0.05)
+    try:
+        yield
+    finally:
+        try:
+            lock.rmdir()
+        except FileNotFoundError:
+            pass
+
+
+def _serialized_mutation(function):
+    """Run a root-first marketplace mutation under the repository lock."""
+    @wraps(function)
+    def wrapped(root: Path, *args: Any, **kwargs: Any):
+        with _marketplace_lock(root):
+            return function(root, *args, **kwargs)
+    return wrapped
 
 
 class MarketplaceProvider(ABC):
@@ -108,6 +152,7 @@ class GitHubProvider(MarketplaceProvider):
     ) -> list[list[str]]:
         source = str(root.resolve()) if from_local else data["marketplace"]["repository"]
         commands: list[list[str]] = []
+        run_cwd = Path.cwd() if scope == "project" else root
         for path in paths:
             selector = Path(path).name if from_local else path
             command = ["gh", "skill", "install", source, selector]
@@ -118,7 +163,7 @@ class GitHubProvider(MarketplaceProvider):
                 command += ["--pin", pin]
             if force:
                 command.append("--force")
-            result = subprocess.run(command, cwd=root, text=True, check=False)
+            result = subprocess.run(command, cwd=run_cwd, text=True, check=False)
             if result.returncode:
                 raise MarketplaceError(f"gh skill install failed for {path}")
             commands.append(command)
@@ -518,6 +563,7 @@ def _blocked_allowed_tools(value: Any) -> set[str]:
     return tokens & BLOCKED_TOOLS
 
 
+@_serialized_mutation
 def add_skill(root: Path, skill: Path, department: str, bundle: str) -> dict[str, Any]:
     """Gate and copy one approved skill into its department namespace."""
     department = _require_slug(department, "department")
@@ -591,6 +637,139 @@ def _quality_errors(name: str, quality: dict[str, Any]) -> list[str]:
         if not quality.get(gate, {}).get("passed", False):
             errors.append(f"{name}: {gate} gate failed")
     return errors
+
+
+def _compare_semver(left: str, right: str) -> int:
+    """Compare validated semantic versions, including prerelease precedence."""
+    pattern = re.compile(
+        r"^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?$"
+    )
+    left_match, right_match = pattern.fullmatch(left), pattern.fullmatch(right)
+    if left_match is None or right_match is None:
+        raise MarketplaceError("skill versions must use semantic versioning")
+    left_core = tuple(int(left_match.group(index)) for index in range(1, 4))
+    right_core = tuple(int(right_match.group(index)) for index in range(1, 4))
+    if left_core != right_core:
+        return 1 if left_core > right_core else -1
+    left_pre, right_pre = left_match.group(4), right_match.group(4)
+    if left_pre is None or right_pre is None:
+        if left_pre == right_pre:
+            return 0
+        return 1 if left_pre is None else -1
+    left_parts, right_parts = left_pre.split("."), right_pre.split(".")
+    for left_part, right_part in zip(left_parts, right_parts):
+        if left_part == right_part:
+            continue
+        left_numeric, right_numeric = left_part.isdigit(), right_part.isdigit()
+        if left_numeric and right_numeric:
+            return 1 if int(left_part) > int(right_part) else -1
+        if left_numeric != right_numeric:
+            return -1 if left_numeric else 1
+        return 1 if left_part > right_part else -1
+    if len(left_parts) == len(right_parts):
+        return 0
+    return 1 if len(left_parts) > len(right_parts) else -1
+
+
+@_serialized_mutation
+def update_skill(root: Path, skill: Path, department: str) -> dict[str, Any]:
+    """Replace one marketplace skill with a fully gated, strictly newer version."""
+    department = _require_slug(department, "department")
+    if not skill.is_dir():
+        raise MarketplaceError(f"skill path is not a directory: {skill}")
+    meta = _metadata(skill)
+    if not meta["name"]:
+        raise MarketplaceError("skill name is missing")
+    if _blocked_allowed_tools(meta["allowed_tools"]):
+        raise MarketplaceError("pre-approved shell or bash access is forbidden; runtime permission is required")
+    if not meta["owners"]:
+        raise MarketplaceError("skill metadata must declare at least one owner")
+    if not SEMVER_RE.fullmatch(meta["version"]):
+        raise MarketplaceError("skill metadata.version must be semantic versioning, such as 1.2.0")
+    if meta["lifecycle"] != APPROVED:
+        raise MarketplaceError("updated skill lifecycle must be approved before marketplace intake")
+
+    data = load_manifest(root)
+    existing = next(
+        (
+            item for item in data["skills"]
+            if item.get("department") == department and item.get("name") == meta["name"]
+        ),
+        None,
+    )
+    if existing is None:
+        raise MarketplaceError(
+            f"skill not found for update: {department}/{meta['name']}; use add for first intake"
+        )
+    if _compare_semver(meta["version"], str(existing.get("version", ""))) <= 0:
+        raise MarketplaceError(
+            f"update version {meta['version']} must be strictly newer than {existing.get('version')}"
+        )
+
+    try:
+        normalized_discovery = normalize_discovery({
+            "name": meta["name"], "version": meta["version"], "discovery": meta["discovery"],
+        })
+    except DiscoveryError as exc:
+        raise MarketplaceError(f"invalid discovery metadata: {exc}") from exc
+    commit = _source_commit(skill)
+    attestation = _load_attestation(skill, meta, commit)
+    quality = _gate_skill(skill)
+    failures = _quality_errors(meta["name"], quality)
+    if failures:
+        raise MarketplaceError("; ".join(failures))
+
+    relative = str(existing["path"])
+    expected = f"skills/{department}/{meta['name']}"
+    if relative != expected:
+        raise MarketplaceError(f"existing manifest path must be {expected}")
+    destination = _contained(root, relative)
+    if not destination.is_dir():
+        raise MarketplaceError(f"existing skill directory is missing: {relative}")
+    discovery = json.loads(json.dumps(meta["discovery"])) if isinstance(meta["discovery"], dict) else {}
+    if isinstance(discovery.get("compatibility"), dict):
+        discovery["compatibility"]["certified"] = []
+    replacement = {
+        "name": meta["name"], "department": department, "author": meta["author"],
+        "owners": meta["owners"], "approval_status": meta["approval_status"],
+        "lifecycle": APPROVED, "version": meta["version"],
+        "description": meta["description"], "license": meta["license"],
+        "path": relative, "repository": data["marketplace"]["repository"],
+        "provenance": {
+            "source": str(skill.resolve()), "commit_sha": commit, "updated_at": _now(),
+            "previous_version": existing.get("version"),
+        },
+        "attestation": attestation, "discovery": discovery,
+        "compatibility": {
+            "declared": normalized_discovery["compatibility"]["declared"], "certified": [],
+        },
+        "quality": quality,
+    }
+
+    manifest_before = (root / "registry.json").read_bytes()
+    staging = Path(tempfile.mkdtemp(prefix=f".{meta['name']}-update-", dir=destination.parent))
+    backup = destination.parent / f".{meta['name']}-backup-{secrets.token_hex(8)}"
+    try:
+        shutil.copytree(skill, staging, dirs_exist_ok=True, ignore=COPY_IGNORE_PATTERNS)
+        destination.replace(backup)
+        staging.replace(destination)
+        existing.clear()
+        existing.update(replacement)
+        save_manifest(root, data)
+        generate_repository_files(root, data)
+    except Exception:
+        if destination.exists():
+            shutil.rmtree(destination)
+        if backup.exists():
+            backup.replace(destination)
+        (root / "registry.json").write_bytes(manifest_before)
+        raise
+    finally:
+        if staging.exists():
+            shutil.rmtree(staging)
+        if backup.exists():
+            shutil.rmtree(backup)
+    return replacement
 
 
 def check_marketplace(
@@ -682,9 +861,6 @@ def check_marketplace(
         else:
             if actual_bundle != expected_bundle:
                 errors.append(f"bundle manifest is inconsistent: bundles/{bundle}.json")
-    if refresh:
-        save_manifest(root, data)
-        generate_repository_files(root, data)
     return errors
 
 
@@ -1084,10 +1260,15 @@ def build_parser() -> argparse.ArgumentParser:
     add.add_argument("--department", required=True)
     add.add_argument("--bundle", required=True)
     add.add_argument("--marketplace", default=".")
+    update = sub.add_parser("update")
+    update.add_argument("skill_path")
+    update.add_argument("--department", required=True)
+    update.add_argument("--marketplace", default=".")
     attest = sub.add_parser("attest")
     attest.add_argument("skill_path")
     attest.add_argument("--run-id", required=True)
     attest.add_argument("--completed-at", required=True)
+    attest.add_argument("--marketplace", default=".", help=argparse.SUPPRESS)
     check = sub.add_parser("check")
     check.add_argument("--marketplace", default=".")
     check.add_argument("--release", action="store_true", help="require committed published lifecycle")
@@ -1166,6 +1347,9 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "add":
             entry = add_skill(root, Path(args.skill_path).resolve(), args.department, args.bundle)
             print(f"Added {entry['department']}/{entry['name']} to bundle {args.bundle}")
+        elif args.command == "update":
+            entry = update_skill(root, Path(args.skill_path).resolve(), args.department)
+            print(f"Updated {entry['department']}/{entry['name']} to v{entry['version']}")
         elif args.command == "check":
             errors = check_marketplace(root, require_published=args.release)
             if errors:
