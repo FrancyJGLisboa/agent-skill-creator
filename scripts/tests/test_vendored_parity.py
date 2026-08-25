@@ -23,6 +23,7 @@ VENDORED = {
     "staleness_check.py": "staleness_check.py",
     "run_evals_template.py": "run_evals.py",
     "evolve_template.py": "evolve.py",
+    "success_ledger.py": "success_ledger.py",
 }
 
 

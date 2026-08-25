@@ -31,6 +31,7 @@ ignored; fully duplicated rows are removed before totalling).
 python3 scripts/run_evals.py . --validate   # check the eval spec is well-formed
 python3 scripts/run_evals.py . --rollout    # execute the skill on golden inputs
 python3 scripts/run_evals.py . --rollout --promote   # capture first baselines
+python3 scripts/success_ledger.py summary            # inspect local durable-use metrics
 ```
 
 The eval spec lives in `evals/weekly-crm-report.eval.md` with three golden
@@ -43,5 +44,6 @@ weekly-crm-report/
 ├── SKILL.md                  # activation + usage contract
 ├── scripts/run_pipeline.py   # CSV → dedup → regional totals → JSON
 ├── scripts/run_evals.py      # eval runner (validate / rollout / promote)
+├── scripts/success_ledger.py # private local lifecycle metrics
 └── evals/                    # eval spec + golden cases
 ```

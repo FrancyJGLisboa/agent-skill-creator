@@ -1455,7 +1455,8 @@ Copy the maintenance loop into the skill so it can check itself after delivery
 ```bash
 cp scripts/evolve_template.py <skill>/scripts/evolve.py
 cp scripts/skill_document.py scripts/review_staleness.py scripts/dependency_health.py \
-   scripts/schema_drift.py scripts/staleness_check.py <skill>/scripts/
+   scripts/schema_drift.py scripts/staleness_check.py scripts/success_ledger.py \
+   <skill>/scripts/
 chmod +x <skill>/scripts/evolve.py
 ```
 
@@ -1463,6 +1464,13 @@ chmod +x <skill>/scripts/evolve.py
 eval rollout (with `--judge` to grade llm-judge criteria). Any failure appends
 the raw evidence to the skill's `EVOLUTION.md` — that file is the input for a
 regenerate pass (`/agent-skill-creator <skill> using EVOLUTION.md`).
+
+The ledger records only fixed lifecycle metadata with a locally salted skill ID.
+It contains no workflow content and has no network transport. Read
+`product-success.md` for the event schema, instrumentation contract, opt-out, and
+metric formulas. Instrument a deterministic `run_pipeline.py` so a successful run
+records `os.environ.get("ASC_RUN_EVENT", "skill_run")`, uses `ASC_RUN_ID` when
+present, and treats ledger errors as non-fatal.
 
 ### Step 7: Write README.md
 
@@ -1664,7 +1672,7 @@ primary handoff.
 | 5.5 | `evals/*.eval.md` + `scripts/run_evals.py` | Bundled loss function; skip if `--no-eval` |
 | 6 | `install.sh` | Cross-platform installer, `chmod +x` |
 | 6.5 | `.claude-plugin/*.json` | Plugin manifests from `scripts/claude-plugin-template/`; names match SKILL.md |
-| 6.6 | `scripts/evolve.py` + staleness/drift modules | Shipped self-maintenance loop; failures append evidence to `EVOLUTION.md` |
+| 6.6 | `scripts/evolve.py` + maintenance modules + `success_ledger.py` | Self-maintenance plus private local lifecycle measurement |
 | 7 | `README.md` | Multi-platform install instructions |
 | 7.5 | `skill.graph.json` | Normalized typed IR; build with `scripts/skill_graph.py` |
 | 8 | Run `skill_graph.py run` | Constraints + spec/security/pipeline/eval gates must pass |

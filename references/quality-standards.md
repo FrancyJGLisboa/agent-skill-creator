@@ -37,6 +37,9 @@
 - Declare external dependencies in `metadata.dependencies` so health can be checked
 - Declare expected API response shapes in `metadata.schema_expectations` for drift detection
 - Generated skills carry the loop themselves: `python3 scripts/evolve.py` (staleness + deps + drift + eval rollout from the skill's own root); failures append raw evidence to the skill's `EVOLUTION.md`
+- Generated skills carry `scripts/success_ledger.py`; it stores only fixed,
+  pseudonymous lifecycle metadata locally, never workflow content, and ledger
+  failures never fail the business workflow
 - From the creator repo, `python3 scripts/staleness_check.py path/to/skill/` (add `--record` to write findings into the skill's `EVOLUTION.md`) works for ad-hoc checks
 - When publishing to a registry, use `python3 scripts/skill_registry.py stale` to audit all skills
 

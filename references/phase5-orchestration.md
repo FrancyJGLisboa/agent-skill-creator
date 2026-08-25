@@ -66,6 +66,28 @@ if __name__ == "__main__":
 
 The SKILL.md then documents one command: `python scripts/run_pipeline.py --source <X>`.
 
+### Record successful use without recording business data
+
+Every generated deterministic pipeline imports `record_event` from the shipped
+`scripts/success_ledger.py`. Start a monotonic timer before work; after the output
+is safely written, record:
+
+```python
+event = os.environ.get("ASC_RUN_EVENT", "skill_run")
+record_event(
+    event,
+    skill="skill-name",
+    run_id=os.environ.get("ASC_RUN_ID"),
+    duration_seconds=time.monotonic() - started,
+)
+```
+
+Wrap recording in `try/except (OSError, ValueError)` and print a warning to stderr:
+measurement must never turn a successful business workflow into a failure. The
+event vocabulary prevents prompts, inputs, outputs, and corrections from entering
+the ledger. Read `product-success.md` for the privacy contract. Interactive skills
+record after their own explicit success boundary rather than inventing a pipeline.
+
 ## Say which files to run and which to read
 
 A skill bundles two kinds of file the agent must treat differently: scripts it

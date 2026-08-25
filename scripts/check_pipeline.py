@@ -37,7 +37,7 @@ import sys
 from pathlib import Path
 
 _ENTRY = "run_pipeline.py"
-_TOOLING = {"run_pipeline.py", "run_evals.py"}
+_TOOLING = {"run_pipeline.py", "run_evals.py", "success_ledger.py"}
 _SKIP_DIR_PARTS = {"__pycache__", "tests"}
 
 

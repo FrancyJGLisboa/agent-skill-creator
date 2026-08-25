@@ -44,6 +44,8 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+from success_ledger import record_event
+
 GOTCHAS_HEADING = re.compile(r"^([ \t]{0,3})(#{1,6})[ \t]+gotchas\b.*$", re.IGNORECASE | re.MULTILINE)
 # A placeholder body meaning "there are none yet" -- replaced rather than appended to.
 NONE_KNOWN = re.compile(r"^\s*(none known|none|n/a)\.?\s*$", re.IGNORECASE)
@@ -53,6 +55,14 @@ FALLBACK_ANCHORS = ("## Keywords", "## Usage Examples", "## References", "## Ant
 
 def _utc_stamp() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _record_lifecycle(event: str, skill_dir: Path) -> None:
+    """Record product health locally without making maintenance depend on metrics."""
+    try:
+        record_event(event, skill=skill_dir.name)
+    except (OSError, ValueError) as exc:
+        print(f"warning: success ledger did not record {event}: {exc}", file=sys.stderr)
 
 
 def record_correction(skill_dir: Path, text: str) -> list[str]:
@@ -156,6 +166,7 @@ def main(argv: list[str] | None = None) -> int:
         except ValueError as exc:
             print(f"error: {exc}", file=sys.stderr)
             return 2
+        _record_lifecycle("correction_recorded", root)
         print("\nnext: run scripts/evolve.py to re-verify, and reword the entry in the")
         print("house style (wrong assumption -> real behavior) next time you edit the skill")
         return 0
@@ -180,6 +191,8 @@ def main(argv: list[str] | None = None) -> int:
             failures.append((name, proc.returncode))
 
     if failures:
+        if any(name == "evals" for name, _ in failures):
+            _record_lifecycle("regression_detected", root)
         print("\nevolve: FAILED — raw evidence recorded in EVOLUTION.md")
         for name, rc in failures:
             print(f"  - {name} (exit {rc})")
@@ -190,6 +203,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1
 
+    _record_lifecycle("gates_passed", root)
     print("\nevolve: all checks fresh and green")
     return 0
 

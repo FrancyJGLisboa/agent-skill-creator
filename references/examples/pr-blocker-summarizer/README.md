@@ -32,6 +32,7 @@ and `age_days`. Missing fields are treated conservatively.
 python3 scripts/run_evals.py . --validate   # check the eval spec is well-formed
 python3 scripts/run_evals.py . --rollout    # execute the skill on golden inputs
 python3 scripts/run_evals.py . --rollout --promote   # capture first baselines
+python3 scripts/success_ledger.py summary            # inspect local durable-use metrics
 ```
 
 The eval spec lives in `evals/pr-blocker-summarizer.eval.md` with three
@@ -44,5 +45,6 @@ pr-blocker-summarizer/
 ├── SKILL.md                  # activation + usage contract
 ├── scripts/run_pipeline.py   # PR JSON → blocked/ready triage → digest JSON
 ├── scripts/run_evals.py      # eval runner (validate / rollout / promote)
+├── scripts/success_ledger.py # private local lifecycle metrics
 └── evals/                    # eval spec + golden cases
 ```

@@ -64,6 +64,11 @@ The skill is successfully created only after the representative run succeeds. If
 safe run needs credentials, unavailable data, or permission for a consequential side
 effect, use the `verification-blocked` handoff below instead of claiming success.
 
+At creation start, run `python3 scripts/success_ledger.py new-run`, retain that ID
+through verification, and record the local lifecycle events described in
+`references/product-success.md`. Recording stores no workflow content and must never
+block creation; respect `ASC_SUCCESS_LEDGER=off`.
+
 ## Trigger
 
 User invokes `/agent-skill-creator` followed by their input:
@@ -318,16 +323,19 @@ Create all files in this order:
 6. Write assets (templates, configs)
 7. **Emit the eval spec** (skip if `--no-eval`): write `evals/<name>.eval.md` (the binary checks + golden cases derived in Phase 2, one marked `"split": "test"` as the holdout, plus a `judge` block with a pinned model and known-bad canary when any criterion is `llm-judge`) and copy `scripts/run_evals_template.py` → the generated skill's `scripts/run_evals.py`. See `references/phase2-eval-assessment.md`
 8. Generate `install.sh` from `scripts/install-template.sh` (replace `{{SKILL_NAME}}` with actual name, `chmod +x`)
-8.5. Generate `.claude-plugin/plugin.json` + `marketplace.json` from `scripts/claude-plugin-template/` (placeholders from frontmatter — makes the skill installable via `/plugin marketplace add`), and **ship the evolution toolkit**: copy `scripts/evolve_template.py` → `scripts/evolve.py` plus the staleness/drift/dep-health modules. See `references/pipeline-phases.md` Steps 6.5–6.6
+8.5. Generate `.claude-plugin/plugin.json` + `marketplace.json` from `scripts/claude-plugin-template/` (placeholders from frontmatter — makes the skill installable via `/plugin marketplace add`), and **ship the evolution toolkit and local success ledger**: copy `scripts/evolve_template.py` → `scripts/evolve.py`, `scripts/success_ledger.py`, plus the staleness/drift/dep-health modules. See `references/pipeline-phases.md` Steps 6.5–6.6
 9. Write `README.md` (multi-platform install instructions showing the `/plugin marketplace add` path for Claude Code and `git clone` to each tool's **native** path)
 9.5. Build the normalized IR with **`python3 scripts/skill_graph.py build <skill> --output <skill>/skill.graph.json`**. This typed artifact/dependency graph is the validation source of truth; the five phases remain its user-facing projection. Read `references/skill-graph.md` for its schema and invariants.
-10. Run **`python3 scripts/skill_graph.py run <skill> --jobs 4`**. It blocks unreachable expected outputs and missing deterministic orchestrators, then runs spec, security, pipeline, and eval-schema gates concurrently with content-addressed caching. All constraints and gates must pass.
+10. Run **`python3 scripts/skill_graph.py run <skill> --jobs 4`**. It blocks unreachable expected outputs and missing deterministic orchestrators, then runs spec, security, pipeline, and eval-schema gates concurrently with content-addressed caching. All constraints and gates must pass. Record `gates_passed` with the creation run ID.
 11. **Auto-install on the current platform** (see below)
 12. **Run one safe representative use case** using a supplied artifact when possible,
     otherwise a local fixture. Never send messages, write production data, purchase,
     publish, or trigger another consequential action merely to verify a skill; use a
     dry run or sandbox. If safe execution needs missing credentials, data, or authority,
-    stop with `verification-blocked` and one exact setup action.
+    stop with `verification-blocked` and one exact setup action. Set
+    `ASC_RUN_EVENT=representative_run_passed` and `ASC_RUN_ID=<creation-run-id>` so
+    the instrumented pipeline records the first result without double-counting it as
+    an ordinary run.
 13. Report the result using the handoff contract below, including one invocation and
     one correction command. Put eval/optimization details behind an advanced label.
 
@@ -350,6 +358,9 @@ part of first-skill completion.
 Corporate users don't know what a registry is, how to `git push`, or what `skill_registry.py` does. They just want their colleague to have the same skill. If they say yes, you do all of it: `git init`, create the remote with whichever CLI is authenticated (`gh` or `glab`), tag it `agent-skill` for org-wide discoverability, and hand back a one-line `git clone` command they can paste into Slack.
 
 If they say no, that is fine — the skill is installed and working, and they can share later.
+
+After a successful share, record `skill_shared`; do not record an offer, declined
+share, failed publication, recipient identity, repository name, or organization.
 
 Read `references/distribution-guide.md` for the git/`gh`/`glab` procedure, the platform-detection fallback, the shareable one-liner template, team-registry setup, and the update-check flow.
 
@@ -467,6 +478,7 @@ Every generated skill ships its own learning loop — the eval harness plus a se
 - A `"split": "test"` holdout case is scored only at release, never fed to an optimization loop
 - `evolve.py` runs staleness/dependency/drift checks + the rollout in one command; every failure appends its raw evidence to the skill's `EVOLUTION.md`, which feeds a regenerate pass
 - `evolve.py --correct "<what it got wrong>"` captures the one thing no check can derive: a correction from someone using the skill. It writes the sentence verbatim to `EVOLUTION.md` and adds it to `## Gotchas`
+- `success_ledger.py` records only pseudonymous lifecycle metadata and reports verified creation, reuse, durable activity, correction recovery, and sharing locally. Run `python3 scripts/success_ledger.py summary`; read `references/product-success.md` for the privacy boundary and formulas
 
 **Tell the user about `--correct` when you hand over a skill.** The deepest expertise in any workflow is never stated up front — people cannot describe a process they run from muscle memory, which is why this factory reads artifacts instead of interviewing. But the same person recognizes a wrong output instantly. `--correct` is the capture point for that moment, and it is how a skill's `## Gotchas` accumulates real knowledge over its life instead of being frozen at whatever could be extracted on day one.
 
@@ -540,3 +552,4 @@ Read these on demand — each one when its moment arrives, not upfront.
 | `references/phase2-eval-assessment.md` | Phase 2 eval-criteria step, golden-case strategy, spec format, autoresearch handoff |
 | `references/phase5-orchestration.md` | Phase 5 pipeline orchestration: single run_pipeline.py entry-point, deterministic sequencing, check_pipeline.py |
 | `references/skill-graph.md` | Normalized artifact graph, blocking reachability constraints, parallel gates, and content-addressed caching |
+| `references/product-success.md` | Local lifecycle event schema, privacy boundary, Durable Active Skills definition, and metric formulas |

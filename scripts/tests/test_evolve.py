@@ -1,5 +1,7 @@
 """End-to-end test of the shipped evolve loop (scripts/evolve.py in each skill)."""
 
+import json
+import os
 import re
 import shutil
 import subprocess
@@ -35,6 +37,12 @@ def _hermetic_copy(tmp: Path) -> Path:
     return skill
 
 
+def _ledger_env(skill: Path) -> dict[str, str]:
+    env = os.environ.copy()
+    env["ASC_SUCCESS_LEDGER"] = str(skill / "success-events.jsonl")
+    return env
+
+
 class EvolveLoopTest(unittest.TestCase):
     def test_healthy_skill_evolves_green(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -42,6 +50,7 @@ class EvolveLoopTest(unittest.TestCase):
             proc = subprocess.run(
                 [sys.executable, "scripts/evolve.py"],
                 cwd=skill, capture_output=True, text=True, timeout=300,
+                env=_ledger_env(skill),
             )
             self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
             self.assertIn("fresh and green", proc.stdout)
@@ -65,6 +74,7 @@ class EvolveLoopTest(unittest.TestCase):
             proc = subprocess.run(
                 [sys.executable, "scripts/evolve.py"],
                 cwd=skill, capture_output=True, text=True, timeout=300,
+                env=_ledger_env(skill),
             )
             self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
             evolution = skill / "EVOLUTION.md"
@@ -85,12 +95,14 @@ class CorrectionCaptureTest(unittest.TestCase):
             encoding="utf-8",
         )
         shutil.copy(ROOT / "scripts" / "evolve_template.py", skill / "scripts" / "evolve.py")
+        shutil.copy(ROOT / "scripts" / "success_ledger.py", skill / "scripts" / "success_ledger.py")
         return skill
 
     def _run(self, skill: Path, *args: str) -> subprocess.CompletedProcess:
         return subprocess.run(
             [sys.executable, "scripts/evolve.py", *args],
             cwd=skill, capture_output=True, text=True, timeout=60,
+            env=_ledger_env(skill),
         )
 
     def _gotchas(self, skill: Path) -> str:
@@ -138,6 +150,8 @@ class CorrectionCaptureTest(unittest.TestCase):
             log = (skill / "EVOLUTION.md").read_text(encoding="utf-8")
             self.assertIn("correction from use", log)
             self.assertIn(f"> {self.CORRECTION}", log)
+            event = json.loads((skill / "success-events.jsonl").read_text(encoding="utf-8"))
+            self.assertEqual(event["event"], "correction_recorded")
 
     def test_repeated_corrections_all_survive(self):
         with tempfile.TemporaryDirectory() as tmp:

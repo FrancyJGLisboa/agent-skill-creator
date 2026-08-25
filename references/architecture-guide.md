@@ -68,7 +68,7 @@ skill-name/
 ├── SKILL.md          # <500 lines, spec-compliant frontmatter
 ├── AGENTS.md         # Companion instruction file (cross-tool reach)
 ├── .claude-plugin/   # plugin.json + marketplace.json (/plugin install path)
-├── scripts/          # Functional Python code + run_evals.py + evolve.py
+├── scripts/          # Functional code + eval, evolution, and success-ledger tooling
 ├── references/       # Detailed documentation (loaded on demand)
 ├── assets/           # Templates, schemas, data files
 ├── evals/            # Bundled eval spec + golden cases
@@ -105,6 +105,7 @@ compatibility: >-           # optional, use when platform-specific features exis
 | `.claude-plugin/` | Plugin manifests for `/plugin marketplace add` install | Yes |
 | `evals/` | Eval spec (binary checks + golden cases + judge canary) | Yes (unless `--no-eval`) |
 | `scripts/evolve.py` | Shipped self-maintenance loop (staleness + rollout → `EVOLUTION.md`) | Yes |
+| `scripts/success_ledger.py` | Private local lifecycle events and Durable Active Skills metrics | Yes |
 | `install.sh` | Cross-platform installer script | Yes |
 | `README.md` | Installation instructions for 5+ platforms | Yes |
 

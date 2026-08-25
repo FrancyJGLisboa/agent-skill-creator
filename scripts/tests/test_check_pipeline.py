@@ -112,6 +112,16 @@ class EntrypointWarningTest(unittest.TestCase):
         skill = _skill(self.tmp, {"scripts/main.py": STEP})
         self.assertEqual(check(skill)["warnings"], [])
 
+    def test_success_ledger_is_tooling_not_a_pipeline_step(self) -> None:
+        skill = _skill(
+            self.tmp,
+            {
+                "scripts/main.py": STEP,
+                "scripts/success_ledger.py": STEP,
+            },
+        )
+        self.assertEqual(check(skill)["warnings"], [])
+
 
 class MainExitTest(unittest.TestCase):
     def test_missing_dir_exits_two(self) -> None:

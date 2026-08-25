@@ -126,10 +126,22 @@ Every generated skill includes:
 - Functional scripts with one pipeline entry point when the workflow is sequential.
 - Golden examples and regression checks, unless explicitly disabled with `--no-eval`.
 - Validation, dependency, staleness, and correction tooling.
+- A private local success ledger that measures verified creation, reuse, recovery,
+  and durable activity without storing skill names or workflow content.
 - Native installation support across 17 agent tools.
 
 Generated skills use the Agent Skills Open Standard and invoke as `/skill-name` on
 tools that support slash commands.
+
+Inspect product success locally:
+
+```bash
+python3 scripts/success_ledger.py summary
+```
+
+The ledger has no network transport. Read the [event schema, privacy boundary, and
+metric formulas](references/product-success.md), or set `ASC_SUCCESS_LEDGER=off` to
+disable recording.
 
 ## Why the checks matter
 
