@@ -17,6 +17,7 @@ import os
 import secrets
 import statistics
 import sys
+import time
 import uuid
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
@@ -37,6 +38,8 @@ ALLOWED_EVENTS = {
 }
 RESULTS = {"success", "failure"}
 SALT_FILE = ".success-ledger-salt"
+SALT_SIZE = 32
+SALT_LOCK_TIMEOUT_SECONDS = 5.0
 
 
 def default_ledger_path() -> Path | None:
@@ -57,20 +60,63 @@ def default_ledger_path() -> Path | None:
 def _salt(ledger_path: Path) -> bytes:
     salt_path = ledger_path.parent / SALT_FILE
     ledger_path.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        descriptor = os.open(salt_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-    except FileExistsError:
-        pass
-    else:
+
+    def read_valid_salt() -> bytes | None:
         try:
-            os.write(descriptor, secrets.token_bytes(32))
+            value = salt_path.read_bytes()
+        except FileNotFoundError:
+            return None
+        return value if len(value) == SALT_SIZE else None
+
+    existing = read_valid_salt()
+    if existing is not None:
+        return existing
+
+    lock_path = salt_path.with_name(f"{salt_path.name}.lock")
+    deadline = time.monotonic() + SALT_LOCK_TIMEOUT_SECONDS
+    while True:
+        try:
+            lock_descriptor = os.open(
+                lock_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600
+            )
+        except FileExistsError:
+            existing = read_valid_salt()
+            if existing is not None:
+                return existing
+            if time.monotonic() >= deadline:
+                raise TimeoutError(f"timed out initializing privacy salt: {salt_path}")
+            time.sleep(0.01)
+            continue
+
+        os.close(lock_descriptor)
+        temporary_path = salt_path.with_name(
+            f"{salt_path.name}.{secrets.token_hex(8)}.tmp"
+        )
+        try:
+            existing = read_valid_salt()
+            if existing is None:
+                value = secrets.token_bytes(SALT_SIZE)
+                descriptor = os.open(
+                    temporary_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600
+                )
+                try:
+                    with os.fdopen(descriptor, "wb") as handle:
+                        handle.write(value)
+                        handle.flush()
+                        os.fsync(handle.fileno())
+                except BaseException:
+                    temporary_path.unlink(missing_ok=True)
+                    raise
+                os.replace(temporary_path, salt_path)
+                try:
+                    salt_path.chmod(0o600)
+                except OSError:
+                    pass
+                return value
+            return existing
         finally:
-            os.close(descriptor)
-        try:
-            salt_path.chmod(0o600)
-        except OSError:
-            pass
-    return salt_path.read_bytes()
+            temporary_path.unlink(missing_ok=True)
+            lock_path.unlink(missing_ok=True)
 
 
 def _skill_id(skill: str, ledger_path: Path) -> str:
