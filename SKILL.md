@@ -49,8 +49,9 @@ can judge and correct.
 Use this guided-light path by default. Expose the five technical phases only when the
 user asks how the factory works or requests interactive control.
 
-1. **Understand** — read the evidence and summarize the workflow, input, output, and
-   definition of success. Ask for one confirmation or correction.
+1. **Understand** — read the evidence and summarize the question, trigger, supported
+   decision, required evidence, and measurable success condition alongside the
+   workflow, input, and output. Ask for one confirmation or correction.
 2. **Build** — create the skill autonomously. Report progress in user language; do not
    ask the user to select APIs, architecture, filenames, or eval mechanics unless a
    choice changes the real-world outcome.
@@ -322,11 +323,13 @@ Create all files in this order:
 5. Write references (detailed documentation the skill loads on demand)
 6. Write assets (templates, configs)
 7. **Emit the eval spec** (skip if `--no-eval`): write `evals/<name>.eval.md` (the binary checks + golden cases derived in Phase 2, one marked `"split": "test"` as the holdout, plus a `judge` block with a pinned model and known-bad canary when any criterion is `llm-judge`) and copy `scripts/run_evals_template.py` → the generated skill's `scripts/run_evals.py`. See `references/phase2-eval-assessment.md`
-7.5. Write **`discovery.json`** with the real-world outcome, intended users, input
-   types, output artifacts, use cases, invocation examples, permissions/systems,
-   typical completion time, declared platform compatibility, and support tier. Read
-   `references/discovery-metadata.md`. This is required for governed marketplace
-   discovery; do not invent compatibility certification during creation.
+7.5. Write **`discovery.json`** with the required decision contract (`question`,
+   `trigger`, `decision`, `evidence`, and `success_measure`), plus the real-world
+   outcome, intended users, input types, output artifacts, use cases, invocation
+   examples, permissions/systems, typical completion time, declared platform
+   compatibility, and support tier. Read `references/discovery-metadata.md`. Never
+   generate a skill without the five decision-contract fields; do not invent
+   compatibility certification during creation.
 8. Generate `install.sh` from `scripts/install-template.sh` (replace `{{SKILL_NAME}}` with actual name, `chmod +x`)
 8.5. Generate `.claude-plugin/plugin.json` + `marketplace.json` from `scripts/claude-plugin-template/` (placeholders from frontmatter — makes the skill installable via `/plugin marketplace add`), and **ship the evolution toolkit and local success ledger**: copy `scripts/evolve_template.py` → `scripts/evolve.py`, `scripts/success_ledger.py`, plus the staleness/drift/dep-health modules. See `references/pipeline-phases.md` Steps 6.5–6.6
 9. Write `README.md` (multi-platform install instructions showing the `/plugin marketplace add` path for Claude Code and `git clone` to each tool's **native** path)

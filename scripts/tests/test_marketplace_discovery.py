@@ -22,6 +22,11 @@ def entry(name: str = "revenue-review", outcome: str = "Prepare a monthly revenu
         "path": f"skills/finance/{name}",
         "lifecycle_state": "published",
         "discovery": {
+            "question": "Why did monthly revenue deviate from plan?",
+            "trigger": ["Monthly close data is available"],
+            "decision": ["Escalate material variances", "Accept the reported result"],
+            "evidence": ["Revenue ledger", "Approved operating plan"],
+            "success_measure": "Leadership can explain and act on every material variance.",
             "outcome": outcome,
             "intended_users": ["finance analysts", "revenue leaders"],
             "input_types": ["CSV", "spreadsheet"],
@@ -43,8 +48,12 @@ def test_normalize_preserves_all_required_discovery_metadata() -> None:
     normalized = discovery.normalize_discovery(entry())
     assert set(normalized) == set(discovery.DISCOVERY_FIELDS)
     assert normalized["outcome"] == "Prepare a monthly revenue review"
+    assert normalized["question"] == "Why did monthly revenue deviate from plan?"
     assert normalized["examples"][0]["invocation"].startswith("/revenue-review")
     assert normalized["compatibility"]["certified"] == ["codex"]
+    assert discovery.search_skills([entry()], "monthly revenue")[0]["question"] == (
+        "Why did monthly revenue deviate from plan?"
+    )
 
 
 def test_backward_compatible_defaults_are_explicit_and_low_confidence() -> None:
@@ -69,6 +78,14 @@ def test_invalid_structured_values_fail_closed() -> None:
     item["discovery"]["examples"] = [{"invocation": "../escape", "description": "bad"}]  # type: ignore[index]
     with pytest.raises(discovery.DiscoveryError, match="invocation"):
         discovery.normalize_discovery(item)
+
+
+@pytest.mark.parametrize("field", ["question", "trigger", "decision", "evidence", "success_measure"])
+def test_required_decision_contract_fails_when_missing(field: str) -> None:
+    item = entry()
+    item["discovery"].pop(field)  # type: ignore[index]
+    with pytest.raises(discovery.DiscoveryError, match=field):
+        discovery.require_decision_contract(item)
 
 
 def test_search_prioritizes_outcome_over_name_and_description() -> None:

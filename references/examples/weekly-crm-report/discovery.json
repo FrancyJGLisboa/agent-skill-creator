@@ -1,0 +1,8 @@
+{
+  "question": "Which sales regions require attention after this week's CRM close?",
+  "trigger": ["A weekly CRM export is available"],
+  "decision": ["Investigate a regional variance", "Accept the weekly regional totals"],
+  "evidence": ["CRM export rows", "Deduplication and regional-total output"],
+  "success_measure": "Every reported regional total reconciles to the cleaned CRM export",
+  "outcome": "Produce a clean weekly regional sales summary"
+}

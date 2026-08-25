@@ -7,6 +7,16 @@ to semantic versioning where practical.
 ## [Unreleased]
 
 ### Changed
+- **Question-first product and marketplace positioning**: README, GitHub Pages, social
+  preview, repository description, and topics now present Agent Skill Creator as both
+  a skill factory and the operating system for a user-defined skill marketplace.
+  Public documentation leads with the full create-to-retire lifecycle, intended users,
+  decision quality, and the unattended consumer proof standard.
+- **Required skill decision contract**: every validated or marketplace-admitted skill
+  must define `question`, `trigger`, `decision`, `evidence`, and `success_measure` in
+  `discovery.json`. Both registries persist the contract, marketplace search weights
+  questions and decisions above implementation terms, and generated skill pages render
+  the five fields before outcome metadata.
 - **First-skill success journey**: the default conversation now uses four
   user-facing stages — Understand, Build, Check, Try — and asks users to confirm
   only the inferred workflow and success criteria. A skill is called `verified`

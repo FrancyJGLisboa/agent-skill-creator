@@ -49,6 +49,14 @@ None known.
     (skill / "scripts" / "run_evals.py").write_text(
         "raise SystemExit(0)\n", encoding="utf-8",
     )
+    (skill / "discovery.json").write_text(json.dumps({
+        "question": "What result requires action?",
+        "trigger": ["Representative input becomes available"],
+        "decision": ["Accept or correct the result"],
+        "evidence": ["The supplied input and produced output"],
+        "success_measure": "The result passes the skill's evaluation criteria.",
+        "outcome": f"Complete the {name} workflow",
+    }), encoding="utf-8")
     subprocess.run(["git", "init", "-q", str(skill)], check=True)
     subprocess.run(["git", "-C", str(skill), "add", "."], check=True)
     subprocess.run(
@@ -655,6 +663,11 @@ def test_certification_enables_filtered_search_and_distribution_plan(tmp_path: P
     repo = init_marketplace(tmp_path)
     skill = make_skill(tmp_path, "report-skill")
     (skill / "discovery.json").write_text(json.dumps({
+        "question": "Why did monthly revenue deviate from plan?",
+        "trigger": ["Monthly close data is available"],
+        "decision": ["Escalate material variances"],
+        "evidence": ["Revenue ledger", "Approved operating plan"],
+        "success_measure": "Leadership can act on every material variance.",
         "outcome": "Prepare monthly revenue reporting",
         "support_tier": "supported",
         "compatibility": {"declared": ["codex"]},
@@ -684,6 +697,11 @@ def test_add_persists_discovery_compatibility_for_health_governance(tmp_path: Pa
     repo = init_marketplace(tmp_path)
     skill = make_skill(tmp_path, "report-skill")
     (skill / "discovery.json").write_text(json.dumps({
+        "question": "Why did monthly revenue deviate from plan?",
+        "trigger": ["Monthly close data is available"],
+        "decision": ["Escalate material variances"],
+        "evidence": ["Revenue ledger", "Approved operating plan"],
+        "success_measure": "Leadership can act on every material variance.",
         "outcome": "Prepare monthly revenue reporting",
         "support_tier": "supported",
         "compatibility": {"declared": ["codex", "cursor"]},
@@ -698,3 +716,14 @@ def test_add_persists_discovery_compatibility_for_health_governance(tmp_path: Pa
         finding["dimension"] == "compatibility" and "codex" in finding["reason"] and "cursor" in finding["reason"]
         for finding in report["findings"]
     )
+
+
+def test_add_rejects_incomplete_decision_contract(tmp_path: Path) -> None:
+    repo = init_marketplace(tmp_path)
+    skill = make_skill(tmp_path, "report-skill")
+    discovery = json.loads((skill / "discovery.json").read_text(encoding="utf-8"))
+    discovery.pop("evidence")
+    (skill / "discovery.json").write_text(json.dumps(discovery), encoding="utf-8")
+    recommit_and_attest(skill, run_gates=False)
+    with pytest.raises(market.MarketplaceError, match="evidence"):
+        market.add_skill(repo, skill, "finance", "base")

@@ -7,6 +7,7 @@ otherwise-working skill.
 """
 
 import sys
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -40,6 +41,13 @@ metadata:
 """,
         encoding="utf-8",
     )
+    (skill / "discovery.json").write_text(json.dumps({
+        "question": "What result requires action?",
+        "trigger": ["Representative input becomes available"],
+        "decision": ["Accept or correct the result"],
+        "evidence": ["The supplied input and produced output"],
+        "success_measure": "The result passes the skill's evaluation criteria.",
+    }), encoding="utf-8")
     return skill
 
 
@@ -97,6 +105,13 @@ class TestGotchasCheck(unittest.TestCase):
             "This skill has some gotchas you should know about.",
         )
         self.assertEqual(len(gotchas_warnings(validate_skill(str(skill)))), 1)
+
+    def test_missing_decision_contract_is_invalid(self):
+        skill = write_skill(self.base, "missing-question-skill", "## Gotchas\n\nNone known.")
+        (skill / "discovery.json").unlink()
+        result = validate_skill(str(skill))
+        self.assertFalse(result["valid"])
+        self.assertTrue(any("discovery.json" in error for error in result["errors"]))
 
 
 LABEL_HINT = "do not say what to do with the file"

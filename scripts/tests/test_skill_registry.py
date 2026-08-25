@@ -52,6 +52,13 @@ Demo body.
         encoding="utf-8",
     )
     (skill / "scripts" / "main.py").write_text("print('ok')\n", encoding="utf-8")
+    (skill / "discovery.json").write_text(json.dumps({
+        "question": f"What result should {name} produce?",
+        "trigger": ["A representative request is available"],
+        "decision": ["Accept or correct the result"],
+        "evidence": ["The request and generated output"],
+        "success_measure": "The output satisfies the documented workflow",
+    }), encoding="utf-8")
     return skill
 
 
@@ -139,6 +146,7 @@ class TestPublish(unittest.TestCase):
         self.assertEqual(entry["name"], "alpha")
         self.assertEqual(entry["author"], "alice")
         self.assertEqual(entry["path"], "skills/alice/alpha")
+        self.assertEqual(entry["discovery"]["question"], "What result should alpha produce?")
         self.assertTrue((self.registry / "skills" / "alice" / "alpha" / "SKILL.md").exists())
 
     def test_duplicate_same_author_version_blocked(self):

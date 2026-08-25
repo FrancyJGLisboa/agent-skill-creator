@@ -38,7 +38,8 @@ from marketplace_trust import (  # noqa: E402
 )
 from marketplace_health import build_health_report, report_json, report_markdown  # noqa: E402
 from marketplace_discovery import (  # noqa: E402
-    DiscoveryError, normalize_discovery, render_skill_page, search_skills,
+    DiscoveryError, render_skill_page, require_decision_contract,
+    search_skills,
 )
 from marketplace_metrics import (  # noqa: E402
     CONSENT_SCHEMA, EVENT_TYPES, MetricsError, aggregate_events, create_event,
@@ -582,7 +583,7 @@ def add_skill(root: Path, skill: Path, department: str, bundle: str) -> dict[str
     if meta["lifecycle"] != APPROVED:
         raise MarketplaceError("skill lifecycle must be approved before marketplace intake")
     try:
-        normalized_discovery = normalize_discovery({
+        normalized_discovery = require_decision_contract({
             "name": meta["name"], "version": meta["version"], "discovery": meta["discovery"],
         })
     except DiscoveryError as exc:
@@ -707,7 +708,7 @@ def update_skill(root: Path, skill: Path, department: str) -> dict[str, Any]:
         )
 
     try:
-        normalized_discovery = normalize_discovery({
+        normalized_discovery = require_decision_contract({
             "name": meta["name"], "version": meta["version"], "discovery": meta["discovery"],
         })
     except DiscoveryError as exc:
@@ -821,7 +822,7 @@ def check_marketplace(
             if meta[field] != entry.get(field):
                 errors.append(f"{identity[1]}: SKILL.md {field} is inconsistent with registry.json")
         try:
-            normalized_discovery = normalize_discovery({
+            normalized_discovery = require_decision_contract({
                 "name": meta["name"], "version": meta["version"], "discovery": meta["discovery"],
             })
         except DiscoveryError as exc:
@@ -1394,7 +1395,7 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 for item in results:
                     platforms = ",".join(item["certified_platforms"]) or "uncertified"
-                    print(f"{item['department']}/{item['name']} v{item['version']} [{item['support_tier']}; {platforms}] — {item['outcome']}")
+                    print(f"{item['department']}/{item['name']} v{item['version']} [{item['support_tier']}; {platforms}] — {item['question']}")
         elif args.command == "metrics-consent":
             path = configure_metrics_consent(root, args.expires_at)
             print(f"Metrics consent enabled until {args.expires_at}: {path}")

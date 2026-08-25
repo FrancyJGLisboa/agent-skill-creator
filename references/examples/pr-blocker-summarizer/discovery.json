@@ -1,0 +1,8 @@
+{
+  "question": "What is preventing this pull request from merging?",
+  "trigger": ["A pull request has unresolved review or CI state"],
+  "decision": ["Assign the next unblock action", "Declare the pull request ready to merge"],
+  "evidence": ["Pull-request metadata", "Review state", "CI check results"],
+  "success_measure": "Every active blocker has an evidence-backed owner and next action",
+  "outcome": "Produce an actionable pull-request blocker summary"
+}

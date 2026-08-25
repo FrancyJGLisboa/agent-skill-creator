@@ -6,6 +6,7 @@ output_dir (a positional-argument mismatch once routed --version into a dead
 ``platform`` parameter and --output-dir into the version string).
 """
 
+import json
 import os
 import subprocess
 import sys
@@ -48,6 +49,13 @@ Demo body.
         encoding="utf-8",
     )
     (skill / "scripts" / "main.py").write_text("print('ok')\n", encoding="utf-8")
+    (skill / "discovery.json").write_text(json.dumps({
+        "question": "What export result is required?",
+        "trigger": ["A supported skill needs packaging"],
+        "decision": ["Accept or reject the export package"],
+        "evidence": ["Source skill", "Generated package"],
+        "success_measure": "The package preserves the requested version and target format",
+    }), encoding="utf-8")
     return skill
 
 

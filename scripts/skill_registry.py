@@ -428,6 +428,7 @@ def cmd_publish(args: argparse.Namespace) -> None:
         tags = auto_extract_tags(metadata["description"])
 
     author = metadata["author"]
+    discovery = json.loads((skill_path / "discovery.json").read_text(encoding="utf-8"))
 
     # Step 5: Check duplicates. Identity is (name, author, version) so two
     # authors can publish the same skill name without colliding.
@@ -493,6 +494,10 @@ def cmd_publish(args: argparse.Namespace) -> None:
         "platforms": list(ALL_PLATFORMS),
         "published": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "path": rel_path,
+        "discovery": {
+            field: discovery[field]
+            for field in ("question", "trigger", "decision", "evidence", "success_measure")
+        },
         "validation": {
             "valid": validation["valid"],
             "errors": len(validation["errors"]),

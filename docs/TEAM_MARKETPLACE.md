@@ -362,10 +362,13 @@ command fail so scheduled automation can alert maintainers.
 
 ## Outcome-based discovery
 
-Add `discovery.json` to each skill with its outcome, intended users, input and
-output types, use cases, examples, permissions/systems, completion time,
+Add `discovery.json` to each skill. The required decision contract names the
+`question`, observable `trigger` conditions, supported `decision` choices, required
+`evidence`, and `success_measure`. Also include the outcome, intended users, input
+and output types, use cases, examples, permissions/systems, completion time,
 compatibility claims, and support tier (`supported`, `community`, or `deprecated`).
-Intake validates this metadata and generates one page under `skill-pages/`.
+Intake rejects missing or empty decision fields and generates one structured page
+under `skill-pages/`.
 
 ```bash
 python3 scripts/team_marketplace.py search "monthly revenue review" \

@@ -1,0 +1,35 @@
+{
+  "question": "How can this recurring workflow become a trusted, reusable agent capability?",
+  "trigger": [
+    "A person describes repetitive work or supplies artifacts that represent it",
+    "An existing skill needs validation, maintenance, or cross-platform distribution"
+  ],
+  "decision": [
+    "Create or revise a skill",
+    "Block delivery until a failed quality gate is repaired",
+    "Publish the verified skill for governed reuse"
+  ],
+  "evidence": [
+    "User-supplied workflow descriptions and artifacts",
+    "Validation, security, eval, and representative-run results"
+  ],
+  "success_measure": "A second user can discover, invoke, and reuse the verified skill without its creator's assistance",
+  "outcome": "Produce a validated, security-scanned, cross-platform agent skill",
+  "intended_users": ["workflow experts", "AI enablement teams", "marketplace operators"],
+  "input_types": ["workflow description", "document", "URL", "script", "transcript"],
+  "output_artifacts": ["installable agent skill", "evaluation suite", "cross-platform installer"],
+  "use_cases": ["skill creation", "skill validation", "skill evolution", "governed distribution"],
+  "examples": [
+    {
+      "invocation": "/agent-skill-creator Create a skill for reviewing monthly revenue variance",
+      "description": "Turn a recurring finance review into an installable capability"
+    }
+  ],
+  "permissions_systems": ["Read supplied local artifacts", "Write generated skill files", "No production mutation during verification"],
+  "typical_completion_time": "5-30 minutes",
+  "compatibility": {
+    "declared": ["codex", "claude-code", "github-copilot", "cursor"],
+    "certified": []
+  },
+  "support_tier": "supported"
+}

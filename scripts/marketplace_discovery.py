@@ -8,7 +8,8 @@ from pathlib import PurePosixPath
 from typing import Any, Mapping, Sequence
 
 DISCOVERY_FIELDS = (
-    "outcome", "intended_users", "input_types", "output_artifacts", "use_cases",
+    "question", "trigger", "decision", "evidence", "success_measure", "outcome",
+    "intended_users", "input_types", "output_artifacts", "use_cases",
     "examples", "permissions_systems", "typical_completion_time", "compatibility",
     "support_tier", "metadata_completeness",
 )
@@ -82,6 +83,11 @@ def normalize_discovery(entry: Mapping[str, Any]) -> dict[str, Any]:
         raise DiscoveryError("skill version must use semantic versioning")
     raw = entry.get("discovery", {})
     raw = raw if isinstance(raw, Mapping) else {}
+    question = _text(raw.get("question"))
+    trigger = _list(raw.get("trigger"))
+    decision = _list(raw.get("decision"))
+    evidence = _list(raw.get("evidence"))
+    success_measure = _text(raw.get("success_measure"))
     outcome = _text(raw.get("outcome"))
     intended_users = _list(raw.get("intended_users"))
     input_types = _list(raw.get("input_types"))
@@ -95,12 +101,19 @@ def normalize_discovery(entry: Mapping[str, Any]) -> dict[str, Any]:
         raise DiscoveryError("support_tier must be supported, community, or deprecated")
     compatibility = _compatibility(raw.get("compatibility"), version)
     present = sum((
+        question != "Not provided", bool(trigger), bool(decision), bool(evidence),
+        success_measure != "Not provided",
         outcome != "Not provided", bool(intended_users), bool(input_types),
         bool(output_artifacts), bool(examples), bool(permissions),
         completion != "Not provided", bool(compatibility["declared"]),
         "support_tier" in raw,
     ))
     return {
+        "question": question,
+        "trigger": trigger,
+        "decision": decision,
+        "evidence": evidence,
+        "success_measure": success_measure,
         "outcome": outcome,
         "intended_users": intended_users,
         "input_types": input_types,
@@ -113,6 +126,24 @@ def normalize_discovery(entry: Mapping[str, Any]) -> dict[str, Any]:
         "support_tier": support,
         "metadata_completeness": present,
     }
+
+
+def require_decision_contract(entry: Mapping[str, Any]) -> dict[str, Any]:
+    """Return normalized metadata or reject an incomplete decision contract."""
+    metadata = normalize_discovery(entry)
+    missing = [
+        field for field in ("question", "success_measure")
+        if metadata[field] == "Not provided"
+    ]
+    missing.extend(
+        field for field in ("trigger", "decision", "evidence")
+        if not metadata[field]
+    )
+    if missing:
+        raise DiscoveryError(
+            "required discovery field(s) missing or empty: " + ", ".join(missing)
+        )
+    return metadata
 
 
 def _tokens(value: object) -> set[str]:
@@ -153,7 +184,12 @@ def search_skills(
         if support_tier and metadata["support_tier"] != support_tier:
             continue
         score = (
-            _field_score(query_tokens, metadata["outcome"], 12)
+            _field_score(query_tokens, metadata["question"], 16)
+            + _field_score(query_tokens, metadata["decision"], 10)
+            + _field_score(query_tokens, metadata["trigger"], 8)
+            + _field_score(query_tokens, metadata["evidence"], 7)
+            + _field_score(query_tokens, metadata["success_measure"], 7)
+            + _field_score(query_tokens, metadata["outcome"], 12)
             + _field_score(query_tokens, metadata["use_cases"], 6)
             + _field_score(query_tokens, entry.get("description", ""), 3)
             + _field_score(query_tokens, entry.get("name", ""), 2)
@@ -165,6 +201,7 @@ def search_skills(
             "name": str(entry.get("name", "")),
             "department": str(entry.get("department", "")),
             "version": str(entry.get("version", "")),
+            "question": metadata["question"],
             "outcome": metadata["outcome"],
             "support_tier": metadata["support_tier"],
             "certified_platforms": metadata["compatibility"]["certified"],
@@ -203,6 +240,11 @@ def render_skill_page(entry: Mapping[str, Any]) -> str:
     compatibility = metadata["compatibility"]
     lines = [
         f"# /{_md(name)}", "", _md(entry.get("description", "Not provided")), "",
+        "## Question", "", _md(metadata["question"]), "",
+        "## Trigger", "", *_bullets(metadata["trigger"]), "",
+        "## Decisions supported", "", *_bullets(metadata["decision"]), "",
+        "## Evidence required", "", *_bullets(metadata["evidence"]), "",
+        "## Success measure", "", _md(metadata["success_measure"]), "",
         "## Outcome", "", _md(metadata["outcome"]), "",
         "## Intended users", "", *_bullets(metadata["intended_users"]), "",
         "## Inputs and outputs", "", "### Input types", "", *_bullets(metadata["input_types"]), "",

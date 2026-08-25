@@ -20,6 +20,7 @@ import sys
 from pathlib import Path
 
 from skill_document import SkillDoc
+from marketplace_discovery import DiscoveryError, require_decision_contract
 
 
 # --- Constants ---
@@ -223,6 +224,25 @@ def validate_skill(skill_path: str) -> dict:
     if doc.frontmatter is None:
         errors.append("SKILL.md frontmatter is not properly closed (missing closing '---')")
         return {"valid": False, "errors": errors, "warnings": warnings}
+
+    discovery_path = skill_dir / "discovery.json"
+    if not discovery_path.exists():
+        errors.append(
+            "discovery.json is required and must define question, trigger, decision, "
+            "evidence, and success_measure"
+        )
+    else:
+        try:
+            discovery = json.loads(discovery_path.read_text(encoding="utf-8"))
+            if not isinstance(discovery, dict):
+                raise DiscoveryError("discovery.json must contain a JSON object")
+            require_decision_contract({
+                "name": doc.name or skill_dir.name,
+                "version": str(doc.subfield("metadata", "version") or ""),
+                "discovery": discovery,
+            })
+        except (json.JSONDecodeError, OSError, DiscoveryError) as exc:
+            errors.append(f"invalid discovery.json decision contract: {exc}")
 
     # --- Check: name field ---
     name_value = doc.name

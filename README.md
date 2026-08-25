@@ -1,6 +1,8 @@
 # Agent Skill Creator
 
-**Turn work you already do into a reusable agent workflow—and see it work once before calling it done.**
+**Build trusted agent skills. Govern their marketplace. Improve what your organization knows.**
+
+![Agent Skill Creator: question to tested skill to governed marketplace](docs/assets/agent-skill-creator-social-preview.png)
 
 [![CI](https://github.com/FrancyJGLisboa/agent-skill-creator/actions/workflows/ci.yml/badge.svg)](https://github.com/FrancyJGLisboa/agent-skill-creator/actions/workflows/ci.yml)
 [![Agent Skills Open Standard](https://img.shields.io/badge/Agent%20Skills-Open%20Standard-blue)](https://github.com/anthropics/agent-skills-spec)
@@ -14,14 +16,67 @@
 [GitLab team registry](docs/GITLAB_TEAM_REGISTRY.md) ·
 [Changelog](CHANGELOG.md)
 
-The governed marketplace includes commit-bound trust attestations, seven-state
-lifecycle policy, scheduled health reports, outcome-based search, consent-gated
-product metrics, and cross-platform distribution certification.
+Agent Skill Creator turns human expertise into tested, installable agent skills and
+provides the operating system for managing those skills through a user-defined
+marketplace.
 
-You do not need to write a specification or understand skill engineering. Give the
-creator a sentence, spreadsheet, PDF, link, screenshot, transcript, or half-working
-script. It reconstructs the workflow, confirms what a correct result means, builds and
-checks the skill, installs it, and safely tries it on representative input.
+Give it a sentence, spreadsheet, PDF, link, screenshot, transcript, or half-working
+script. It reconstructs the judgment behind the work: the important question, when to
+ask it, which decision the answer supports, what evidence makes the answer credible,
+and how success will be measured. It then builds the skill, evaluates it, installs it,
+and safely tries it on representative input.
+
+For teams, the same system governs the complete lifecycle:
+
+```text
+create → attest → admit → approve → publish → discover → install
+       → use → update → rollback → quarantine → retire
+```
+
+The result is more than a collection of prompts. It is a maintained map of which
+questions an organization knows how to answer, which decisions it can support, and
+whether those capabilities still work.
+
+## Who it is for
+
+| User | What they need | What this provides |
+|---|---|---|
+| **Workflow experts** | Preserve the judgment hidden inside recurring work | A skill built from existing artifacts, not a blank specification form |
+| **AI platform teams** | Move from isolated prompts to supported capabilities | Evals, attestations, ownership, lifecycle controls, and health reporting |
+| **Marketplace operators** | Publish and maintain skills without losing control | Admission gates, discovery, version-safe updates, rollback, and quarantine |
+| **Regulated teams** | Show why a capability was trusted and which version ran | Commit-bound evidence, approvals, compatibility certification, and immutable releases |
+
+## What makes a skill valuable
+
+Answers are becoming inexpensive. The scarce asset is knowing which question matters
+and what action should follow. Every generated skill therefore carries a required
+decision contract:
+
+```json
+{
+  "question": "Why did monthly revenue deviate from plan?",
+  "trigger": ["Monthly close data is available"],
+  "decision": ["Escalate a material variance", "Accept the reported result"],
+  "evidence": ["Revenue ledger", "Approved operating plan"],
+  "success_measure": "Every material variance has an evidence-backed owner and action"
+}
+```
+
+Creation and marketplace admission fail when any of these fields is missing.
+
+## The product in one view
+
+| Layer | Job | Proof |
+|---|---|---|
+| **Skill factory** | Turn expertise and artifacts into executable skills | Validation, security scan, eval suite, representative run |
+| **Marketplace operating system** | Govern publishing, discovery, installation, updates, and removal | Ownership, lifecycle state, immutable versions, rollback, quarantine |
+| **Organizational learning system** | Improve capabilities from real corrections and outcomes | Evolution log, regression evidence, health reports, privacy-safe success metrics |
+
+The decisive product test is automated: create three skills, publish a remote tag,
+discover from a clean consumer, install, invoke twice, update, roll back, quarantine,
+and confirm installation is blocked. The repository's tests exercise the underlying
+contracts for that lifecycle; the remaining standard is whether an unfamiliar team
+can complete it without assistance.
 
 ## Create your first skill
 
@@ -50,13 +105,14 @@ totals, and email a PDF sales report.
 ```
 
 You can attach the CRM export, an old report, or the script you currently use. The
-creator first gives you a short understanding to confirm:
+creator first gives you a short decision contract to confirm:
 
 ```text
-Input: the Friday CRM export
-Work: remove duplicates and total sales by region
-Output: a PDF summary for the VP
-Success: totals reconcile to the source and every region appears
+Question: Which region needs attention this week?
+Trigger: the Friday CRM export is available
+Decision: investigate a variance or accept the reported totals
+Evidence: the CRM export and reconciliation output
+Success: every material variance has an owner and next action
 
 Reply “yes” or correct the part I got wrong.
 ```
@@ -134,6 +190,8 @@ hash.
 
 Every generated skill includes:
 
+- A required question, trigger, supported decision, evidence contract, and measurable
+  success condition in `discovery.json`.
 - A focused `SKILL.md` and companion `AGENTS.md`.
 - Functional scripts with one pipeline entry point when the workflow is sequential.
 - Golden examples and regression checks, unless explicitly disabled with `--no-eval`.
@@ -193,11 +251,15 @@ python3 scripts/run_pipeline.py --input evals/golden/case-1/input.csv --output /
 python3 scripts/run_evals.py --rollout
 ```
 
-## Governed team marketplace
+## The marketplace operating system
 
-Follow the [complete marketplace timeline](docs/TEAM_MARKETPLACE.md) for every
-command in operational order: prerequisites, initialization, GitHub protection,
-skill intake, review, release, installation, update, rollback, and correction.
+Users define the marketplace: its departments, owners, approval rules, supported
+platforms, decision contracts, and success measures. Agent Skill Creator supplies the
+control plane that makes those definitions executable.
+
+Follow the [complete marketplace timeline](docs/TEAM_MARKETPLACE.md) for every command
+in operational order: prerequisites, initialization, GitHub protection, skill intake,
+review, release, discovery, installation, update, rollback, quarantine, and correction.
 
 Create a central GitHub or GitLab repository for department-owned skills, reviewed
 bundles, and version-pinned installs in VS Code Copilot Agent Mode:
@@ -214,13 +276,14 @@ python3 scripts/team_marketplace.py add ./report-skill \
   --marketplace ./acme-skills
 ```
 
-The generated repository includes `registry.json` schema v2, departmental skill
-paths, bundle manifests, `CATALOG.md`, `CODEOWNERS`, governance instructions, and
-provider-native CI. Add `--provider gitlab` and, for self-managed instances,
-`--host gitlab.acme.test` during `init`. `add` blocks failed validation,
-security, pipeline, or eval gates. It also rejects path traversal, duplicate skill
-identities, undeclared network endpoints, embedded secrets, instruction injection,
-and pre-approved `shell` or `bash` access.
+The generated repository includes `registry.json` schema v2, question-first search,
+structured skill pages, departmental paths, bundle manifests, `CATALOG.md`,
+`CODEOWNERS`, governance instructions, scheduled health checks, and provider-native
+CI. Add `--provider gitlab` and, for self-managed instances, `--host
+gitlab.acme.test` during `init`. Admission blocks incomplete decision contracts and
+failed validation, security, pipeline, eval, or attestation gates. It also rejects
+path traversal, duplicate identities, undeclared network endpoints, embedded secrets,
+instruction injection, and pre-approved `shell` or `bash` access.
 
 Install an approved bundle at an immutable release:
 
@@ -232,10 +295,11 @@ python3 scripts/team_marketplace.py install \
   --marketplace ./acme-skills
 ```
 
-Use `--scope project` for a repository-local install. Update by installing a newer
-tag; roll back by reinstalling the previous tag with `--force`. GitHub uses exact
-`gh skill install` paths. GitLab clones the exact protected tag and copies the
-bundle into Copilot's user or project skill directory.
+Use `team_marketplace.py update` to re-gate a strictly newer semantic version. Use
+`--scope project` for a repository-local install. Roll back by reinstalling an exact
+previous tag with `--force`; quarantine immediately removes a skill from installable
+states. GitHub installs into the consumer project. GitLab clones the exact protected
+tag and copies the bundle into Copilot's user or project skill directory.
 
 The [complete marketplace timeline](docs/TEAM_MARKETPLACE.md) is the canonical
 operator page. The [distribution reference](references/distribution-guide.md#governed-github-copilot-marketplace)

@@ -1,0 +1,8 @@
+{
+  "question": "Does the available market evidence justify further investigation of this stock?",
+  "trigger": ["A user requests analysis of a named public equity"],
+  "decision": ["Continue investment research", "Reject the candidate based on defined evidence gaps"],
+  "evidence": ["Price history", "Volume history", "Calculated technical indicators"],
+  "success_measure": "The analysis is reproducible from cited market inputs and exposes material evidence gaps",
+  "outcome": "Produce an evidence-backed technical stock analysis"
+}
