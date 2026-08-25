@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import argparse
 import json
 import shutil
 import subprocess
@@ -247,6 +246,7 @@ def test_real_gh_local_install_for_user_and_project_scopes(tmp_path: Path, monke
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     market.install_bundle(repo, "base", "project", None, from_local=True)
     market.install_bundle(repo, "base", "user", None, from_local=True)
     project_installs = list((repo / ".agents/skills").glob("*/SKILL.md"))
