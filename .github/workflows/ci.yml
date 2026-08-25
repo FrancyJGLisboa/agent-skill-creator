@@ -41,9 +41,7 @@ jobs:
           for skill in references/examples/*/; do
             if [ -f "$skill/SKILL.md" ]; then
               echo "::group::$skill"
-              python3 scripts/validate.py "$skill"
-              python3 scripts/check_pipeline.py "$skill"
-              python3 scripts/security_scan.py "$skill"
+              python3 scripts/skill_graph.py run "$skill" --jobs 4 --cache "/tmp/$(basename "$skill")-gate-cache.json"
               echo "::endgroup::"
             fi
           done

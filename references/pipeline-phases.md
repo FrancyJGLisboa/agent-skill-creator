@@ -1576,29 +1576,25 @@ Every skill must include these harness patterns as executable code, not as markd
 - All errors as JSON to stderr: `{"error": "message", "error_type": "validation|runtime|network", "hint": "..."}`
 - Exit code 1 on all errors. Never expose stack traces.
 
-### Step 8: Run Spec Validation
+### Step 8: Build the Normalized Skill Graph and Run Gates
 
-After creating all files, run the validation script:
-
-```bash
-python3 scripts/validate.py path/to/skill/
-```
-
-Confirm the scripts run reliably (compile cleanly, deps declared, pipeline wired):
+After creating all files, emit the normalized artifact/dependency IR:
 
 ```bash
-python3 scripts/check_pipeline.py path/to/skill/
+python3 scripts/skill_graph.py build path/to/skill/ --output path/to/skill/skill.graph.json
 ```
 
-It must report no errors. See `phase5-orchestration.md`.
-
-If an eval spec was emitted (Step 5.5), also confirm it is well-formed:
+Then run the constraint system and all independent gates through one entry point:
 
 ```bash
-python3 path/to/skill/scripts/run_evals.py --validate
+python3 scripts/skill_graph.py run path/to/skill/ --jobs 4
 ```
 
-It must report `VALID` (exit 0). Fix the spec and re-run if not.
+It must report no graph-constraint or gate errors. The graph blocks unreachable
+expected outputs and deterministic multi-step workflows without an orchestrator.
+The spec, security, pipeline, and eval-schema gates run concurrently; unchanged
+gate results are reused by content hash. Read `skill-graph.md` for the complete IR
+contract. Run an individual validator only to diagnose its corresponding gate.
 
 **What it checks:**
 - Frontmatter fields present and valid (name, description, license, metadata)
@@ -1610,19 +1606,11 @@ It must report `VALID` (exit 0). Fix the spec and re-run if not.
 
 **If validation fails:** Fix the issues and re-run. Do not proceed until validation passes.
 
-### Step 9: Run Security Scan
+### Step 9: Repair Any Gate Failure
 
-```bash
-python3 scripts/security_scan.py path/to/skill/
-```
-
-**What it checks:**
-- Hardcoded API keys or secrets
-- `.env` files with credentials
-- Shell injection patterns
-- Sensitive data in committed files
-
-**If security scan finds issues:** Fix them (replace hardcoded keys with env var references, remove `.env` files, sanitize shell inputs) and re-run.
+Use the failed gate's stdout/stderr and the graph constraint's exact repair. Fix
+the named artifact, rebuild `skill.graph.json`, and rerun Step 8. Do not proceed
+while any gate or constraint fails.
 
 ### Step 10: Install, Try, and Report
 
@@ -1678,8 +1666,9 @@ primary handoff.
 | 6.5 | `.claude-plugin/*.json` | Plugin manifests from `scripts/claude-plugin-template/`; names match SKILL.md |
 | 6.6 | `scripts/evolve.py` + staleness/drift modules | Shipped self-maintenance loop; failures append evidence to `EVOLUTION.md` |
 | 7 | `README.md` | Multi-platform install instructions |
-| 8 | Run `validate.py` + `check_pipeline.py` | Must pass before delivery |
-| 9 | Run `security_scan.py` | Must pass before delivery |
+| 7.5 | `skill.graph.json` | Normalized typed IR; build with `scripts/skill_graph.py` |
+| 8 | Run `skill_graph.py run` | Constraints + spec/security/pipeline/eval gates must pass |
+| 9 | Repair failed graph node | Rebuild the IR and rerun until green |
 | 10 | Report results | Summary to user |
 
 ## Phase 5 Checklist

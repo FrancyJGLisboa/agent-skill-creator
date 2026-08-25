@@ -124,6 +124,18 @@ run and a sidecar would be noise.
 
 ## Verify in Phase 5
 
+The normalized skill graph is the primary entry point. It turns the independent
+static checks into parallel graph nodes and blocks a missing orchestrator instead
+of leaving it as a warning:
+
+```bash
+python3 scripts/skill_graph.py build <skill-dir> --output <skill-dir>/skill.graph.json
+python3 scripts/skill_graph.py run <skill-dir> --jobs 4
+```
+
+Read `skill-graph.md` for the IR, reachability rules, and cache behavior. The
+focused verifier below remains useful when repairing pipeline-only failures.
+
 Run the verifier alongside `validate.py` and `security_scan.py`:
 
 ```bash

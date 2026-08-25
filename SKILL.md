@@ -320,7 +320,8 @@ Create all files in this order:
 8. Generate `install.sh` from `scripts/install-template.sh` (replace `{{SKILL_NAME}}` with actual name, `chmod +x`)
 8.5. Generate `.claude-plugin/plugin.json` + `marketplace.json` from `scripts/claude-plugin-template/` (placeholders from frontmatter — makes the skill installable via `/plugin marketplace add`), and **ship the evolution toolkit**: copy `scripts/evolve_template.py` → `scripts/evolve.py` plus the staleness/drift/dep-health modules. See `references/pipeline-phases.md` Steps 6.5–6.6
 9. Write `README.md` (multi-platform install instructions showing the `/plugin marketplace add` path for Claude Code and `git clone` to each tool's **native** path)
-10. Run **validation** against the official spec, **security scan** for hardcoded keys, instruction-body injection, and undeclared endpoints, **`python3 <skill>/scripts/check_pipeline.py <skill>`** (no compile or undeclared-dependency errors), and — if an eval spec was emitted — `python3 <skill>/scripts/run_evals.py --validate` (must report `VALID`)
+9.5. Build the normalized IR with **`python3 scripts/skill_graph.py build <skill> --output <skill>/skill.graph.json`**. This typed artifact/dependency graph is the validation source of truth; the five phases remain its user-facing projection. Read `references/skill-graph.md` for its schema and invariants.
+10. Run **`python3 scripts/skill_graph.py run <skill> --jobs 4`**. It blocks unreachable expected outputs and missing deterministic orchestrators, then runs spec, security, pipeline, and eval-schema gates concurrently with content-addressed caching. All constraints and gates must pass.
 11. **Auto-install on the current platform** (see below)
 12. **Run one safe representative use case** using a supplied artifact when possible,
     otherwise a local fixture. Never send messages, write production data, purchase,
@@ -433,6 +434,13 @@ python3 scripts/validate.py path/to/skill/
 python3 scripts/security_scan.py path/to/skill/
 ```
 
+For factory-created skills, prefer the unified graph gate; the individual commands
+above remain useful for focused diagnosis:
+
+```bash
+python3 scripts/skill_graph.py run path/to/skill/ --jobs 4
+```
+
 ## Other Front Doors
 
 Each of these is a mode of the same factory, documented in full in its own reference.
@@ -531,3 +539,4 @@ Read these on demand — each one when its moment arrives, not upfront.
 | `references/phase4-detection.md` | Detection & keyword-design craft reference |
 | `references/phase2-eval-assessment.md` | Phase 2 eval-criteria step, golden-case strategy, spec format, autoresearch handoff |
 | `references/phase5-orchestration.md` | Phase 5 pipeline orchestration: single run_pipeline.py entry-point, deterministic sequencing, check_pipeline.py |
+| `references/skill-graph.md` | Normalized artifact graph, blocking reachability constraints, parallel gates, and content-addressed caching |
