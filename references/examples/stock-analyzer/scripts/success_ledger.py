@@ -79,7 +79,9 @@ def _salt(ledger_path: Path) -> bytes:
             lock_descriptor = os.open(
                 lock_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600
             )
-        except FileExistsError:
+        except (FileExistsError, PermissionError):
+            # Windows can report a sharing violation as PermissionError while
+            # another thread owns an O_EXCL-created lock file.
             existing = read_valid_salt()
             if existing is not None:
                 return existing
