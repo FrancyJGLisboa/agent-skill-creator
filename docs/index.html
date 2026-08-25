@@ -51,7 +51,7 @@
         <div><dt>Result</dt><dd>Regional totals PDF</dd></div>
         <div><dt>Use it</dt><dd><code>/weekly-crm-report-skill</code></dd></div>
       </dl>
-      <p class="result-card__checks">Validation passed · pipeline passed · scan clean · example run passed</p>
+      <p class="result-card__checks">Graph constraints passed · 4 gates passed · example run passed</p>
     </div>
   </section>
 
@@ -89,7 +89,7 @@
         <h3>Check</h3>
         <p>Structure, code, dependencies, known security risks, and representative
         examples must pass their gates.</p>
-        <small>Behind the scenes: validation, pipeline checks, scan, evals</small>
+        <small>Behind the scenes: parallel spec, pipeline, security, and eval-schema nodes in the skill graph</small>
       </li>
       <li>
         <span>04</span>
@@ -99,6 +99,42 @@
         <small>No real emails, publishing, purchases, or production writes for proof</small>
       </li>
     </ol>
+
+    <figure class="skill-flow" aria-labelledby="skill-flow-title">
+      <figcaption id="skill-flow-title">
+        <span class="eyebrow">The release path underneath Check</span>
+        <strong>One graph connects what exists to the evidence required for release.</strong>
+      </figcaption>
+      <ol>
+        <li>
+          <span class="skill-flow__number">01</span>
+          <strong>Artifacts</strong>
+          <small>Instructions, scripts, evals, expected outputs</small>
+        </li>
+        <li>
+          <span class="skill-flow__number">02</span>
+          <strong>Skill graph</strong>
+          <small>Typed nodes, dependencies, and content hashes</small>
+        </li>
+        <li>
+          <span class="skill-flow__number">03</span>
+          <strong>Constraints</strong>
+          <small>Reachable evidence and reliable orchestration</small>
+        </li>
+        <li class="skill-flow__gates">
+          <span class="skill-flow__number">04</span>
+          <strong>Parallel gates</strong>
+          <span class="skill-flow__chips" aria-label="Spec, pipeline, security, and eval schema gates">
+            <small>Spec</small><small>Pipeline</small><small>Security</small><small>Eval schema</small>
+          </span>
+        </li>
+        <li>
+          <span class="skill-flow__number">05</span>
+          <strong>Representative run</strong>
+          <small>A result a person can inspect and correct</small>
+        </li>
+      </ol>
+    </figure>
   </section>
 
   <section class="section start" id="start">

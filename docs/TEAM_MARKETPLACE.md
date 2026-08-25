@@ -138,8 +138,9 @@ In an installed agent environment, provide the real workflow evidence:
 ```
 
 The factory must finish with a representative result—not only generated files. The
-skill is ready for marketplace intake only after validation, pipeline, security, and
-eval gates pass.
+skill is ready for marketplace intake only after its normalized graph constraints and gates
+pass: every expected output is reachable, deterministic multi-step work has an
+orchestrator, and the parallel spec, pipeline, security, and eval-schema gates are green.
 
 Before `add`, its `SKILL.md` metadata must include real values:
 

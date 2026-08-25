@@ -76,7 +76,7 @@ The weekly sales report now works from a CRM export.
 Result: ./output/weekly-sales-report.pdf
 Use it: /weekly-crm-report-skill data/crm-export.csv
 
-Checks: validation passed · pipeline passed · security scan clean · representative run passed
+Checks: graph constraints passed · 4 parallel gates passed · representative run passed
 ```
 
 If a safe test needs credentials, data, or permission, the creator says
@@ -100,11 +100,23 @@ when you want to inspect the process.
 |---|---|---|
 | **Understand** | Reads all material, reconstructs the workflow, identifies inputs, outputs, and success criteria | A plain-language hypothesis you approve or correct |
 | **Build** | Researches sources, designs use cases, chooses the structure, writes instructions and functional scripts | A complete installable skill package |
-| **Check** | Validates structure, compiles the pipeline, scans known security risks, and runs defined examples | Gate results plus the skill's eval specification |
+| **Check** | Builds the normalized skill graph, enforces its constraints, and runs spec, pipeline, security, and eval-schema gates in parallel | A typed artifact graph, constraint results, and cached gate evidence |
 | **Try** | Installs to the detected tool and runs a safe representative example | An output you can inspect and correct |
 
 Internally, Build covers the five engineering phases: discovery, design, architecture,
 detection, and implementation. Details live in [the pipeline reference](references/pipeline-phases.md).
+
+The graph is the release gate behind **Check**:
+
+```bash
+python3 scripts/skill_graph.py run ./the-skill/ --jobs 4
+```
+
+Two structural failures block delivery. `every_expected_is_reachable` prevents an
+expected output from sitting in the package without participating in an eval.
+`deterministic_multistep_has_orchestrator` requires a deterministic multi-step skill
+to expose one reliable `scripts/run_pipeline.py` entry point. The four independent
+gates run concurrently, and unchanged results are reused by content hash.
 
 ## What you receive
 

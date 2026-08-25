@@ -10,9 +10,11 @@ skill installer.
 > instruction body is read by the agent before any code runs.
 >
 > ```bash
-> python3 scripts/validate.py ./the-skill/
-> python3 scripts/security_scan.py ./the-skill/
+> python3 scripts/skill_graph.py run ./the-skill/ --jobs 4
 > ```
+>
+> This checks graph constraints, package structure, pipeline code, known security
+> patterns, and the eval schema through one release gate.
 >
 > See [Why the checks matter](../README.md#why-the-checks-matter).
 > Everything below assumes you trust the source.

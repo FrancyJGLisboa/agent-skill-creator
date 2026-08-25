@@ -77,6 +77,29 @@ def test_public_onboarding_is_human_centered_and_result_first() -> None:
         assert "dark factory" not in source.lower()
 
 
+def test_public_docs_present_the_normalized_graph_release_gate() -> None:
+    command = "python3 scripts/skill_graph.py run ./the-skill/ --jobs 4"
+    readme = read("README.md")
+    install = read("docs/INSTALL.md")
+    marketplace = read("docs/TEAM_MARKETPLACE.md")
+    page = read("docs/index.html")
+
+    assert "every_expected_is_reachable" in readme
+    assert "deterministic_multistep_has_orchestrator" in readme
+    assert command in install
+    assert "graph constraints and gates" in marketplace
+    assert "skill graph" in page.lower()
+    assert 'class="skill-flow"' in page
+    for label in (
+        "Artifacts",
+        "Skill graph",
+        "Constraints",
+        "Parallel gates",
+        "Representative run",
+    ):
+        assert label in page
+
+
 def test_website_platform_chooser_matches_canonical_registry() -> None:
     page = read("docs/index.html")
     chooser_block = page.split("var platforms = [", 1)[1].split("];", 1)[0]
