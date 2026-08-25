@@ -126,6 +126,31 @@ def _skill_id(skill: str, ledger_path: Path) -> str:
     return hmac.new(_salt(ledger_path), normalized.encode("utf-8"), hashlib.sha256).hexdigest()[:20]
 
 
+def _append_line(destination: Path, line: str) -> None:
+    lock_path = destination.with_name(f"{destination.name}.lock")
+    deadline = time.monotonic() + SALT_LOCK_TIMEOUT_SECONDS
+    while True:
+        try:
+            descriptor = os.open(
+                lock_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600
+            )
+        except FileExistsError:
+            if time.monotonic() >= deadline:
+                raise TimeoutError(f"timed out appending to success ledger: {destination}")
+            time.sleep(0.01)
+            continue
+        os.close(descriptor)
+        break
+
+    try:
+        with destination.open("a", encoding="utf-8") as handle:
+            handle.write(line)
+            handle.flush()
+            os.fsync(handle.fileno())
+    finally:
+        lock_path.unlink(missing_ok=True)
+
+
 def _timestamp(value: datetime | None) -> datetime:
     stamp = value or datetime.now(timezone.utc)
     if stamp.tzinfo is None:
@@ -175,8 +200,9 @@ def record_event(
         "duration_seconds": duration_seconds,
     }
     destination.parent.mkdir(parents=True, exist_ok=True)
-    with destination.open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(item, separators=(",", ":"), sort_keys=True) + "\n")
+    _append_line(
+        destination, json.dumps(item, separators=(",", ":"), sort_keys=True) + "\n"
+    )
     try:
         destination.chmod(0o600)
     except OSError:
