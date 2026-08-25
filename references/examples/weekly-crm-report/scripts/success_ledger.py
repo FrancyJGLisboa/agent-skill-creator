@@ -64,7 +64,7 @@ def _salt(ledger_path: Path) -> bytes:
     def read_valid_salt() -> bytes | None:
         try:
             value = salt_path.read_bytes()
-        except FileNotFoundError:
+        except (FileNotFoundError, PermissionError):
             return None
         return value if len(value) == SALT_SIZE else None
 
