@@ -51,7 +51,7 @@
         <div><dt>Result</dt><dd>Regional totals PDF</dd></div>
         <div><dt>Use it</dt><dd><code>/weekly-crm-report-skill</code></dd></div>
       </dl>
-      <p class="result-card__checks">Graph constraints passed · 4 gates passed · example run passed</p>
+      <p class="result-card__checks">Structural requirements passed · 4 checks passed · example run passed</p>
     </div>
   </section>
 
@@ -87,9 +87,9 @@
       <li>
         <span>03</span>
         <h3>Check</h3>
-        <p>Structure, code, dependencies, known security risks, and representative
-        examples must pass their gates.</p>
-        <small>Behind the scenes: parallel spec, pipeline, security, and eval-schema nodes in the skill graph</small>
+        <p>The skill is checked as one connected system, then proved with a useful
+        example result.</p>
+        <small>Behind the scenes: structural requirements and four parallel checks in the skill graph</small>
       </li>
       <li>
         <span>04</span>
@@ -99,6 +99,13 @@
         <small>No real emails, publishing, purchases, or production writes for proof</small>
       </li>
     </ol>
+
+    <p>Every skill is checked as one connected system. The skill graph links its
+    instructions, scripts, evaluations, and expected outputs. Two structural
+    requirements confirm that every expected result is tested and every predictable
+    multi-step workflow has one reliable entry point. Four checks—specification,
+    pipeline, security, and evaluation schema—run in parallel. Finally, a representative
+    run proves that the skill produces a useful result.</p>
 
     <figure class="skill-flow" aria-labelledby="skill-flow-title">
       <figcaption id="skill-flow-title">
@@ -118,14 +125,14 @@
         </li>
         <li>
           <span class="skill-flow__number">03</span>
-          <strong>Constraints</strong>
+          <strong>Structural requirements</strong>
           <small>Reachable evidence and reliable orchestration</small>
         </li>
         <li class="skill-flow__gates">
           <span class="skill-flow__number">04</span>
-          <strong>Parallel gates</strong>
-          <span class="skill-flow__chips" aria-label="Spec, pipeline, security, and eval schema gates">
-            <small>Spec</small><small>Pipeline</small><small>Security</small><small>Eval schema</small>
+          <strong>Parallel checks</strong>
+          <span class="skill-flow__chips" aria-label="Specification, pipeline, security, and evaluation schema checks">
+            <small>Specification</small><small>Pipeline</small><small>Security</small><small>Evaluation schema</small>
           </span>
         </li>
         <li>

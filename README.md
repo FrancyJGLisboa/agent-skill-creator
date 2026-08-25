@@ -76,7 +76,7 @@ The weekly sales report now works from a CRM export.
 Result: ./output/weekly-sales-report.pdf
 Use it: /weekly-crm-report-skill data/crm-export.csv
 
-Checks: graph constraints passed · 4 parallel gates passed · representative run passed
+Checks: structural requirements passed · 4 parallel checks passed · representative run passed
 ```
 
 If a safe test needs credentials, data, or permission, the creator says
@@ -96,11 +96,18 @@ The correction becomes part of the skill's maintained knowledge.
 You do not need this section to create a skill. It explains what the creator is doing
 when you want to inspect the process.
 
+Every skill is checked as one connected system. The skill graph links its
+instructions, scripts, evaluations, and expected outputs. Two structural
+requirements confirm that every expected result is tested and every predictable
+multi-step workflow has one reliable entry point. Four checks—specification,
+pipeline, security, and evaluation schema—run in parallel. Finally, a representative
+run proves that the skill produces a useful result.
+
 | What you see | What the factory does | Evidence left behind |
 |---|---|---|
 | **Understand** | Reads all material, reconstructs the workflow, identifies inputs, outputs, and success criteria | A plain-language hypothesis you approve or correct |
 | **Build** | Researches sources, designs use cases, chooses the structure, writes instructions and functional scripts | A complete installable skill package |
-| **Check** | Builds the normalized skill graph, enforces its constraints, and runs spec, pipeline, security, and eval-schema gates in parallel | A typed artifact graph, constraint results, and cached gate evidence |
+| **Check** | Connects the package in a skill graph, applies two structural requirements, and runs four checks in parallel | A connected artifact map, requirement results, and reusable check evidence |
 | **Try** | Installs to the detected tool and runs a safe representative example | An output you can inspect and correct |
 
 Internally, Build covers the five engineering phases: discovery, design, architecture,
@@ -112,11 +119,12 @@ The graph is the release gate behind **Check**:
 python3 scripts/skill_graph.py run ./the-skill/ --jobs 4
 ```
 
-Two structural failures block delivery. `every_expected_is_reachable` prevents an
-expected output from sitting in the package without participating in an eval.
-`deterministic_multistep_has_orchestrator` requires a deterministic multi-step skill
-to expose one reliable `scripts/run_pipeline.py` entry point. The four independent
-gates run concurrently, and unchanged results are reused by content hash.
+The two requirements have technical identifiers for automation.
+`every_expected_is_reachable` prevents an expected output from sitting in the package
+without participating in an evaluation. `deterministic_multistep_has_orchestrator`
+requires a predictable multi-step skill to expose one reliable
+`scripts/run_pipeline.py` entry point. Unchanged check results are reused by content
+hash.
 
 ## What you receive
 

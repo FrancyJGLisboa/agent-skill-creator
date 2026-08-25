@@ -87,17 +87,48 @@ def test_public_docs_present_the_normalized_graph_release_gate() -> None:
     assert "every_expected_is_reachable" in readme
     assert "deterministic_multistep_has_orchestrator" in readme
     assert command in install
-    assert "graph constraints and gates" in marketplace
+    assert "both structural requirements, all" in marketplace
+    assert "four checks, and the representative run pass" in marketplace
     assert "skill graph" in page.lower()
     assert 'class="skill-flow"' in page
     for label in (
         "Artifacts",
         "Skill graph",
-        "Constraints",
-        "Parallel gates",
+        "Structural requirements",
+        "Parallel checks",
         "Representative run",
     ):
         assert label in page
+
+
+def test_public_docs_use_one_plain_language_graph_explanation() -> None:
+    canonical = (
+        "Every skill is checked as one connected system. The skill graph links its "
+        "instructions, scripts, evaluations, and expected outputs. Two structural "
+        "requirements confirm that every expected result is tested and every "
+        "predictable multi-step workflow has one reliable entry point. Four "
+        "checks—specification, pipeline, security, and evaluation schema—run in "
+        "parallel. Finally, a representative run proves that the skill produces a "
+        "useful result."
+    )
+    public_docs = {
+        "README.md": read("README.md"),
+        "docs/INSTALL.md": read("docs/INSTALL.md"),
+        "docs/TEAM_MARKETPLACE.md": read("docs/TEAM_MARKETPLACE.md"),
+        "docs/index.html": re.sub(r"<[^>]+>", " ", read("docs/index.html")),
+    }
+    deprecated_phrases = (
+        "validation, pipeline checks, scan, evals",
+        "graph constraints and gates",
+        "parallel spec, pipeline, security, and eval-schema",
+    )
+
+    for path, source in public_docs.items():
+        without_markdown_quotes = re.sub(r"(?m)^>\s?", "", source)
+        normalized = " ".join(without_markdown_quotes.split())
+        assert canonical in normalized, f"{path} is missing the canonical explanation"
+        for phrase in deprecated_phrases:
+            assert phrase not in normalized.lower(), f"{path} uses deprecated wording: {phrase}"
 
 
 def test_website_platform_chooser_matches_canonical_registry() -> None:

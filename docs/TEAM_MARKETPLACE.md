@@ -137,10 +137,15 @@ In an installed agent environment, provide the real workflow evidence:
 /agent-skill-creator Create a skill from the attached ACME monthly reporting workflow.
 ```
 
-The factory must finish with a representative result—not only generated files. The
-skill is ready for marketplace intake only after its normalized graph constraints and gates
-pass: every expected output is reachable, deterministic multi-step work has an
-orchestrator, and the parallel spec, pipeline, security, and eval-schema gates are green.
+Every skill is checked as one connected system. The skill graph links its
+instructions, scripts, evaluations, and expected outputs. Two structural
+requirements confirm that every expected result is tested and every predictable
+multi-step workflow has one reliable entry point. Four checks—specification,
+pipeline, security, and evaluation schema—run in parallel. Finally, a representative
+run proves that the skill produces a useful result.
+
+A skill is ready for marketplace intake only after both structural requirements, all
+four checks, and the representative run pass.
 
 Before `add`, its `SKILL.md` metadata must include real values:
 

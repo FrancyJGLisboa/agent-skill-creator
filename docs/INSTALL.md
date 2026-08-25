@@ -13,8 +13,12 @@ skill installer.
 > python3 scripts/skill_graph.py run ./the-skill/ --jobs 4
 > ```
 >
-> This checks graph constraints, package structure, pipeline code, known security
-> patterns, and the eval schema through one release gate.
+> Every skill is checked as one connected system. The skill graph links its
+> instructions, scripts, evaluations, and expected outputs. Two structural
+> requirements confirm that every expected result is tested and every predictable
+> multi-step workflow has one reliable entry point. Four checks—specification,
+> pipeline, security, and evaluation schema—run in parallel. Finally, a representative
+> run proves that the skill produces a useful result.
 >
 > See [Why the checks matter](../README.md#why-the-checks-matter).
 > Everything below assumes you trust the source.
