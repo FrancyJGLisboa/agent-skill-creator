@@ -557,6 +557,10 @@ AGENTSEOF
 # Universal .agents/skills/ secondary install (symlink or copy)
 # ---------------------------------------------------------------------------
 install_universal_secondary() {
+    # A custom path is an explicit containment boundary. Do not create a second
+    # user-home install that the caller did not request.
+    [ -n "$CUSTOM_PATH" ] && return 0
+
     # Skip if primary target is already .agents/
     case "$PLATFORM" in
         codex|universal) return 0 ;;
@@ -857,6 +861,10 @@ install_single() {
 # Install for all detected platforms (--all)
 # ---------------------------------------------------------------------------
 install_all() {
+    if [ -n "$CUSTOM_PATH" ]; then
+        error "--path cannot be combined with --all"
+        exit 1
+    fi
     detect_all_platforms
     info "Installing to all detected platforms: ${ALL_PLATFORMS}"
     printf "%-40s\n" "----------------------------------------"

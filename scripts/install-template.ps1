@@ -568,6 +568,10 @@ See [SKILL.md](./SKILL.md) for full implementation details, triggers, and config
 function Install-UniversalSecondary {
     param([string]$Plat, [string]$InstallDir)
 
+    # A custom path is an explicit containment boundary. Do not create a second
+    # user-profile install that the caller did not request.
+    if ($Path) { return }
+
     if ($Plat -in "codex", "universal") { return }
 
     $universalDir = Join-Path $HomeDir ".agents\skills" $SkillName
@@ -673,6 +677,10 @@ function Install-Single {
 # Install for all detected platforms (-All)
 # ---------------------------------------------------------------------------
 function Install-All {
+    if ($Path) {
+        Write-Err "-Path cannot be combined with -All"
+        exit 1
+    }
     $platforms = Find-AllPlatforms
     Write-Info "Installing to all detected platforms: $($platforms -join ', ')"
     Write-Host "----------------------------------------"

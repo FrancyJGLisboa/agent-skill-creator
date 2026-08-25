@@ -330,6 +330,11 @@ Create all files in this order:
    compatibility, and support tier. Read `references/discovery-metadata.md`. Never
    generate a skill without the five decision-contract fields; do not invent
    compatibility certification during creation.
+   If the user has named a target governed marketplace and its published governance
+   configuration identifies the responsible owners and required intake state, also
+   write those exact values as `metadata.owners` and `metadata.approval_status` in
+   `SKILL.md`. Do not guess an owner, approver, department, or approval status when
+   no target marketplace is known; leave organizational assignment to intake.
 8. Generate `install.sh` from `scripts/install-template.sh` (replace `{{SKILL_NAME}}` with actual name, `chmod +x`)
 8.5. Generate `.claude-plugin/plugin.json` + `marketplace.json` from `scripts/claude-plugin-template/` (placeholders from frontmatter — makes the skill installable via `/plugin marketplace add`), and **ship the evolution toolkit and local success ledger**: copy `scripts/evolve_template.py` → `scripts/evolve.py`, `scripts/success_ledger.py`, plus the staleness/drift/dep-health modules. See `references/pipeline-phases.md` Steps 6.5–6.6
 9. Write `README.md` (multi-platform install instructions showing the `/plugin marketplace add` path for Claude Code and `git clone` to each tool's **native** path)
@@ -379,6 +384,12 @@ schema-v2 quality evidence, and exact version-pinned installs. Runtime
 shell access must never be pre-approved in a marketplace skill. Read the governed
 marketplace section of `references/distribution-guide.md` before initializing or
 migrating a team repository.
+
+For an organizational readiness decision, run the blind four-role protocol in
+`docs/ORGANIZATIONAL_ACCEPTANCE.md`. Keep administrator, creator, operator, and
+consumer contexts and workspaces isolated. Give each role only public documentation
+and artifacts legitimately published by the prior role. Any implementation hint or
+direct assistance makes that run a failure rather than a successful demonstration.
 
 ### Completion Handoff Contract
 

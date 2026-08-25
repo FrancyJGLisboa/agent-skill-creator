@@ -263,6 +263,20 @@ def _require_slug(value: str, label: str) -> str:
     return value
 
 
+def _department_options(values: list[str] | None) -> dict[str, str]:
+    """Parse repeatable ``department=owner`` initialization options."""
+    result: dict[str, str] = {}
+    for value in values or []:
+        department, separator, owner = value.partition("=")
+        if not separator or not owner.strip():
+            raise MarketplaceError("--department must use department=owner")
+        department = _require_slug(department.strip(), "department")
+        if department in result:
+            raise MarketplaceError(f"duplicate department option: {department}")
+        result[department] = owner.strip().lstrip("@")
+    return result
+
+
 def _contained(root: Path, relative: str) -> Path:
     target = (root / relative).resolve()
     resolved_root = root.resolve()
@@ -363,6 +377,8 @@ def _legacy_department(item: dict[str, Any]) -> str:
 def init_marketplace(
     root: Path, name: str, repository: str, from_registry: Path | None = None,
     *, provider: str = "github", host: str | None = None,
+    departments: dict[str, str] | None = None, approvers: list[str] | None = None,
+    supported_platforms: list[str] | None = None, starter_bundles: list[str] | None = None,
 ) -> dict[str, Any]:
     """Create the repository scaffold, optionally importing schema-v1 files."""
     if not re.fullmatch(r"[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)+", repository):
@@ -375,6 +391,16 @@ def init_marketplace(
         raise MarketplaceError("host must be a hostname, optionally followed by a port")
     if (root / "registry.json").exists():
         raise MarketplaceError(f"marketplace already exists at {root}")
+    departments = departments or {}
+    normalized_departments = {
+        _require_slug(department, "department"): str(owner).strip().lstrip("@")
+        for department, owner in departments.items()
+    }
+    if any(not owner for owner in normalized_departments.values()):
+        raise MarketplaceError("every department must declare a non-empty owner")
+    normalized_approvers = sorted({str(value).strip().lstrip("@") for value in (approvers or []) if str(value).strip()})
+    normalized_platforms = sorted({_require_slug(value, "supported platform") for value in (supported_platforms or [])})
+    normalized_bundles = sorted({_require_slug(value, "starter bundle") for value in (starter_bundles or [])})
     root.mkdir(parents=True, exist_ok=True)
     (root / "skills").mkdir(exist_ok=True)
     (root / "bundles").mkdir(exist_ok=True)
@@ -392,13 +418,30 @@ def init_marketplace(
             "schema_version": SCHEMA_VERSION,
             "marketplace": {
                 "name": name, "repository": repository, "provider": provider,
-                "host": resolved_host, "created": _now(), "active_owners": [],
+                "host": resolved_host, "created": _now(),
+                "active_owners": sorted(set(normalized_departments.values())),
+                "departments": normalized_departments,
+                "approvers": normalized_approvers,
+                "supported_platforms": normalized_platforms,
             },
             "skills": [],
-            "bundles": {},
+            "bundles": {bundle: [] for bundle in normalized_bundles},
         }
+    marketplace = data["marketplace"]
+    if normalized_departments:
+        marketplace["departments"] = normalized_departments
+        marketplace["active_owners"] = sorted(set(normalized_departments.values()))
+    if normalized_approvers:
+        marketplace["approvers"] = normalized_approvers
+    if normalized_platforms:
+        marketplace["supported_platforms"] = normalized_platforms
+    for bundle in normalized_bundles:
+        data.setdefault("bundles", {}).setdefault(bundle, [])
     save_manifest(root, data)
-    (root / ".gitignore").write_text(".marketplace-state/\n", encoding="utf-8")
+    (root / ".gitignore").write_text(
+        ".marketplace-state/\n.marketplace-mutation.lock/\n__pycache__/\n*.py[cod]\n",
+        encoding="utf-8",
+    )
     generate_repository_files(root, data)
     scaffold_scripts = root / "scripts"
     scaffold_scripts.mkdir(exist_ok=True)
@@ -614,6 +657,7 @@ def add_skill(root: Path, skill: Path, department: str, bundle: str) -> dict[str
         "discovery": meta["discovery"] if isinstance(meta["discovery"], dict) else {},
         "compatibility": normalized_discovery["compatibility"],
         "quality": quality,
+        "lineage_id": secrets.token_hex(16),
     }
     data["skills"].append(entry)
     active_owners = data["marketplace"].setdefault("active_owners", [])
@@ -633,10 +677,22 @@ def add_skill(root: Path, skill: Path, department: str, bundle: str) -> dict[str
 def _quality_errors(name: str, quality: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     if not quality.get("validation", {}).get("valid", False):
-        errors.append(f"{name}: validation gate failed")
-    for gate in ("security", "pipeline", "evals"):
-        if not quality.get(gate, {}).get("passed", False):
-            errors.append(f"{name}: {gate} gate failed")
+        details = quality.get("validation", {}).get("errors", [])
+        errors.append(f"{name}: validation gate failed: " + "; ".join(details or ["no details reported"]))
+    if not quality.get("security", {}).get("passed", False):
+        findings = quality.get("security", {}).get("high_findings", [])
+        details = [str(item.get("message") or item) for item in findings]
+        errors.append(f"{name}: security gate failed: " + "; ".join(details or ["scan reported findings"]))
+    if not quality.get("pipeline", {}).get("passed", False):
+        details = quality.get("pipeline", {}).get("errors", [])
+        errors.append(f"{name}: pipeline gate failed: " + "; ".join(details or ["no details reported"]))
+    if not quality.get("evals", {}).get("passed", False):
+        gate = quality.get("evals", {})
+        details = [str(gate.get(key, "")).strip() for key in ("validation_output", "gate_output")]
+        errors.append(
+            f"{name}: evals gate failed: "
+            + "; ".join([item for item in details if item] or ["no details reported"])
+        )
     return errors
 
 
@@ -745,6 +801,7 @@ def update_skill(root: Path, skill: Path, department: str) -> dict[str, Any]:
             "declared": normalized_discovery["compatibility"]["declared"], "certified": [],
         },
         "quality": quality,
+        "lineage_id": existing.get("lineage_id") or secrets.token_hex(16),
     }
 
     manifest_before = (root / "registry.json").read_bytes()
@@ -756,6 +813,103 @@ def update_skill(root: Path, skill: Path, department: str) -> dict[str, Any]:
         staging.replace(destination)
         existing.clear()
         existing.update(replacement)
+        save_manifest(root, data)
+        generate_repository_files(root, data)
+    except Exception:
+        if destination.exists():
+            shutil.rmtree(destination)
+        if backup.exists():
+            backup.replace(destination)
+        (root / "registry.json").write_bytes(manifest_before)
+        raise
+    finally:
+        if staging.exists():
+            shutil.rmtree(staging)
+        if backup.exists():
+            shutil.rmtree(backup)
+    return replacement
+
+
+@_serialized_mutation
+def recreate_skill(root: Path, skill: Path, department: str, reason: str) -> dict[str, Any]:
+    """Replace a retired identity with a fresh 1.0.0 lineage and a minimal tombstone."""
+    department = _require_slug(department, "department")
+    reason = reason.strip()
+    if not reason:
+        raise MarketplaceError("recreate requires a non-empty reason")
+    if not skill.is_dir():
+        raise MarketplaceError(f"skill path is not a directory: {skill}")
+    meta = _metadata(skill)
+    if meta["version"] != "1.0.0":
+        raise MarketplaceError("recreated skill must start at version 1.0.0")
+    data = load_manifest(root)
+    matches = [
+        item for item in data["skills"]
+        if item.get("department") == department and item.get("name") == meta["name"]
+    ]
+    if len(matches) != 1:
+        raise MarketplaceError(
+            f"recreate requires exactly one unambiguous predecessor: {department}/{meta['name']}"
+        )
+    predecessor = matches[0]
+    if predecessor.get("lifecycle") != "retired":
+        raise MarketplaceError("recreate requires the predecessor lifecycle to be retired")
+    predecessor_lineage = predecessor.get("lineage_id")
+    if not isinstance(predecessor_lineage, str) or not predecessor_lineage:
+        # Schema-v2 marketplaces created before lineage support are migrated at
+        # the recreate boundary. The generated identity becomes immutable in the
+        # committed tombstone; no operator registry edit is required.
+        predecessor_lineage = secrets.token_hex(16)
+    if _blocked_allowed_tools(meta["allowed_tools"]):
+        raise MarketplaceError("pre-approved shell or bash access is forbidden; runtime permission is required")
+    if not meta["owners"] or meta["lifecycle"] != APPROVED:
+        raise MarketplaceError("recreated skill must be approved and declare at least one owner")
+    try:
+        normalized = require_decision_contract({
+            "name": meta["name"], "version": meta["version"], "discovery": meta["discovery"],
+        })
+    except DiscoveryError as exc:
+        raise MarketplaceError(f"invalid discovery metadata: {exc}") from exc
+    commit = _source_commit(skill)
+    attestation = _load_attestation(skill, meta, commit)
+    quality = _gate_skill(skill)
+    failures = _quality_errors(meta["name"], quality)
+    if failures:
+        raise MarketplaceError("; ".join(failures))
+    relative = f"skills/{department}/{meta['name']}"
+    destination = _contained(root, relative)
+    bundles = [name for name, paths in data.get("bundles", {}).items() if relative in paths]
+    tombstone = {
+        "name": predecessor["name"], "department": department,
+        "lineage_id": predecessor_lineage, "version": predecessor.get("version"),
+        "retired_at": _now(), "recreate_reason": reason,
+    }
+    new_lineage = secrets.token_hex(16)
+    replacement = {
+        "name": meta["name"], "department": department, "author": meta["author"],
+        "owners": meta["owners"], "approval_status": APPROVED, "lifecycle": APPROVED,
+        "version": "1.0.0", "description": meta["description"], "license": meta["license"],
+        "path": relative, "repository": data["marketplace"]["repository"],
+        "lineage_id": new_lineage, "predecessor_lineage_id": predecessor_lineage,
+        "recreate_reason": reason,
+        "provenance": {"source": str(skill.resolve()), "commit_sha": commit, "recreated_at": _now()},
+        "attestation": attestation, "discovery": meta["discovery"],
+        "compatibility": {"declared": normalized["compatibility"]["declared"], "certified": []},
+        "quality": quality,
+    }
+    staging = Path(tempfile.mkdtemp(prefix=f".{meta['name']}-recreate-", dir=destination.parent))
+    backup = destination.parent / f".{meta['name']}-backup-{secrets.token_hex(8)}"
+    manifest_before = (root / "registry.json").read_bytes()
+    try:
+        shutil.copytree(skill, staging, dirs_exist_ok=True, ignore=COPY_IGNORE_PATTERNS)
+        destination.replace(backup)
+        staging.replace(destination)
+        predecessor.clear()
+        predecessor.update(replacement)
+        data.setdefault("history", []).append(tombstone)
+        for bundle in bundles:
+            if relative not in data["bundles"][bundle]:
+                data["bundles"][bundle].append(relative)
         save_manifest(root, data)
         generate_repository_files(root, data)
     except Exception:
@@ -896,12 +1050,31 @@ def generate_repository_files(root: Path, data: dict[str, Any]) -> None:
             existing.unlink()
     provider = _provider(data)
     governance_path = "/.github/" if provider.name == "github" else "/.gitlab-ci.yml"
-    owner_lines = ["# Generated from registry.json; repository admins own governance files.", "/registry.json @acme-platform @acme-security", "/bundles/ @acme-platform @acme-security", f"{governance_path} @acme-platform @acme-security"]
+    marketplace = data["marketplace"]
+    approvers = [str(value).strip().lstrip("@") for value in marketplace.get("approvers", []) if str(value).strip()]
+    governance_owners = " ".join(f"@{owner}" for owner in approvers) or "@acme-platform @acme-security"
+    owner_lines = [
+        "# Generated from registry.json; repository admins own governance files.",
+        f"/registry.json {governance_owners}", f"/bundles/ {governance_owners}",
+        f"{governance_path} {governance_owners}",
+    ]
+    for department, owner in sorted(marketplace.get("departments", {}).items()):
+        owner_lines.append(f"/skills/{department}/ @{str(owner).lstrip('@')} {governance_owners}")
     for item in sorted(data["skills"], key=lambda value: value["path"]):
         owners = " ".join(f"@{owner.lstrip('@')}" for owner in item.get("owners", []))
-        owner_lines.append(f"/{item['path']}/ {owners} @acme-platform @acme-security")
+        owner_lines.append(f"/{item['path']}/ {owners} {governance_owners}")
     (root / "CODEOWNERS").write_text("\n".join(owner_lines) + "\n", encoding="utf-8")
     governance = _GITHUB_GOVERNANCE if provider.name == "github" else _GITLAB_GOVERNANCE
+    governance = governance.replace("ACME", str(marketplace["name"]))
+    if marketplace.get("departments") or approvers or marketplace.get("supported_platforms"):
+        policy = ["", "## Organization policy", ""]
+        for department, owner in sorted(marketplace.get("departments", {}).items()):
+            policy.append(f"- `{department}` owner: `@{str(owner).lstrip('@')}`")
+        if approvers:
+            policy.append("- Required approvers: " + ", ".join(f"`@{owner}`" for owner in approvers))
+        if marketplace.get("supported_platforms"):
+            policy.append("- Supported platforms: " + ", ".join(f"`{value}`" for value in marketplace["supported_platforms"]))
+        governance = governance.rstrip() + "\n" + "\n".join(policy) + "\n"
     (root / "GOVERNANCE.md").write_text(governance, encoding="utf-8")
     provider.generate_files(root)
 
@@ -1048,6 +1221,23 @@ def install_bundle(
         raise MarketplaceError(f"bundle not found: {bundle}")
     if not from_local and not pin:
         raise MarketplaceError("managed remote installs require --pin vX.Y.Z")
+    provider_pin = pin
+    if from_local and pin:
+        if not SEMVER_TAG_RE.fullmatch(pin):
+            raise MarketplaceError("local exact installs require --pin vX.Y.Z")
+        head = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "HEAD"], capture_output=True, text=True,
+            check=False,
+        )
+        tagged = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", f"{pin}^{{commit}}"],
+            capture_output=True, text=True, check=False,
+        )
+        if head.returncode or tagged.returncode or head.stdout.strip() != tagged.stdout.strip():
+            raise MarketplaceError(
+                f"local marketplace must be checked out at exact tag {pin}; refusing an ambiguous pin"
+            )
+        provider_pin = None
     if scope not in {"user", "project"}:
         raise MarketplaceError("scope must be user or project")
     blocked = [
@@ -1057,7 +1247,7 @@ def install_bundle(
     ]
     if blocked:
         raise MarketplaceError("bundle contains non-installable skills: " + ", ".join(blocked))
-    commands = _provider(data).install(root, data, paths, scope, pin, force, from_local)
+    commands = _provider(data).install(root, data, paths, scope, provider_pin, force, from_local)
     platform = "github-copilot" if _provider(data).name == "github" else "vscode-copilot"
     for path in paths:
         record_marketplace_event(root, "install", Path(path).name, True, platform=platform)
@@ -1243,6 +1433,30 @@ def release_marketplace(root: Path, tag: str) -> None:
             "release requires the published lifecycle transition to be reviewed and committed: "
             + ", ".join(unpublished)
         )
+    remote = subprocess.run(
+        ["git", "-C", str(root), "remote", "get-url", "origin"],
+        capture_output=True, text=True, check=False,
+    )
+    remote_url = (remote.stdout or "").strip()
+    remote_path = Path(remote_url).expanduser() if remote.returncode == 0 and remote_url else None
+    if remote_path is not None and remote_path.exists():
+        create = subprocess.run(["git", "-C", str(root), "tag", tag], text=True, check=False)
+        if create.returncode:
+            raise MarketplaceError(f"failed to create local release tag {tag}")
+        push = subprocess.run(
+            ["git", "-C", str(root), "push", "origin", f"refs/tags/{tag}"],
+            text=True, check=False,
+        )
+        if push.returncode:
+            subprocess.run(["git", "-C", str(root), "tag", "-d", tag], check=False)
+            raise MarketplaceError(f"failed to push release tag {tag} to local remote")
+        verify = subprocess.run(
+            ["git", "-C", str(root), "ls-remote", "--exit-code", "--tags", "origin", f"refs/tags/{tag}"],
+            capture_output=True, text=True, check=False,
+        )
+        if verify.returncode:
+            raise MarketplaceError(f"release tag {tag} is absent from origin")
+        return
     _provider(data).release(root, tag)
 
 
@@ -1255,6 +1469,16 @@ def build_parser() -> argparse.ArgumentParser:
     init.add_argument("--provider", choices=tuple(PROVIDERS), default="github")
     init.add_argument("--host", help="provider hostname; defaults to github.com or gitlab.com")
     init.add_argument("--from-registry")
+    init.add_argument(
+        "--department", action="append", metavar="SLUG=OWNER",
+        help="repeatable department ownership declaration",
+    )
+    init.add_argument("--approver", action="append", help="repeatable governance approver handle")
+    init.add_argument(
+        "--supported-platform", action="append",
+        help="repeatable canonical platform governed by this marketplace",
+    )
+    init.add_argument("--starter-bundle", action="append", help="repeatable empty bundle to initialize")
     init.add_argument("--marketplace", default=".")
     add = sub.add_parser("add")
     add.add_argument("skill_path")
@@ -1265,6 +1489,11 @@ def build_parser() -> argparse.ArgumentParser:
     update.add_argument("skill_path")
     update.add_argument("--department", required=True)
     update.add_argument("--marketplace", default=".")
+    recreate = sub.add_parser("recreate")
+    recreate.add_argument("skill_path")
+    recreate.add_argument("--department", required=True)
+    recreate.add_argument("--reason", required=True)
+    recreate.add_argument("--marketplace", default=".")
     attest = sub.add_parser("attest")
     attest.add_argument("skill_path")
     attest.add_argument("--run-id", required=True)
@@ -1281,7 +1510,10 @@ def build_parser() -> argparse.ArgumentParser:
     install.add_argument("--scope", choices=("user", "project"), required=True)
     install.add_argument("--pin")
     install.add_argument("--force", action="store_true")
-    install.add_argument("--from-local", action="store_true", help=argparse.SUPPRESS)
+    install.add_argument(
+        "--local", "--from-local", dest="from_local", action="store_true",
+        help="install from this local marketplace; with --pin, HEAD must equal that exact tag",
+    )
     install.add_argument("--marketplace", default=".")
     lifecycle = sub.add_parser("lifecycle")
     lifecycle.add_argument("skill_name")
@@ -1340,6 +1572,9 @@ def main(argv: list[str] | None = None) -> int:
                 root, args.name, args.repository,
                 Path(args.from_registry).resolve() if args.from_registry else None,
                 provider=args.provider, host=args.host,
+                departments=_department_options(args.department), approvers=args.approver,
+                supported_platforms=args.supported_platform,
+                starter_bundles=args.starter_bundle,
             )
             print(f"Marketplace initialized at {root}")
         elif args.command == "attest":
@@ -1351,6 +1586,13 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "update":
             entry = update_skill(root, Path(args.skill_path).resolve(), args.department)
             print(f"Updated {entry['department']}/{entry['name']} to v{entry['version']}")
+        elif args.command == "recreate":
+            entry = recreate_skill(
+                root, Path(args.skill_path).resolve(), args.department, args.reason,
+            )
+            print(
+                f"Recreated {entry['department']}/{entry['name']} as lineage {entry['lineage_id']}"
+            )
         elif args.command == "check":
             errors = check_marketplace(root, require_published=args.release)
             if errors:

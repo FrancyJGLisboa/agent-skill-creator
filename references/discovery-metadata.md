@@ -48,3 +48,15 @@ Rules:
 - `compatibility.declared` uses canonical names from `scripts/platforms.py`.
 - `compatibility.certified` is empty at creation. Only the governed marketplace
   writes certification after explicit current-version checks pass.
+
+## Organizational metadata
+
+`owners` and `approval_status` belong in `SKILL.md` metadata, not `discovery.json`.
+When the user names a target governed marketplace, read its published governance and
+use the exact assigned owner identities and intake status. These values make the
+generated package submission-ready for that specific marketplace.
+
+When there is no known target marketplace, do not invent an organization, department,
+owner, approver, or approval status. Marketplace intake is the authority that assigns
+those values. Compatibility certification follows the same boundary: creation may
+declare compatibility, but only marketplace verification may certify it.

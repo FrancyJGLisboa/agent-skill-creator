@@ -117,6 +117,111 @@ def test_init_generates_governance_scaffold(tmp_path: Path) -> None:
     assert (repo / "scripts/team_marketplace.py").exists()
     assert (repo / ".github/workflows/marketplace-check.yml").exists()
     assert (repo / ".github/workflows/marketplace-release.yml").exists()
+    assert "__pycache__/" in (repo / ".gitignore").read_text()
+    assert "*.py[cod]" in (repo / ".gitignore").read_text()
+
+
+def test_init_accepts_complete_organization_policy_without_manual_registry_edits(
+    tmp_path: Path,
+) -> None:
+    repo = tmp_path / "northstar"
+    result = market.main([
+        "init", "--name", "Northstar Skills", "--repository", "Northstar/skills",
+        "--department", "finance=maya-chen", "--department", "operations=diego-alvarez",
+        "--approver", "northstar-platform", "--approver", "northstar-security",
+        "--supported-platform", "github-copilot", "--starter-bundle", "finance-starter",
+        "--marketplace", str(repo),
+    ])
+
+    assert result == 0
+    data = market.load_manifest(repo)
+    assert data["marketplace"]["departments"] == {
+        "finance": "maya-chen", "operations": "diego-alvarez",
+    }
+    assert data["marketplace"]["active_owners"] == ["diego-alvarez", "maya-chen"]
+    assert data["marketplace"]["approvers"] == ["northstar-platform", "northstar-security"]
+    assert data["marketplace"]["supported_platforms"] == ["github-copilot"]
+    assert data["bundles"] == {"finance-starter": []}
+    assert json.loads((repo / "bundles/finance-starter.json").read_text()) == {
+        "name": "finance-starter", "skills": [],
+    }
+    codeowners = (repo / "CODEOWNERS").read_text()
+    assert "/skills/finance/ @maya-chen @northstar-platform @northstar-security" in codeowners
+    governance = (repo / "GOVERNANCE.md").read_text()
+    assert "Northstar Skills marketplace governance" in governance
+    assert "ACME" not in governance
+
+
+def test_init_rejects_malformed_department_option(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str],
+) -> None:
+    result = market.main([
+        "init", "--name", "Bad", "--repository", "Bad/skills",
+        "--department", "finance", "--marketplace", str(tmp_path / "bad"),
+    ])
+    assert result == 1
+    assert "department=owner" in capsys.readouterr().err
+
+
+def test_recreate_starts_fresh_lineage_and_preserves_bundle(tmp_path: Path) -> None:
+    repo = init_marketplace(tmp_path)
+    skill = make_skill(tmp_path, "report-skill")
+    original = market.add_skill(repo, skill, "finance", "base")
+    market.load_manifest(repo)["skills"]
+    data = market.load_manifest(repo)
+    data["skills"][0]["lifecycle"] = "retired"
+    market.save_manifest(repo, data)
+    update_skill_version(skill, "1.0.0")
+
+    recreated = market.recreate_skill(repo, skill, "finance", "method replaced")
+    stored = market.load_manifest(repo)
+    assert recreated["lineage_id"] != original["lineage_id"]
+    assert recreated["predecessor_lineage_id"] == original["lineage_id"]
+    assert recreated["version"] == "1.0.0"
+    assert recreated["lifecycle"] == "approved"
+    assert recreated["compatibility"]["certified"] == []
+    assert stored["bundles"]["base"] == ["skills/finance/report-skill"]
+    assert stored["history"] == [{
+        "name": "report-skill", "department": "finance",
+        "lineage_id": original["lineage_id"], "version": "1.2.3",
+        "retired_at": stored["history"][0]["retired_at"],
+        "recreate_reason": "method replaced",
+    }]
+    assert "attestation" not in stored["history"][0]
+
+
+def test_recreate_rejects_active_or_ambiguous_predecessor(tmp_path: Path) -> None:
+    repo = init_marketplace(tmp_path)
+    skill = make_skill(tmp_path, "report-skill")
+    market.add_skill(repo, skill, "finance", "base")
+    update_skill_version(skill, "1.0.0")
+    with pytest.raises(market.MarketplaceError, match="retired"):
+        market.recreate_skill(repo, skill, "finance", "restart")
+    data = market.load_manifest(repo)
+    data["skills"][0]["lifecycle"] = "retired"
+    data["skills"].append(dict(data["skills"][0]))
+    market.save_manifest(repo, data)
+    with pytest.raises(market.MarketplaceError, match="unambiguous"):
+        market.recreate_skill(repo, skill, "finance", "restart")
+
+
+def test_recreate_backfills_lineage_for_legacy_retired_entry(tmp_path: Path) -> None:
+    repo = init_marketplace(tmp_path)
+    skill = make_skill(tmp_path, "report-skill")
+    market.add_skill(repo, skill, "finance", "base")
+    data = market.load_manifest(repo)
+    data["skills"][0].pop("lineage_id")
+    data["skills"][0]["lifecycle"] = "retired"
+    market.save_manifest(repo, data)
+    update_skill_version(skill, "1.0.0")
+
+    recreated = market.recreate_skill(repo, skill, "finance", "legacy restart")
+
+    assert recreated["predecessor_lineage_id"]
+    assert recreated["lineage_id"] != recreated["predecessor_lineage_id"]
+    assert market.load_manifest(repo)["history"][0]["lineage_id"] == (
+        recreated["predecessor_lineage_id"]
+    )
 
 
 def test_generated_marketplace_cli_runs_without_factory_source_tree(tmp_path: Path) -> None:
@@ -440,6 +545,40 @@ def test_local_install_uses_from_local_for_integration(tmp_path: Path, monkeypat
     assert calls[0][1]["cwd"] == consumer
 
 
+def test_local_pinned_install_requires_head_at_exact_tag(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    repo = init_marketplace(tmp_path)
+    market.add_skill(repo, make_skill(tmp_path, "report-skill"), "finance", "base")
+    subprocess.run(["git", "init", "-q", str(repo)], check=True)
+    subprocess.run(["git", "-C", str(repo), "add", "."], check=True)
+    subprocess.run([
+        "git", "-C", str(repo), "-c", "user.name=Test", "-c",
+        "user.email=test@example.invalid", "commit", "-qm", "marketplace",
+    ], check=True)
+    subprocess.run(["git", "-C", str(repo), "tag", "v1.2.3"], check=True)
+    calls: list[list[str]] = []
+    real_run = subprocess.run
+    monkeypatch.setattr(market.subprocess, "run", lambda command, **kwargs: (
+        calls.append(command) or subprocess.CompletedProcess(command, 0)
+    ) if command[:3] == ["gh", "skill", "install"] else real_run(command, **kwargs))
+    market.install_bundle(repo, "base", "project", "v1.2.3", from_local=True)
+    assert "--pin" not in calls[0]
+    (repo / "uncommitted").write_text("x")
+    real_run(["git", "-C", str(repo), "add", "uncommitted"], check=True)
+    real_run([
+        "git", "-C", str(repo), "-c", "user.name=Test", "-c",
+        "user.email=test@example.invalid", "commit", "-qm", "later",
+    ], check=True)
+    with pytest.raises(market.MarketplaceError, match="exact tag"):
+        market.install_bundle(repo, "base", "project", "v1.2.3", from_local=True)
+
+
+def test_install_cli_exposes_local_alias() -> None:
+    args = market.build_parser().parse_args([
+        "install", "--bundle", "base", "--scope", "project", "--local",
+    ])
+    assert args.from_local is True
+
+
 @pytest.mark.skipif(shutil.which("gh") is None, reason="GitHub CLI is not installed")
 def test_real_gh_local_install_for_user_and_project_scopes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     repo = init_marketplace(tmp_path)
@@ -472,6 +611,28 @@ def test_release_requires_semver_and_passed_checks(tmp_path: Path, monkeypatch: 
     market.transition_skill(repo, "finance", "report-skill", "published")
     market.release_marketplace(repo, "v1.2.0")
     assert calls[-1] == ["gh", "skill", "publish", str(repo), "--tag", "v1.2.0"]
+
+
+def test_release_pushes_tag_to_local_bare_origin(tmp_path: Path) -> None:
+    repo = init_marketplace(tmp_path)
+    market.add_skill(repo, make_skill(tmp_path, "report-skill"), "finance", "base")
+    market.transition_skill(repo, "finance", "report-skill", "published")
+    subprocess.run(["git", "init", "-q", str(repo)], check=True)
+    subprocess.run(["git", "-C", str(repo), "add", "."], check=True)
+    subprocess.run([
+        "git", "-C", str(repo), "-c", "user.name=Test", "-c",
+        "user.email=test@example.invalid", "commit", "-qm", "published marketplace",
+    ], check=True)
+    bare = tmp_path / "origin.git"
+    subprocess.run(["git", "init", "--bare", "-q", str(bare)], check=True)
+    subprocess.run(["git", "-C", str(repo), "remote", "add", "origin", str(bare)], check=True)
+    subprocess.run(["git", "-C", str(repo), "push", "-q", "origin", "HEAD:main"], check=True)
+    market.release_marketplace(repo, "v1.2.0")
+    result = subprocess.run(
+        ["git", "--git-dir", str(bare), "rev-parse", "refs/tags/v1.2.0"],
+        capture_output=True, text=True, check=False,
+    )
+    assert result.returncode == 0
 
 
 def test_release_grade_check_does_not_dirty_committed_marketplace(tmp_path: Path) -> None:
@@ -614,6 +775,17 @@ def test_attest_cli_runs_without_marketplace_argument(tmp_path: Path) -> None:
     )
     assert result.returncode == 0, result.stderr
     assert "Wrote trust attestation" in result.stdout
+
+
+def test_attest_error_surfaces_gate_details(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    skill = make_skill(tmp_path, "report-skill")
+    monkeypatch.setattr(market, "_gate_skill", lambda _: {
+        "validation": {"valid": False, "errors": ["SKILL.md: missing required field question"]},
+        "security": {"passed": True}, "pipeline": {"passed": True},
+        "evals": {"passed": True}, "checked_at": "2026-08-25T12:00:00Z",
+    })
+    with pytest.raises(market.MarketplaceError, match="missing required field question"):
+        market.attest_skill(skill, "run", "2026-08-25T12:00:00Z")
 
 
 def test_intake_rejects_missing_and_commit_mismatched_attestation(tmp_path: Path) -> None:

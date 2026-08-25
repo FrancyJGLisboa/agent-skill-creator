@@ -71,8 +71,19 @@ Run from the `agent-skill-creator` repository:
 python3 scripts/team_marketplace.py init \
   --name "ACME Skills" \
   --repository ACME/acme-skills \
+  --department finance=finance-owner \
+  --department operations=operations-owner \
+  --approver acme-platform \
+  --approver acme-security \
+  --supported-platform github-copilot \
+  --starter-bundle analyst-starter \
   --marketplace ./acme-skills
 ```
+
+Repeat `--department SLUG=OWNER`, `--approver`, `--supported-platform`, and
+`--starter-bundle` as needed. The generated registry, `CODEOWNERS`, governance policy,
+and empty bundle manifests carry these declarations; no manual registry edit is
+required.
 
 This creates:
 
@@ -100,6 +111,18 @@ python3 scripts/team_marketplace.py init \
 
 Migration never grants approval. Migrated skills remain `draft` until their source,
 owners, scripts, and quality evidence are reviewed.
+
+A starter bundle created with `--starter-bundle` may be empty before the first
+admission. Its generated manifest is:
+
+```json
+{
+  "name": "analyst-starter",
+  "skills": []
+}
+```
+
+Do not add a placeholder or nonexistent skill to populate it.
 
 ### A3. Put the scaffold in GitHub
 
@@ -286,6 +309,26 @@ python3 scripts/team_marketplace.py install \
 There is no moving “latest” channel in the governed workflow. Every managed change
 names the exact release that should be present.
 
+For a local provider test, clone or check out the exact immutable tag into a temporary
+source directory, then run the project-scoped install from the clean consumer project.
+Installing from the marketplace's mutable working tree does not prove release or
+rollback behavior.
+
+```bash
+git -C /tmp/acme-skills checkout --detach v1.2.0
+cd /tmp/clean-consumer-project
+python3 /tmp/acme-skills/scripts/team_marketplace.py install \
+  --bundle analyst-starter \
+  --scope project \
+  --local \
+  --pin v1.2.0 \
+  --marketplace /tmp/acme-skills
+```
+
+With `--local --pin`, the CLI verifies that marketplace `HEAD` is the exact requested
+tag before invoking the provider's local transport. It does not pass an incompatible
+pin argument through to `gh skill --from-local`.
+
 ### C4. Correct a skill through the repository
 
 Never edit an installed copy. Capture the correction in the skill source:
@@ -345,6 +388,34 @@ python3 scripts/team_marketplace.py lifecycle report-skill \
 Quarantined, deprecated, and retired skills cannot be installed. The
 `approved → published` transition is committed before release so GitHub and GitLab
 publish the exact reviewed registry state.
+
+When repair would preserve the wrong assumptions, retire and recreate the skill as a
+new generation. Recreation resets the skill version to `1.0.0`, assigns a fresh
+lineage identity, records the reset reason and predecessor, and does not inherit
+attestations, eval baselines, compatibility certifications, or success metrics. It
+preserves governed history; erasing sensitive material from Git history, tags,
+releases, caches, and artifacts is a separate privileged purge procedure.
+
+```bash
+python3 scripts/team_marketplace.py recreate ./replacement-skill \
+  --department finance \
+  --reason "The original decision model is no longer valid" \
+  --marketplace ./acme-skills
+```
+
+The existing identity must already be `retired`, and the replacement source version
+must be exactly `1.0.0`. `recreate` reruns every fresh admission and attestation gate,
+preserves bundle membership, creates an approved next generation with a new
+`lineage_id`, clears certifications, and retains a predecessor/reason tombstone.
+
+## Blind cross-team acceptance
+
+Technical checks do not prove that another department can operate the marketplace.
+Run the [blind organizational acceptance protocol](ORGANIZATIONAL_ACCEPTANCE.md) with
+isolated administrator, workflow-expert, operator, and consumer sessions. The exact
+gate is create, publish, discover, install, invoke twice, update, rollback,
+quarantine, blocked install, retire, and recreate. Any undocumented assistance or
+implementation inspection before a recorded failure makes the run fail.
 
 ## Maintenance health control plane
 

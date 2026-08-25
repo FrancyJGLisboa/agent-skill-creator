@@ -13,6 +13,7 @@
 [Website](https://francyjglisboa.github.io/agent-skill-creator/) ·
 [Installation](docs/INSTALL.md) ·
 [Governed team marketplace](docs/TEAM_MARKETPLACE.md) ·
+[Organizational acceptance](docs/ORGANIZATIONAL_ACCEPTANCE.md) ·
 [GitLab team registry](docs/GITLAB_TEAM_REGISTRY.md) ·
 [Changelog](CHANGELOG.md)
 
@@ -77,6 +78,11 @@ discover from a clean consumer, install, invoke twice, update, roll back, quaran
 and confirm installation is blocked. The repository's tests exercise the underlying
 contracts for that lifecycle; the remaining standard is whether an unfamiliar team
 can complete it without assistance.
+
+The stronger organizational gate uses four blind, isolated roles: an administrator,
+workflow expert, marketplace operator, and cross-department consumer. Follow the
+[organizational acceptance protocol](docs/ORGANIZATIONAL_ACCEPTANCE.md); undocumented
+assistance counts as failure, not success.
 
 ## Create your first skill
 
@@ -268,6 +274,10 @@ bundles, and version-pinned installs in VS Code Copilot Agent Mode:
 python3 scripts/team_marketplace.py init \
   --name "ACME Skills" \
   --repository ACME/acme-skills \
+  --department finance=finance-owner \
+  --approver acme-platform \
+  --supported-platform github-copilot \
+  --starter-bundle analyst-starter \
   --marketplace ./acme-skills
 
 python3 scripts/team_marketplace.py add ./report-skill \
@@ -304,6 +314,11 @@ tag and copies the bundle into Copilot's user or project skill directory.
 The [complete marketplace timeline](docs/TEAM_MARKETPLACE.md) is the canonical
 operator page. The [distribution reference](references/distribution-guide.md#governed-github-copilot-marketplace)
 contains the factory's internal routing and fallback behavior.
+
+Use the [blind organizational acceptance protocol](docs/ORGANIZATIONAL_ACCEPTANCE.md)
+to test the complete cross-team handoff in isolated sessions. It includes exact-tag
+local testing, immutable release rules, an empty starter-bundle shape, and the
+retire-and-recreate generation contract.
 
 GitLab teams use the first-class [GitLab marketplace backend](docs/GITLAB_TEAM_REGISTRY.md),
 including generated GitLab CI, `glab` releases, schema-v2 bundles, nested groups,
