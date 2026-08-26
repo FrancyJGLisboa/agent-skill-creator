@@ -86,6 +86,7 @@ Creation and marketplace admission fail when any of these fields is missing.
 |---|---|---|
 | **Skill factory** | Turn expertise and artifacts into executable skills | Validation, security scan, eval suite, representative run |
 | **Marketplace operating system** | Govern publishing, discovery, installation, updates, and removal | Ownership, lifecycle state, immutable versions, rollback, quarantine |
+| **Organizational learning system** | Improve capabilities from real corrections and outcomes | Evolution log, regression evidence, health reports, privacy-safe success metrics |
 
 Every admitted skill also carries an operating contract: environment documentation,
 data sources, readiness checks, least-privilege permissions, risk tier, mutation
@@ -95,7 +96,11 @@ source precedence, exact dependencies, ambiguity behavior, and owner-review fres
 Installation plans expose this preflight instead of treating installation as proof of
 readiness. Use the bounded [semantic-contract experiment](references/semantic-contract-experiment.md)
 before expanding that capability.
-| **Organizational learning system** | Improve capabilities from real corrections and outcomes | Evolution log, regression evidence, health reports, privacy-safe success metrics |
+
+Existing skills without `semantic_contract` remain valid and are interpreted as
+`{"applies": false}` with a migration warning. Add that explicit value—or a complete
+human-approved contract—before the skill's next release. Humans establish meaning;
+the agent may structure, document, test, and apply it, but cannot make it authoritative.
 
 The decisive product test is automated: create three skills, publish a remote tag,
 discover from a clean consumer, install, invoke twice, update, roll back, quarantine,

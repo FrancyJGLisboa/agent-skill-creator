@@ -241,6 +241,11 @@ def validate_skill(skill_path: str) -> dict:
                 "version": str(doc.subfield("metadata", "version") or ""),
                 "discovery": discovery,
             })
+            if "semantic_contract" not in discovery:
+                warnings.append(
+                    "legacy discovery.json has no semantic_contract; treated as "
+                    "{\"applies\": false}. Add the field before the next release."
+                )
         except (json.JSONDecodeError, OSError, DiscoveryError) as exc:
             errors.append(f"invalid discovery.json decision contract: {exc}")
 

@@ -450,7 +450,7 @@ def require_operating_contract(entry: Mapping[str, Any]) -> dict[str, Any]:
         raw.get("data_interfaces"), required=True
     )
     metadata["semantic_contract"] = _semantic_contract(
-        raw.get("semantic_contract"), required=True
+        raw.get("semantic_contract"), required="semantic_contract" in raw
     )
     metadata["routing_tests"] = _routing_tests_required(raw.get("routing_tests"))
     return metadata

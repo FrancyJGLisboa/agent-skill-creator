@@ -191,11 +191,13 @@ it. Do not add speculative metadata; require evidence that it improves routing,
 safety, compatibility, or a lifecycle decision.
 
 The control plane now requires environment discovery/readiness, risk-based mutation
-boundaries, portfolio-level routing tests, and an organizational onboarding report.
-The next maturity step is behavioral enforcement in each runtime adapter: execute
-readiness probes in the consumer environment and integrate department reporting with
-the organization's authoritative identity and analytics systems. Everything else is
-an integration or a separate product.
+boundaries, portfolio-level routing tests, organizational onboarding, and conditional
+human-approved semantic contracts. It governs semantic definitions consumed by skills;
+it does not become a semantic-layer database, ontology editor, data catalog, warehouse
+query engine, or autonomous definition generator. The next maturity step is evidence:
+run the bounded three-skill experiment across isolated configurations before expanding
+the semantic surface. Runtime probes, identity, analytics, and semantic storage remain
+integrations. Everything else is a separate product.
 
 ## Stop or move decision gate
 

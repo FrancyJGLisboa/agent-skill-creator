@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Agent Skill Creator — build skills and govern their marketplace</title>
-<meta name="description" content="Turn human expertise into tested agent skills, then govern discovery, installation, updates, rollback, and quarantine through a user-defined marketplace.">
+<meta name="description" content="Turn human expertise and approved business meaning into tested agent skills, then govern their complete lifecycle through a user-defined marketplace.">
 <meta property="og:title" content="agent-skill-creator">
 <meta property="og:description" content="Build trusted agent skills. Govern their marketplace. Improve what your organization knows.">
 <meta property="og:image" content="https://francyjglisboa.github.io/agent-skill-creator/assets/agent-skill-creator-social-preview.png">
@@ -37,7 +37,8 @@
       <h1>Build trusted skills. Govern their marketplace.</h1>
       <p class="hero__lede">Give it a sentence, spreadsheet, PDF, link, screenshot, or
       half-working script. It reconstructs the question, trigger, decision, evidence,
-      and success measure; builds and verifies the skill; then governs how teams
+      and success measure; captures human-approved meaning when the answer depends on
+      organizational definitions; builds and verifies the skill; then governs how teams
       publish, discover, install, update, roll back, and quarantine it.</p>
       <div class="hero__actions">
         <a class="button" href="#start">Create your first skill</a>
@@ -87,8 +88,9 @@
         <span>01</span>
         <h3>Understand</h3>
         <p>The creator reads everything and summarizes the consequential question,
-        trigger, supported decision, required evidence, and success measure.</p>
-        <small>Behind the scenes: evidence triage and discovery</small>
+        trigger, supported decision, required evidence, success measure, and any
+        unresolved business meaning.</p>
+        <small>Behind the scenes: evidence, data structures, semantics, and authority</small>
       </li>
       <li>
         <span>02</span>
@@ -212,10 +214,10 @@
     </header>
 
     <ol class="capabilities" aria-label="Five product capabilities">
-      <li><span>01</span><h3>Capture</h3><p>Turn expertise and source material into a confirmed decision contract.</p></li>
+      <li><span>01</span><h3>Capture</h3><p>Turn expertise into confirmed decision, data, and—when required—semantic contracts.</p></li>
       <li><span>02</span><h3>Compile</h3><p>Package portable instructions, deterministic helpers, and environment contracts.</p></li>
       <li><span>03</span><h3>Prove</h3><p>Bind evals, safety checks, compatibility, and representative outcomes to the release.</p></li>
-      <li><span>04</span><h3>Govern</h3><p>Enforce ownership, approval, versioning, update, rollback, quarantine, and retirement.</p></li>
+      <li><span>04</span><h3>Govern</h3><p>Enforce ownership, semantic freshness, approval, versioning, rollback, quarantine, and retirement.</p></li>
       <li><span>05</span><h3>Deliver + learn</h3><p>Install exact versions and improve them from consented, privacy-safe usage evidence.</p></li>
     </ol>
 
@@ -225,7 +227,7 @@
         <pre><code id="marketplace-command">python3 scripts/team_marketplace.py init --name "ACME Skills" --repository ACME/acme-skills --marketplace ./acme-skills</code></pre>
         <button class="copybtn copybtn--light" type="button" data-copy="marketplace-command">Copy</button>
       </div>
-      <p class="muted"><strong>What it creates:</strong> department namespaces, bundle manifests, question-first skill pages, CODEOWNERS, lifecycle policy, scheduled health checks, and provider-native CI. Installation does not imply readiness: each skill declares capabilities, permissions, risk tier, mutation boundaries, and blocking preflight checks.</p>
+      <p class="muted"><strong>What it creates:</strong> department namespaces, bundle manifests, question-first skill pages, CODEOWNERS, lifecycle policy, scheduled health checks, and provider-native CI. Installation does not imply readiness: each skill declares capabilities, permissions, risk tier, mutation boundaries, blocking preflight checks, and whether human-approved semantics apply. Overdue semantic definitions block release.</p>
       <div class="operator-proof" aria-label="Organizational operator checks">
         <div><strong>Portfolio proof</strong><code>python3 scripts/team_marketplace.py portfolio-check --marketplace ./acme-skills</code><span>Tests positive routing, non-triggering, and coexistence across published skills.</span></div>
         <div><strong>Department proof</strong><code>python3 scripts/team_marketplace.py onboarding-report --marketplace ./acme-skills</code><span>Reports ownership, separation of duties, readiness, and cross-team reuse evidence.</span></div>
@@ -242,9 +244,12 @@
     <div class="trust__grid">
       <article><h3>Structure</h3><p>The package follows the required format and names every referenced file.</p></article>
       <article><h3>Execution</h3><p>Scripts compile, dependencies are declared, and examples can be scored again later.</p></article>
+      <article><h3>Meaning + authority</h3><p>When business meaning matters, the skill records who owns the definition, which source wins, and when review expires.</p></article>
       <article><h3>Known risks</h3><p>The scanner checks secrets, dangerous patterns, instruction injection, and undeclared endpoints.</p></article>
       <article><h3>Honest limit</h3><p>A clean scan means no known pattern matched. It is not proof that software is safe.</p></article>
     </div>
+    <p class="trust__audit"><strong>Human authority remains final:</strong> agents may structure, document, test, and apply organizational meaning. They do not establish it.</p>
+    <p class="trust__audit">Semantic effectiveness is experimental until the bounded three-skill protocol produces isolated, SHA-bound evidence. No accuracy improvement is claimed from synthetic scores.</p>
     <p class="trust__audit">Received a skill from somewhere else? Ask <code>/agent-skill-creator --audit ./downloaded-skill/</code> before installing it.</p>
   </section>
 
@@ -257,6 +262,7 @@
       <a href="https://github.com/FrancyJGLisboa/agent-skill-creator/blob/main/references/pipeline-phases.md">Five-phase pipeline</a>
       <a href="https://github.com/FrancyJGLisboa/agent-skill-creator/blob/main/references/phase2-eval-assessment.md">Evals and evolution</a>
       <a href="https://github.com/FrancyJGLisboa/agent-skill-creator/blob/main/references/skill-audit.md">Skill auditing</a>
+      <a href="https://github.com/FrancyJGLisboa/agent-skill-creator/blob/main/references/semantic-contract-experiment.md">Semantic-contract experiment</a>
       <a href="PRODUCT_SCOPE.html">Product scope and boundaries</a>
       <a href="TEAM_MARKETPLACE.html">Team marketplace timeline</a>
       <a href="GITLAB_TEAM_REGISTRY.html">GitLab marketplace backend</a>

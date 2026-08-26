@@ -434,11 +434,31 @@ implementation inspection before a recorded failure makes the run fail.
 ## Maintenance health control plane
 
 GitHub marketplaces include a weekly `marketplace-health` workflow. GitLab includes
-the equivalent scheduled-pipeline job. Run the same five checks locally:
+the equivalent scheduled-pipeline job. The report covers skill review, semantic
+freshness, dependencies, eval regressions, active owners, and compatibility. Run the
+same six checks locally:
 
 ```bash
 python3 scripts/team_marketplace.py health --marketplace ./acme-skills \
   --output MARKETPLACE_HEALTH.md --json-output marketplace-health.json
+```
+
+An overdue human-owned semantic definition is critical health evidence and blocks a
+release until its owner reviews the meaning and updates the contract date or version.
+
+### Migrating existing skills
+
+Skills created before semantic contracts remain installable. Validation treats a
+missing field as `{"applies": false}` and emits a migration warning. Before the next
+release, add one of these to `discovery.json`:
+
+```json
+{"semantic_contract": {"applies": false}}
+```
+
+Use a complete contract instead when the answer depends on organizational definitions,
+scope, grain, units, time interpretation, or source precedence. The domain owner—not
+the agent or marketplace operator—approves that meaning.
 
 ## Environment, risk, and portfolio gates
 
@@ -446,7 +466,8 @@ Marketplace intake rejects skills unless `discovery.json` contains:
 
 - documentation and data sources the skill must understand;
 - required capabilities and blocking readiness checks;
-- a risk tier, complete permission disclosure, and mutation boundary; and
+- a risk tier, complete permission disclosure, and mutation boundary;
+- an explicit semantic contract applicability decision for newly generated skills; and
 - at least three queries that should trigger and three that should not trigger.
 
 Installation is not readiness. `plan-install` includes the exact environment and risk

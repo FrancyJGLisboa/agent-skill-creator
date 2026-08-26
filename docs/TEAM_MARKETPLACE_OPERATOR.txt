@@ -25,6 +25,19 @@ agent-skill-creator creates and validates individual skills.
 
 acme-skills catalogs, reviews, bundles, versions, and releases approved skills.
 
+SEMANTIC AUTHORITY
+==================
+
+When a skill depends on organizational meaning, discovery.json carries a versioned
+semantic contract: definition, scope, grain, unit, ordered source precedence, owner,
+ambiguity behavior, and review interval. The domain owner establishes and approves
+that meaning. The marketplace operator checks presence and freshness but never invents
+or silently changes it. An overdue definition blocks release.
+
+Legacy skills without semantic_contract remain valid with a migration warning and are
+treated as {"applies": false}. Add that explicit value—or a complete owner-approved
+contract—before their next release.
+
 For VS Code Copilot Agent Mode, the primary delivery mechanism is a pinned
 gh skill install command. Plugin manifests are a secondary compatibility channel
 for supported CLI hosts.

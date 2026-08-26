@@ -95,6 +95,18 @@ def test_public_docs_distinguish_skills_from_rag_mcp_and_runtime() -> None:
         assert distinction in normalized, f"{path} is missing the canonical distinction"
 
 
+def test_public_docs_state_semantic_authority_boundary_and_evidence_limit() -> None:
+    readme = read("README.md").lower()
+    marketplace = read("docs/TEAM_MARKETPLACE.md").lower()
+    page = re.sub(r"<[^>]+>", " ", read("docs/index.html")).lower()
+
+    assert "humans establish meaning" in readme
+    assert "domain owner" in marketplace and "six checks" in marketplace
+    assert "agents may structure, document, test, and apply organizational meaning" in page
+    assert "no accuracy improvement is claimed" in page
+    assert "semantic-contract experiment" in page
+
+
 def test_public_docs_present_the_normalized_graph_release_gate() -> None:
     command = "python3 scripts/skill_graph.py run ./the-skill/ --jobs 4"
     readme = read("README.md")

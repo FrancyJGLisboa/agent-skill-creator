@@ -128,6 +128,18 @@ class TestGotchasCheck(unittest.TestCase):
         self.assertFalse(result["valid"])
         self.assertTrue(any("discovery.json" in error for error in result["errors"]))
 
+    def test_legacy_missing_semantic_contract_is_valid_with_migration_warning(self):
+        skill = write_skill(self.base, "legacy-contract-skill", "## Gotchas\n\nNone known.")
+        path = skill / "discovery.json"
+        discovery = json.loads(path.read_text(encoding="utf-8"))
+        discovery.pop("semantic_contract")
+        path.write_text(json.dumps(discovery), encoding="utf-8")
+
+        result = validate_skill(str(skill))
+
+        self.assertTrue(result["valid"])
+        self.assertTrue(any("legacy discovery.json" in warning for warning in result["warnings"]))
+
 
 LABEL_HINT = "do not say what to do with the file"
 

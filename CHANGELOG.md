@@ -6,6 +6,12 @@ to semantic versioning where practical.
 
 ## [Unreleased]
 
+### Migration
+- Skills created before this capability remain valid. A missing `semantic_contract`
+  is interpreted as `{"applies": false}` with a migration warning. Add the explicit
+  applicability decision or a complete domain-owner-approved contract before the
+  skill's next release.
+
 ### Changed
 - **Question-first product and marketplace positioning**: README, GitHub Pages, social
   preview, repository description, and topics now present Agent Skill Creator as both
@@ -40,6 +46,13 @@ to semantic versioning where practical.
   runners are re-synced from the template.
 
 ### Added
+- **Conditional governed semantic contracts**: data-dependent skills can carry
+  human-approved, versioned definitions with scope, grain, units, ordered source
+  precedence, exact dependencies, ambiguity behavior (`answer`, `ask`, or
+  `refuse_unknown`), ownership, and review timing. Marketplace health reports semantic
+  freshness and release checks block overdue definitions. A SHA-bound three-skill,
+  four-configuration experiment runner measures reliable behavior without claiming
+  causality from synthetic results.
 - **Governed GitHub and GitLab Copilot team marketplace** (`scripts/team_marketplace.py`):
   schema-v2 departmental catalog, explicit schema-v1 migration, reviewed bundles,
   generated `CATALOG.md`/`CODEOWNERS`/governance guidance, pull-request and tagged

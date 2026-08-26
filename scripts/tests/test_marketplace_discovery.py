@@ -115,7 +115,7 @@ def test_operating_contract_requires_environment_risk_and_routing() -> None:
     }
     for field in (
         "environment", "risk", "software_mutation", "data_interfaces",
-        "semantic_contract", "routing_tests"
+        "routing_tests"
     ):
         broken = entry()
         broken["discovery"].update(operating)  # type: ignore[union-attr]
@@ -203,6 +203,14 @@ def test_semantic_meaning_requires_complete_contract() -> None:
     item["discovery"]["semantic_contract"] = {"applies": True}  # type: ignore[index]
     with pytest.raises(discovery.DiscoveryError, match="definitions"):
         discovery.require_operating_contract(item)
+
+
+def test_legacy_missing_semantic_contract_defaults_to_not_applicable() -> None:
+    item = entry()
+    item["discovery"].pop("semantic_contract")  # type: ignore[index]
+    assert discovery.require_operating_contract(item)["semantic_contract"] == {
+        "applies": False,
+    }
 
 
 def test_semantic_contract_preserves_source_precedence_and_dependencies() -> None:

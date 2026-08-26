@@ -79,6 +79,12 @@ Goal: create a complete skill from workflow evidence, confirm its decision contr
 pass the factory gates and representative run, and submit it through the documented
 marketplace intake path.
 
+For a skill whose answer depends on organizational meaning, this role is also the
+domain authority or must obtain recorded approval from the named domain owner. It
+defines scope, grain, units, source precedence, ambiguity behavior, and review timing.
+The agent may structure and test those statements; the marketplace operator may
+enforce their presence and freshness. Neither may invent or approve the meaning.
+
 When the target marketplace is known, the generated submission must carry the exact
 published `owners` and `approval_status` required by that marketplace. When it is not
 known, the factory must not invent organizational identities or approval.
@@ -88,6 +94,9 @@ known, the factory must not invent organizational identities or approval.
 Goal: review the submitted evidence, admit the skill into its department and starter
 bundle, publish an immutable semantic-version release, publish a strictly newer
 version, quarantine it, retire it, and recreate it as a fresh generation.
+
+The operator must block release when a semantic definition is overdue, but must return
+it to the named domain owner for review rather than editing the definition.
 
 Releases are immutable snapshots. A release tag is created only from the reviewed,
 committed marketplace state; it is never moved or reused. Update requires a strictly
