@@ -8,7 +8,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
-from platforms import PLATFORMS, get_platform, list_supported_platforms
+from platforms import (
+    PLATFORMS, get_platform, list_supported_platforms, normalize_platform_name,
+)
 
 ADAPTER_VERSION = "1.0.0"
 _SLUG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -35,6 +37,7 @@ class DistributionError(ValueError):
 
 def adapter_for(platform: str) -> dict[str, str]:
     """Resolve adapter metadata after validating against canonical platforms.py."""
+    platform = normalize_platform_name(platform)
     if get_platform(platform) is None:
         raise DistributionError(f"unknown platform: {platform}")
     name = _ADAPTED.get(platform, ("native-skill", "SKILL.md"))[0]
@@ -56,6 +59,7 @@ def _contained(root: Path, destination: Path) -> Path:
 
 def resolve_destination(platform: str, scope: str, skill_name: str, *, home: Path, project_root: Path) -> Path:
     """Resolve a canonical platform destination without creating it."""
+    platform = normalize_platform_name(platform)
     target = get_platform(platform)
     if target is None:
         raise DistributionError(f"unknown platform: {platform}")
@@ -100,7 +104,7 @@ def build_install_plan(
     if not isinstance(source, str) or not source.strip() or "\x00" in source:
         raise DistributionError("distribution source is required")
     exact_ref = _immutable_release(release_ref, skill_version) if remote else None
-    requested = set(platforms)
+    requested = {normalize_platform_name(platform) for platform in platforms}
     unknown = requested - set(list_supported_platforms())
     if unknown:
         raise DistributionError("unknown platform(s): " + ", ".join(sorted(unknown)))
@@ -144,17 +148,18 @@ def certify_compatibility(
     evidence: Mapping[str, Any], timestamp: datetime,
 ) -> dict[str, Any]:
     """Validate explicit checks and emit a version-bound certification record."""
+    platform = normalize_platform_name(platform)
     adapter = adapter_for(platform)
     if not _SEMVER.fullmatch(skill_version):
         raise DistributionError("skill version must use semantic versioning")
     canonical = set(list_supported_platforms())
-    claims = set(declared_platforms)
+    claims = {normalize_platform_name(claim) for claim in declared_platforms}
     unknown = claims - canonical
     if unknown:
         raise DistributionError("unsupported platform claim(s): " + ", ".join(sorted(unknown)))
     if platform not in claims:
         raise DistributionError("platform must be declared before certification")
-    if evidence.get("platform") != platform:
+    if normalize_platform_name(str(evidence.get("platform", ""))) != platform:
         raise DistributionError("certification evidence platform mismatch")
     if evidence.get("skill_version") != skill_version:
         raise DistributionError("certification evidence version mismatch")

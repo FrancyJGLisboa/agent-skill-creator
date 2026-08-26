@@ -1404,7 +1404,7 @@ chmod +x skill-name/install.sh
 
 The template handles:
 - POSIX-compatible shell (`set -eu`, no bashisms)
-- 17 platforms (see `scripts/platforms.py`, the single source of truth): claude-code, copilot, cursor, windsurf, cline, codex, gemini, kiro, kilo-code, factory, junie, trae, goose, opencode, roo-code, antigravity, universal
+- 17 platforms (see `scripts/platforms.py`, the single source of truth): claude-code, github-copilot, cursor, windsurf, cline, codex, gemini, kiro, kilo-code, factory, junie, trae, goose, opencode, roo-code, antigravity, universal
 - Corrected paths: Codex → `~/.agents/skills/`, Windsurf → `.windsurf/rules/` (project) / `global_rules.md` (global)
 - Format adapters: auto-generates `.mdc` for Cursor, `.md` rules for Windsurf, plain `.md` for Cline/Roo/Trae
 - Universal `.agents/skills/` secondary symlink after every install

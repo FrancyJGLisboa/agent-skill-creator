@@ -7,6 +7,8 @@ import re
 from pathlib import PurePosixPath
 from typing import Any, Mapping, Sequence
 
+from platforms import normalize_platform_name
+
 DISCOVERY_FIELDS = (
     "question", "trigger", "decision", "evidence", "success_measure", "outcome",
     "intended_users", "input_types", "output_artifacts", "use_cases",
@@ -68,7 +70,7 @@ def _examples(value: object, name: str) -> list[dict[str, str]]:
 
 def _compatibility(value: object, version: str) -> dict[str, list[str]]:
     value = value if isinstance(value, Mapping) else {}
-    declared = _list(value.get("declared"))
+    declared = sorted({normalize_platform_name(item) for item in _list(value.get("declared"))})
     raw = value.get("certified", [])
     certified: set[str] = set()
     if isinstance(raw, list):
@@ -80,7 +82,9 @@ def _compatibility(value: object, version: str) -> dict[str, list[str]]:
                 and item.get("passed") is True
                 and str(item.get("version", "")) == version
             ):
-                platform = _text(item.get("platform"), default="", limit=80).lower()
+                platform = normalize_platform_name(
+                    _text(item.get("platform"), default="", limit=80)
+                )
                 if platform:
                     certified.add(platform)
     return {"declared": declared, "certified": sorted(certified)}
@@ -366,7 +370,7 @@ def search_skills(
 ) -> list[dict[str, Any]]:
     """Rank installable skills by outcomes first, with deterministic filtering."""
     query_tokens = _tokens(query)
-    platform = platform.lower().strip() if platform else None
+    platform = normalize_platform_name(platform) if platform else None
     support_tier = support_tier.lower().strip() if support_tier else None
     results: list[dict[str, Any]] = []
     for entry in skills:

@@ -11,6 +11,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
+from platforms import normalize_platform_name
+
 CONSENT_SCHEMA = "agent-skill-creator.marketplace-metrics-consent"
 EVENT_TYPES = {"install", "activation", "successful_run", "correction", "regression", "retention"}
 PLATFORM_ALLOWLIST = {
@@ -75,7 +77,7 @@ def create_event(
             raise MetricsError("duration_ms must be an integer from 0 through 86400000")
         result["duration_ms"] = duration_ms
     if platform is not None:
-        normalized = platform.strip().lower() if isinstance(platform, str) else ""
+        normalized = normalize_platform_name(platform) if isinstance(platform, str) else ""
         if normalized not in PLATFORM_ALLOWLIST:
             raise MetricsError("platform is not in the approved allowlist")
         result["platform"] = normalized

@@ -90,6 +90,11 @@ while [ $# -gt 0 ]; do
     shift
 done
 
+if [ "$PLATFORM" = "copilot" ]; then
+    warn "Platform alias 'copilot' is deprecated; using 'github-copilot'."
+    PLATFORM="github-copilot"
+fi
+
 if [ -z "$SOURCE" ]; then
     error "Missing required argument: <source>"
     usage
@@ -191,7 +196,7 @@ validate_source() {
 detect_all_global_platforms() {
     platforms=""
     if [ -d "$HOME/.claude" ]; then platforms="$platforms claude-code"; fi
-    if [ -d "$HOME/.copilot" ]; then platforms="$platforms copilot"; fi
+    if [ -d "$HOME/.copilot" ]; then platforms="$platforms github-copilot"; fi
     if [ -d "$HOME/.gemini" ]; then platforms="$platforms gemini"; fi
     if [ -d "$HOME/.kiro" ]; then platforms="$platforms kiro"; fi
     if [ -d "$HOME/.cline" ]; then platforms="$platforms cline"; fi
@@ -206,7 +211,7 @@ detect_all_global_platforms() {
 detect_all_project_platforms() {
     platforms=""
     if [ -d ".claude" ]; then platforms="$platforms claude-code"; fi
-    if [ -d ".github" ]; then platforms="$platforms copilot"; fi
+    if [ -d ".github" ]; then platforms="$platforms github-copilot"; fi
     if [ -d ".cursor" ]; then platforms="$platforms cursor"; fi
     if [ -d ".windsurf" ]; then platforms="$platforms windsurf"; fi
     if [ -d ".clinerules" ] || [ -d ".cline" ]; then platforms="$platforms cline"; fi
@@ -227,7 +232,7 @@ resolve_platform_path() {
     if [ "$PROJECT_LEVEL" = true ]; then
         case "$plat" in
             claude-code)   echo ".claude/skills/$name" ;;
-            copilot)       echo ".github/skills/$name" ;;
+            github-copilot) echo ".github/skills/$name" ;;
             cursor)        echo ".cursor/rules/$name" ;;
             windsurf)      echo ".windsurf/rules/$name" ;;
             cline)         echo ".clinerules/skills/$name" ;;
@@ -247,7 +252,7 @@ resolve_platform_path() {
     else
         case "$plat" in
             claude-code)   echo "$HOME/.claude/skills/$name" ;;
-            copilot)       echo "$HOME/.copilot/skills/$name" ;;
+            github-copilot) echo "$HOME/.copilot/skills/$name" ;;
             cursor)        echo "$HOME/.cursor/rules/$name" ;;
             windsurf)      echo "$HOME/.codeium/windsurf/skills/$name" ;;
             cline)         echo "$HOME/.cline/skills/$name" ;;
@@ -270,7 +275,7 @@ resolve_platform_path() {
 platform_display() {
     case "$1" in
         claude-code)   echo "Claude Code" ;;
-        copilot)       echo "GitHub Copilot" ;;
+        github-copilot) echo "GitHub Copilot" ;;
         cursor)        echo "Cursor" ;;
         windsurf)      echo "Windsurf" ;;
         cline)         echo "Cline" ;;
@@ -484,7 +489,7 @@ do_uninstall() {
     fi
 
     # Check all global platforms
-    for plat in claude-code copilot gemini kiro cline roo-code kilo-code factory goose opencode; do
+    for plat in claude-code github-copilot gemini kiro cline roo-code kilo-code factory goose opencode; do
         dest="$(resolve_platform_path "$plat" "$SKILL_NAME")"
         if [ -e "$dest" ] || [ -L "$dest" ]; then
             if [ "$DRY_RUN" = true ]; then
@@ -497,7 +502,7 @@ do_uninstall() {
     done
 
     # Check project-level platforms
-    for plat in claude-code copilot cursor windsurf cline gemini kiro trae roo-code kilo-code factory junie antigravity; do
+    for plat in claude-code github-copilot cursor windsurf cline gemini kiro trae roo-code kilo-code factory junie antigravity; do
         PROJECT_LEVEL=true
         dest="$(resolve_platform_path "$plat" "$SKILL_NAME")"
         if [ -e "$dest" ] || [ -L "$dest" ]; then

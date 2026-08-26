@@ -310,7 +310,7 @@ If the skill includes an `install.sh` script:
 
 # Install to specific platform
 ./install.sh --platform claude-code
-./install.sh --platform copilot
+./install.sh --platform github-copilot
 ./install.sh --platform cursor
 
 # Install to ALL detected platforms

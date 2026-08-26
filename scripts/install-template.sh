@@ -59,7 +59,7 @@ USAGE
 
 OPTIONS
     --platform PLATFORM   Explicit platform selection. One of:
-                          claude-code, copilot, cursor, windsurf,
+                          claude-code, github-copilot, cursor, windsurf,
                           cline, codex, gemini, kiro, trae, goose,
                           opencode, roo-code, kilo-code, factory,
                           junie, antigravity, universal
@@ -187,13 +187,17 @@ validate_skill_md() {
 # ---------------------------------------------------------------------------
 # Platform detection
 # ---------------------------------------------------------------------------
-SUPPORTED_PLATFORMS="claude-code, copilot, cursor, windsurf, cline, codex, gemini, kiro, trae, goose, opencode, roo-code, kilo-code, factory, junie, antigravity, universal"
+SUPPORTED_PLATFORMS="claude-code, github-copilot, cursor, windsurf, cline, codex, gemini, kiro, trae, goose, opencode, roo-code, kilo-code, factory, junie, antigravity, universal"
 
 detect_platform() {
     # If explicitly provided, validate and return it.
     if [ -n "$PLATFORM" ]; then
+        if [ "$PLATFORM" = "copilot" ]; then
+            warn "Platform alias 'copilot' is deprecated; using 'github-copilot'."
+            PLATFORM="github-copilot"
+        fi
         case "$PLATFORM" in
-            claude-code|copilot|cursor|windsurf|cline|codex|gemini|\
+            claude-code|github-copilot|cursor|windsurf|cline|codex|gemini|\
             kiro|trae|goose|opencode|roo-code|kilo-code|factory|\
             junie|antigravity|universal)
                 info "Platform explicitly set to: ${PLATFORM}"
@@ -212,7 +216,7 @@ detect_platform() {
     if [ -d "${HOME}/.claude" ]; then
         PLATFORM="claude-code"
     elif [ -d "${HOME}/.copilot" ] || [ -d ".github" ]; then
-        PLATFORM="copilot"
+        PLATFORM="github-copilot"
     elif [ -d "${HOME}/.cursor" ] || [ -d ".cursor" ]; then
         PLATFORM="cursor"
     elif [ -d "${HOME}/.codeium/windsurf" ] || [ -d ".windsurf" ]; then
@@ -258,7 +262,7 @@ detect_all_platforms() {
         ALL_PLATFORMS="${ALL_PLATFORMS} claude-code"
     fi
     if [ -d "${HOME}/.copilot" ] || [ -d ".github" ]; then
-        ALL_PLATFORMS="${ALL_PLATFORMS} copilot"
+        ALL_PLATFORMS="${ALL_PLATFORMS} github-copilot"
     fi
     if [ -d "${HOME}/.cursor" ] || [ -d ".cursor" ]; then
         ALL_PLATFORMS="${ALL_PLATFORMS} cursor"
@@ -325,7 +329,7 @@ resolve_install_path() {
         # Project-level: paths are relative to the current working directory.
         case "$PLATFORM" in
             claude-code)   base=".claude/skills" ;;
-            copilot)       base=".github/skills" ;;
+            github-copilot) base=".github/skills" ;;
             cursor)        base=".cursor/rules" ;;
             windsurf)      base=".windsurf/rules" ;;
             cline)         base=".clinerules/skills" ;;
@@ -347,7 +351,7 @@ resolve_install_path() {
         # User-level: paths are under the home directory.
         case "$PLATFORM" in
             claude-code)   base="${HOME}/.claude/skills" ;;
-            copilot)       base="${HOME}/.copilot/skills" ;;
+            github-copilot) base="${HOME}/.copilot/skills" ;;
             cursor)        base="${HOME}/.cursor/rules" ;;
             windsurf)      base="${HOME}/.codeium/windsurf/skills" ;;
             cline)         base="${HOME}/.cline/skills" ;;
@@ -717,7 +721,7 @@ print_activation_instructions() {
             printf "     ${BOLD}${INSTALL_DIR}/SKILL.md${NC}\n"
             printf "  3. Invoke with /${SKILL_NAME} or use trigger phrases.\n"
             ;;
-        copilot)
+        github-copilot)
             printf "To activate the skill in GitHub Copilot:\n"
             printf "  1. Open your project in VS Code or the GitHub CLI.\n"
             printf "  2. The skill is available at:\n"

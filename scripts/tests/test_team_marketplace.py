@@ -128,6 +128,19 @@ def test_init_generates_governance_scaffold(tmp_path: Path) -> None:
     assert (repo / "CATALOG.md").exists()
     assert (repo / "CODEOWNERS").exists()
     assert (repo / "GOVERNANCE.md").exists()
+
+
+def test_init_normalizes_legacy_copilot_platform_alias(tmp_path: Path) -> None:
+    repo = tmp_path / "marketplace"
+    market.init_marketplace(
+        repo, "ACME Skills", "ACME/skills", supported_platforms=["copilot", "github-copilot"]
+    )
+    assert market.load_manifest(repo)["marketplace"]["supported_platforms"] == ["github-copilot"]
+
+    registry = json.loads((repo / "registry.json").read_text())
+    registry["marketplace"]["supported_platforms"] = ["copilot"]
+    (repo / "registry.json").write_text(json.dumps(registry), encoding="utf-8")
+    assert market.load_manifest(repo)["marketplace"]["supported_platforms"] == ["github-copilot"]
     assert (repo / "scripts/team_marketplace.py").exists()
     assert (repo / ".github/workflows/marketplace-check.yml").exists()
     assert (repo / ".github/workflows/marketplace-release.yml").exists()

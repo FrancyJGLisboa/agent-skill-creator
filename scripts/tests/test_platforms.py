@@ -17,7 +17,9 @@ from pathlib import Path
 ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from platforms import PLATFORMS, get_platform, list_supported_platforms  # noqa: E402
+from platforms import (  # noqa: E402
+    PLATFORMS, get_platform, list_supported_platforms, normalize_platform_name,
+)
 
 INSTALL_TEMPLATE = ROOT / "scripts" / "install-template.sh"
 
@@ -65,6 +67,12 @@ class RegistrySanityTest(unittest.TestCase):
 
     def test_unknown_returns_none(self) -> None:
         self.assertIsNone(get_platform("does-not-exist"))
+
+    def test_copilot_alias_normalizes_to_public_canonical_id(self) -> None:
+        self.assertEqual(normalize_platform_name("copilot"), "github-copilot")
+        self.assertEqual(normalize_platform_name(" GitHub-Copilot "), "github-copilot")
+        self.assertEqual(get_platform("copilot"), get_platform("github-copilot"))
+        self.assertEqual(get_platform("copilot").name, "github-copilot")
 
     def test_user_and_project_paths_non_empty(self) -> None:
         for p in PLATFORMS:

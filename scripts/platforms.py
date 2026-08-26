@@ -39,7 +39,7 @@ class Platform:
 
 PLATFORMS: tuple[Platform, ...] = (
     Platform("claude-code", "~/.claude/skills", ".claude/skills", "~/.claude"),
-    Platform("copilot", "~/.copilot/skills", ".github/skills", "~/.copilot"),
+    Platform("github-copilot", "~/.copilot/skills", ".github/skills", "~/.copilot"),
     Platform("cursor", "~/.cursor/rules", ".cursor/rules", "~/.cursor"),
     Platform("windsurf", "~/.codeium/windsurf/skills", ".windsurf/rules", "~/.codeium/windsurf"),
     Platform("cline", "~/.cline/skills", ".clinerules/skills", "~/.cline"),
@@ -59,6 +59,13 @@ PLATFORMS: tuple[Platform, ...] = (
 
 
 _BY_NAME: dict[str, Platform] = {p.name: p for p in PLATFORMS}
+PLATFORM_ALIASES: dict[str, str] = {"copilot": "github-copilot"}
+
+
+def normalize_platform_name(name: str) -> str:
+    """Return the stable public identifier, accepting documented legacy aliases."""
+    normalized = str(name).strip().lower()
+    return PLATFORM_ALIASES.get(normalized, normalized)
 
 
 def list_supported_platforms() -> list[str]:
@@ -67,8 +74,8 @@ def list_supported_platforms() -> list[str]:
 
 
 def get_platform(name: str) -> Platform | None:
-    """Look up a platform by canonical name, or None if unknown."""
-    return _BY_NAME.get(name)
+    """Look up a platform by canonical name or supported alias."""
+    return _BY_NAME.get(normalize_platform_name(name))
 
 
 def user_paths() -> dict[str, str]:

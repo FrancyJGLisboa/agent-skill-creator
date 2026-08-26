@@ -511,6 +511,11 @@ python3 scripts/team_marketplace.py metrics-summary --marketplace ./acme-skills
 
 ## Distribution plans and compatibility certification
 
+Platform IDs are canonicalized across governance, planning, installation, search,
+health, and certification. Use `github-copilot`; the legacy `copilot` input remains
+accepted as an alias but stored evidence and generated plans always emit
+`github-copilot`.
+
 Generate a non-mutating plan before managed distribution. Remote plans require an
 immutable tag matching the skill version or a full commit SHA:
 

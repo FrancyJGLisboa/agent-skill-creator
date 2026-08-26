@@ -49,7 +49,7 @@ USAGE
 
 OPTIONS
     -Platform <name>   Explicit platform selection. One of:
-                       claude-code, copilot, cursor, windsurf,
+                       claude-code, github-copilot, cursor, windsurf,
                        cline, codex, gemini, kiro, trae, goose,
                        opencode, roo-code, kilo-code, factory,
                        junie, antigravity, universal
@@ -120,7 +120,7 @@ function Test-SkillMd {
 # Supported platforms
 # ---------------------------------------------------------------------------
 $SupportedPlatforms = @(
-    "claude-code", "copilot", "cursor", "windsurf", "cline", "codex",
+    "claude-code", "github-copilot", "cursor", "windsurf", "cline", "codex",
     "gemini", "kiro", "trae", "goose", "opencode", "roo-code",
     "kilo-code", "factory", "junie", "antigravity", "universal"
 )
@@ -130,6 +130,10 @@ $SupportedPlatforms = @(
 # ---------------------------------------------------------------------------
 function Find-Platform {
     if ($Platform) {
+        if ($Platform -eq "copilot") {
+            Write-Warn "Platform alias 'copilot' is deprecated; using 'github-copilot'."
+            $Platform = "github-copilot"
+        }
         if ($Platform -notin $SupportedPlatforms) {
             Write-Err "Unknown platform: $Platform"
             Write-Err "Supported: $($SupportedPlatforms -join ', ')"
@@ -141,7 +145,7 @@ function Find-Platform {
 
     $checks = @(
         @{ Dir = ".claude";           Name = "claude-code" },
-        @{ Dir = ".copilot";          Name = "copilot" },
+        @{ Dir = ".copilot";          Name = "github-copilot" },
         @{ Dir = ".cursor";           Name = "cursor" },
         @{ Dir = ".codeium\windsurf"; Name = "windsurf" },
         @{ Dir = ".cline";            Name = "cline" },
@@ -157,7 +161,7 @@ function Find-Platform {
 
     # Also check project-level dirs
     $projectChecks = @(
-        @{ Dir = ".github";    Name = "copilot" },
+        @{ Dir = ".github";    Name = "github-copilot" },
         @{ Dir = ".cursor";    Name = "cursor" },
         @{ Dir = ".windsurf";  Name = "windsurf" },
         @{ Dir = ".clinerules"; Name = "cline" },
@@ -198,7 +202,7 @@ function Find-AllPlatforms {
 
     $globalChecks = @(
         @{ Dir = ".claude";           Name = "claude-code" },
-        @{ Dir = ".copilot";          Name = "copilot" },
+        @{ Dir = ".copilot";          Name = "github-copilot" },
         @{ Dir = ".cursor";           Name = "cursor" },
         @{ Dir = ".codeium\windsurf"; Name = "windsurf" },
         @{ Dir = ".cline";            Name = "cline" },
@@ -212,7 +216,7 @@ function Find-AllPlatforms {
     )
 
     $projectChecks = @(
-        @{ Dir = ".github";    Name = "copilot" },
+        @{ Dir = ".github";    Name = "github-copilot" },
         @{ Dir = ".cursor";    Name = "cursor" },
         @{ Dir = ".windsurf";  Name = "windsurf" },
         @{ Dir = ".clinerules"; Name = "cline" },
@@ -258,7 +262,7 @@ function Resolve-InstallPath {
     if ($Project) {
         $base = switch ($Plat) {
             "claude-code"   { ".claude\skills" }
-            "copilot"       { ".github\skills" }
+            "github-copilot" { ".github\skills" }
             "cursor"        { ".cursor\rules" }
             "windsurf"      { ".windsurf\rules" }
             "cline"         { ".clinerules\skills" }
@@ -279,7 +283,7 @@ function Resolve-InstallPath {
     } else {
         $base = switch ($Plat) {
             "claude-code"   { Join-Path $HomeDir ".claude\skills" }
-            "copilot"       { Join-Path $HomeDir ".copilot\skills" }
+            "github-copilot" { Join-Path $HomeDir ".copilot\skills" }
             "cursor"        { Join-Path $HomeDir ".cursor\rules" }
             "windsurf"      { Join-Path $HomeDir ".codeium\windsurf\skills" }
             "cline"         { Join-Path $HomeDir ".cline\skills" }
@@ -307,7 +311,7 @@ function Get-PlatformDisplay {
     param([string]$Plat)
     switch ($Plat) {
         "claude-code"   { "Claude Code" }
-        "copilot"       { "GitHub Copilot" }
+        "github-copilot" { "GitHub Copilot" }
         "cursor"        { "Cursor" }
         "windsurf"      { "Windsurf" }
         "cline"         { "Cline" }

@@ -56,6 +56,27 @@ def test_adapter_registry_uses_every_canonical_platform() -> None:
     assert [distribution.adapter_for(name)["platform"] for name in list_supported_platforms()] == list_supported_platforms()
 
 
+def test_copilot_alias_is_canonicalized_in_plan_and_adapter(tmp_path: Path) -> None:
+    assert distribution.adapter_for("copilot")["platform"] == "github-copilot"
+    plan = distribution.build_install_plan(
+        skill_name="report-skill", skill_version="1.2.3",
+        platforms=["copilot", "github-copilot"], scope="project",
+        source="./skills/report-skill", release_ref=None, remote=False,
+        home=tmp_path / "home", project_root=tmp_path / "project",
+    )
+    assert [target["platform"] for target in plan["targets"]] == ["github-copilot"]
+    assert plan["targets"][0]["destination"].endswith("/.github/skills/report-skill")
+
+
+def test_copilot_alias_is_canonicalized_in_certification() -> None:
+    proof = evidence("github-copilot")
+    record = distribution.certify_compatibility(
+        platform="copilot", skill_version="1.2.3",
+        declared_platforms=["github-copilot"], evidence=proof, timestamp=NOW,
+    )
+    assert record["platform"] == "github-copilot"
+
+
 def test_adapter_install_plan_requires_exact_remote_release(tmp_path: Path) -> None:
     with pytest.raises(distribution.DistributionError, match="immutable"):
         distribution.build_install_plan(

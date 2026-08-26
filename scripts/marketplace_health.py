@@ -8,6 +8,8 @@ from datetime import date
 from pathlib import Path
 from typing import Any, Mapping
 
+from platforms import normalize_platform_name
+
 from review_staleness import DEFAULT_REVIEW_INTERVAL_DAYS, classify_staleness, _parse_date
 from skill_document import SkillDoc
 from marketplace_discovery import DiscoveryError, normalize_discovery
@@ -137,11 +139,11 @@ def _compatibility_check(entry: Mapping[str, Any], identity: str) -> tuple[dict[
     value = entry.get("compatibility", {})
     if isinstance(value, Mapping) and value:
         raw_declared = value.get("declared", [])
-        declared = sorted({str(item).strip() for item in raw_declared if str(item).strip()}) if isinstance(raw_declared, list) else []
+        declared = sorted({normalize_platform_name(str(item)) for item in raw_declared if str(item).strip()}) if isinstance(raw_declared, list) else []
         raw_certified = value.get("certified", [])
         certified = raw_certified if isinstance(raw_certified, list) else []
         valid = {
-            str(item.get("platform", "")).strip()
+            normalize_platform_name(str(item.get("platform", "")))
             for item in certified
             if isinstance(item, Mapping) and item.get("passed") is True and str(item.get("version", "")) == version
         }

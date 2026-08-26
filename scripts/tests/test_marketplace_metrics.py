@@ -55,6 +55,14 @@ def test_event_contains_only_privacy_safe_allowlisted_fields() -> None:
     assert "revenue-review" not in json.dumps(created)
 
 
+def test_copilot_metrics_alias_is_stored_canonically() -> None:
+    created = metrics.create_event(
+        "install", skill_name="x", salt=SALT, timestamp=NOW,
+        success=True, platform="copilot",
+    )
+    assert created["platform"] == "github-copilot"
+
+
 @pytest.mark.parametrize("field", ["prompt", "input", "output", "path", "person_id", "organization", "email", "run_id"])
 def test_event_rejects_extra_or_content_shaped_fields(field: str) -> None:
     created = event("activation")

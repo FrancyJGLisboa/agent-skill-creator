@@ -90,7 +90,7 @@ function Get-DetectedPlatforms {
 
     $checks = @(
         @{ Dir = ".claude";          Name = "claude-code"; Display = "Claude Code" },
-        @{ Dir = ".copilot";         Name = "copilot";     Display = "GitHub Copilot" },
+        @{ Dir = ".copilot";         Name = "github-copilot"; Display = "GitHub Copilot" },
         @{ Dir = ".gemini";          Name = "gemini";      Display = "Gemini CLI" },
         @{ Dir = ".kiro";            Name = "kiro";        Display = "Kiro" },
         @{ Dir = ".cline";           Name = "cline";       Display = "Cline" },
@@ -136,7 +136,7 @@ function Get-PlatformPath {
 
     switch ($PlatformName) {
         "claude-code"    { return Join-Path $HomeDir ".claude"          "skills" $SkillName }
-        "copilot"        { return Join-Path $HomeDir ".copilot"         "skills" $SkillName }
+        "github-copilot" { return Join-Path $HomeDir ".copilot"         "skills" $SkillName }
         "gemini"         { return Join-Path $HomeDir ".gemini"          "skills" $SkillName }
         "kiro"           { return Join-Path $HomeDir ".kiro"            "skills" $SkillName }
         "cline"          { return Join-Path $HomeDir ".cline"           "skills" $SkillName }

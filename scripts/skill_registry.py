@@ -622,7 +622,7 @@ def cmd_install(args: argparse.Namespace) -> None:
     # Platform-specific activation tips
     tips = {
         "claude-code": "Skill is auto-loaded. Start a new conversation to activate.",
-        "copilot":     "Skill is auto-loaded by Copilot Chat.",
+        "github-copilot": "Skill is auto-loaded by Copilot Chat.",
         "cursor":      "Skill is loaded alongside .mdc rules.",
         "windsurf":    "Skill is auto-loaded by Windsurf.",
         "cline":       "Skill is loaded from .clinerules.",

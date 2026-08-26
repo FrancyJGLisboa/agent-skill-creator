@@ -48,6 +48,7 @@ from marketplace_metrics import (  # noqa: E402
 from marketplace_distribution import (  # noqa: E402
     DistributionError, build_install_plan, certify_compatibility,
 )
+from platforms import normalize_platform_name  # noqa: E402
 
 SCHEMA_VERSION = 2
 SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -307,6 +308,11 @@ def load_manifest(root: Path) -> dict[str, Any]:
     marketplace.setdefault("provider", "github")
     provider = _provider(data)
     marketplace.setdefault("host", provider.default_host)
+    supported = marketplace.get("supported_platforms", [])
+    if isinstance(supported, list):
+        marketplace["supported_platforms"] = sorted({
+            normalize_platform_name(value) for value in supported if str(value).strip()
+        })
     return data
 
 
@@ -406,7 +412,10 @@ def init_marketplace(
     if any(not owner for owner in normalized_departments.values()):
         raise MarketplaceError("every department must declare a non-empty owner")
     normalized_approvers = sorted({str(value).strip().lstrip("@") for value in (approvers or []) if str(value).strip()})
-    normalized_platforms = sorted({_require_slug(value, "supported platform") for value in (supported_platforms or [])})
+    normalized_platforms = sorted({
+        _require_slug(normalize_platform_name(value), "supported platform")
+        for value in (supported_platforms or [])
+    })
     normalized_bundles = sorted({_require_slug(value, "starter bundle") for value in (starter_bundles or [])})
     root.mkdir(parents=True, exist_ok=True)
     (root / "skills").mkdir(exist_ok=True)
@@ -1000,7 +1009,7 @@ def check_marketplace(
             if require_published:
                 declared = set(entry["compatibility"]["declared"])
                 current_certified = {
-                    item.get("platform") for item in certified
+                    normalize_platform_name(str(item.get("platform", ""))) for item in certified
                     if isinstance(item, dict) and item.get("passed") is True
                     and str(item.get("version", item.get("skill_version", ""))) == str(entry.get("version", ""))
                 }
@@ -1478,7 +1487,11 @@ def certify_skill(
         raise MarketplaceError(str(exc)) from exc
     stored = {**record, "version": record["skill_version"]}
     certifications = compatibility.setdefault("certified", [])
-    certifications[:] = [item for item in certifications if item.get("platform") != platform]
+    canonical_platform = normalize_platform_name(platform)
+    certifications[:] = [
+        item for item in certifications
+        if normalize_platform_name(str(item.get("platform", ""))) != canonical_platform
+    ]
     certifications.append(stored)
     certifications.sort(key=lambda item: item["platform"])
     entry["compatibility"] = {

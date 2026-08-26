@@ -70,6 +70,11 @@ if (-not $Source) {
     exit 1
 }
 
+if ($Platform -eq "copilot") {
+    Write-Warn "Platform alias 'copilot' is deprecated; using 'github-copilot'."
+    $Platform = "github-copilot"
+}
+
 # ---------------------------------------------------------------------------
 # Resolve source: git clone or validate local path
 # ---------------------------------------------------------------------------
@@ -168,7 +173,7 @@ function Find-AllGlobalPlatforms {
     $platforms = @()
     $checks = @(
         @{ Dir = ".claude";          Name = "claude-code" },
-        @{ Dir = ".copilot";         Name = "copilot" },
+        @{ Dir = ".copilot";         Name = "github-copilot" },
         @{ Dir = ".gemini";          Name = "gemini" },
         @{ Dir = ".kiro";            Name = "kiro" },
         @{ Dir = ".cline";           Name = "cline" },
@@ -191,7 +196,7 @@ function Find-AllProjectPlatforms {
     $platforms = @()
     $checks = @(
         @{ Dir = ".claude";     Name = "claude-code" },
-        @{ Dir = ".github";     Name = "copilot" },
+        @{ Dir = ".github";     Name = "github-copilot" },
         @{ Dir = ".cursor";     Name = "cursor" },
         @{ Dir = ".windsurf";   Name = "windsurf" },
         @{ Dir = ".clinerules"; Name = "cline" },
@@ -222,7 +227,7 @@ function Resolve-PlatformPath {
     if ($Project) {
         $base = switch ($Plat) {
             "claude-code"   { ".claude\skills" }
-            "copilot"       { ".github\skills" }
+            "github-copilot" { ".github\skills" }
             "cursor"        { ".cursor\rules" }
             "windsurf"      { ".windsurf\rules" }
             "cline"         { ".clinerules\skills" }
@@ -243,7 +248,7 @@ function Resolve-PlatformPath {
     } else {
         $base = switch ($Plat) {
             "claude-code"   { Join-Path $HomeDir ".claude\skills" }
-            "copilot"       { Join-Path $HomeDir ".copilot\skills" }
+            "github-copilot" { Join-Path $HomeDir ".copilot\skills" }
             "cursor"        { Join-Path $HomeDir ".cursor\rules" }
             "windsurf"      { Join-Path $HomeDir ".codeium\windsurf\skills" }
             "cline"         { Join-Path $HomeDir ".cline\skills" }
@@ -268,7 +273,7 @@ function Get-PlatformDisplay {
     param([string]$Plat)
     switch ($Plat) {
         "claude-code"   { "Claude Code" }
-        "copilot"       { "GitHub Copilot" }
+        "github-copilot" { "GitHub Copilot" }
         "cursor"        { "Cursor" }
         "windsurf"      { "Windsurf" }
         "cline"         { "Cline" }
@@ -464,7 +469,7 @@ function Remove-Skill {
         }
     }
 
-    $globalPlatforms = @("claude-code","copilot","gemini","kiro","cline","roo-code","kilo-code","factory","cursor","goose","opencode")
+    $globalPlatforms = @("claude-code","github-copilot","gemini","kiro","cline","roo-code","kilo-code","factory","cursor","goose","opencode")
     foreach ($plat in $globalPlatforms) {
         $dest = Resolve-PlatformPath $plat $SkillName
         if (Test-Path $dest) {
@@ -477,7 +482,7 @@ function Remove-Skill {
         }
     }
 
-    $projectPlatforms = @("claude-code","copilot","cursor","windsurf","cline","gemini","kiro","trae","roo-code","kilo-code","factory","junie","antigravity")
+    $projectPlatforms = @("claude-code","github-copilot","cursor","windsurf","cline","gemini","kiro","trae","roo-code","kilo-code","factory","junie","antigravity")
     foreach ($plat in $projectPlatforms) {
         $script:Project = $true
         $dest = Resolve-PlatformPath $plat $SkillName

@@ -11,6 +11,10 @@ procedures, and message templates they need.
 
 ## Governed GitHub Copilot Marketplace
 
+The canonical platform ID is `github-copilot`. Installers continue accepting
+`copilot` as a deprecated input alias; registry and certification artifacts emit
+only the canonical ID.
+
 The public operator guide is
 [`docs/TEAM_MARKETPLACE.md`](../docs/TEAM_MARKETPLACE.md). It places every command
 in chronological order. Keep this internal routing reference consistent with it.

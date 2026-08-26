@@ -44,7 +44,7 @@ detect_global_platforms() {
     fi
     # GitHub Copilot
     if [ -d "$HOME/.copilot" ]; then
-        platforms="$platforms copilot"
+        platforms="$platforms github-copilot"
     fi
     # Gemini CLI
     if [ -d "$HOME/.gemini" ]; then
@@ -91,7 +91,7 @@ detect_global_platforms() {
 platform_path() {
     case "$1" in
         claude-code) echo "$HOME/.claude/skills/$SKILL_NAME" ;;
-        copilot)     echo "$HOME/.copilot/skills/$SKILL_NAME" ;;
+        github-copilot) echo "$HOME/.copilot/skills/$SKILL_NAME" ;;
         gemini)      echo "$HOME/.gemini/skills/$SKILL_NAME" ;;
         kiro)        echo "$HOME/.kiro/skills/$SKILL_NAME" ;;
         cline)       echo "$HOME/.cline/skills/$SKILL_NAME" ;;
@@ -110,7 +110,7 @@ platform_path() {
 platform_display() {
     case "$1" in
         claude-code) echo "Claude Code" ;;
-        copilot)     echo "GitHub Copilot" ;;
+        github-copilot) echo "GitHub Copilot" ;;
         gemini)      echo "Gemini CLI" ;;
         kiro)        echo "Kiro" ;;
         cline)       echo "Cline" ;;
