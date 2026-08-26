@@ -64,6 +64,8 @@ None known.
         },
         "risk": {"tier": "low", "permissions": ["Read fixture input"],
                  "mutation_boundary": "read-only", "approval_required": []},
+        "software_mutation": {"applies": False},
+        "data_interfaces": {"applies": False},
         "routing_tests": {
             "should_trigger": [f"Run {name} one", f"Run {name} two", f"Run {name} three"],
             "should_not_trigger": ["Write a sales email", "Merge a pull request", "Delete an account"],
@@ -883,6 +885,8 @@ def test_certification_enables_filtered_search_and_distribution_plan(tmp_path: P
                             "readiness_checks": ["Revenue columns exist"]},
             "risk": {"tier": "low", "permissions": ["Read revenue ledger"],
                      "mutation_boundary": "read-only", "approval_required": []},
+            "software_mutation": {"applies": False},
+            "data_interfaces": {"applies": False},
             "routing_tests": {"should_trigger": ["Review monthly revenue", "Explain revenue variance", "Analyze revenue plan"],
                               "should_not_trigger": ["Write sales email", "Merge pull request", "Delete account"]},
         }), encoding="utf-8")
@@ -925,6 +929,8 @@ def test_add_persists_discovery_compatibility_for_health_governance(tmp_path: Pa
                             "readiness_checks": ["Revenue columns exist"]},
             "risk": {"tier": "low", "permissions": ["Read revenue ledger"],
                      "mutation_boundary": "read-only", "approval_required": []},
+            "software_mutation": {"applies": False},
+            "data_interfaces": {"applies": False},
             "routing_tests": {"should_trigger": ["Review monthly revenue", "Explain revenue variance", "Analyze revenue plan"],
                               "should_not_trigger": ["Write sales email", "Merge pull request", "Delete account"]},
         }), encoding="utf-8")

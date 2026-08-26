@@ -61,6 +61,8 @@ Demo body.
                         "readiness_checks": ["Source skill exists"]},
         "risk": {"tier": "low", "permissions": ["Read source skill"],
                  "mutation_boundary": "read-only", "approval_required": []},
+        "software_mutation": {"applies": False},
+        "data_interfaces": {"applies": False},
         "routing_tests": {"should_trigger": ["Export one", "Export two", "Export three"],
                           "should_not_trigger": ["Skip one", "Skip two", "Skip three"]},
     }), encoding="utf-8")

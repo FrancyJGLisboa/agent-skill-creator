@@ -40,6 +40,22 @@ uses it for outcome-first search, and generates a structured skill page.
     "mutation_boundary": "read-only",
     "approval_required": []
   },
+  "software_mutation": {
+    "applies": false
+  },
+  "data_interfaces": {
+    "applies": true,
+    "interface_types": ["structured-file"],
+    "authoritative_sources": ["Approved revenue CSV schema"],
+    "entities": ["Revenue record"],
+    "identifiers": ["Revenue record.id"],
+    "relationships": ["Revenue record.account_id identifies the owning account"],
+    "field_semantics": ["amount is decimal currency in account currency"],
+    "invariants": ["Every record has one account_id"],
+    "freshness_and_pagination": ["One complete monthly snapshot; no pagination"],
+    "nullability": ["amount and account_id are required"],
+    "readiness_checks": ["One safe sample matches the approved schema"]
+  },
   "routing_tests": {
     "should_trigger": ["Review monthly revenue", "Why did revenue miss plan?", "Prepare the revenue variance review"],
     "should_not_trigger": ["Write a sales email", "Forecast next year's hiring", "Delete the revenue ledger"]
@@ -69,6 +85,38 @@ Rules:
   entries when a category genuinely has no dependency; never omit the category.
 - `risk` declares least-privilege access and the mutation boundary. Low-risk skills
   are read-only. High- and critical-risk mutations must name their approval gate.
+- `software_mutation.applies` is required. Set it to `true` only when the skill
+  creates or changes application code, schemas, models, persistence, serialization,
+  caches, synchronization, migrations, or stateful features. A true value requires a
+  representation review before implementation:
+
+```json
+{
+  "software_mutation": {
+    "applies": true,
+    "affected_structures": ["Seat", "SeatState"],
+    "invariants": ["A seat has exactly one state"],
+    "sources_of_truth": ["Seat state: Seat.state"],
+    "invalid_states_prevented": ["A seat cannot be held and sold simultaneously"],
+    "state_transitions": ["open -> held", "held -> open", "held -> sold"]
+  }
+}
+```
+
+  Each review list must be non-empty. Missing invariants block implementation. Keep
+  derived values derived rather than declaring another source of truth. For a
+  non-software workflow, use only `{"applies": false}`; do not invent structures.
+- `data_interfaces.applies` is required. Set it to `true` when the skill consumes an
+  API, MCP tool/resource, database, structured file, event stream, or schema registry.
+  Allowed interface types are `api`, `mcp-tool`, `mcp-resource`, `database`,
+  `structured-file`, `event-stream`, and `schema-registry`. A true value requires
+  non-empty `authoritative_sources`, `entities`, `identifiers`, `relationships`,
+  `field_semantics`, `invariants`, `freshness_and_pagination`, `nullability`, and
+  `readiness_checks`. Inspect authoritative documentation and one safe representative
+  sample when accessible. A connection or successful authentication does not prove
+  semantic readiness. Unresolved field meaning, identity, or relationship ambiguity
+  blocks useful execution. For unstructured inputs with no structured interface, use
+  only `{"applies": false}`.
 - `routing_tests` supplies at least three positive and three negative queries for
   portfolio coexistence evaluation.
 

@@ -48,6 +48,8 @@ def entry(name: str = "revenue-review", outcome: str = "Prepare a monthly revenu
             },
             "risk": {"tier": "low", "permissions": ["Read local input files"],
                      "mutation_boundary": "read-only", "approval_required": []},
+            "software_mutation": {"applies": False},
+            "data_interfaces": {"applies": False},
             "routing_tests": {
                 "should_trigger": ["Review monthly revenue", "Explain revenue variance", "Analyze revenue plan"],
                 "should_not_trigger": ["Write sales email", "Merge pull request", "Delete customer account"],
@@ -110,12 +112,63 @@ def test_operating_contract_requires_environment_risk_and_routing() -> None:
         "routing_tests": {"should_trigger": ["Positive one", "Positive two", "Positive three"],
                           "should_not_trigger": ["Negative one", "Negative two", "Negative three"]},
     }
-    for field in ("environment", "risk", "routing_tests"):
+    for field in (
+        "environment", "risk", "software_mutation", "data_interfaces", "routing_tests"
+    ):
         broken = entry()
         broken["discovery"].update(operating)  # type: ignore[union-attr]
         broken["discovery"].pop(field, None)  # type: ignore[index]
         with pytest.raises(discovery.DiscoveryError, match=field):
             discovery.require_operating_contract(broken)
+
+
+def test_software_mutation_requires_representation_review() -> None:
+    item = entry()
+    item["discovery"]["software_mutation"] = {"applies": True}  # type: ignore[index]
+    with pytest.raises(discovery.DiscoveryError, match="affected_structures"):
+        discovery.require_operating_contract(item)
+
+
+def test_software_mutation_accepts_complete_representation_review() -> None:
+    item = entry()
+    item["discovery"]["software_mutation"] = {  # type: ignore[index]
+        "applies": True,
+        "affected_structures": ["Seat", "SeatState"],
+        "invariants": ["A seat has exactly one state"],
+        "sources_of_truth": ["Seat state: Seat.state"],
+        "invalid_states_prevented": ["A seat cannot be held and sold"],
+        "state_transitions": ["open -> held", "held -> sold"],
+    }
+    contract = discovery.require_operating_contract(item)["software_mutation"]
+    assert contract["applies"] is True
+    assert contract["affected_structures"] == ["Seat", "SeatState"]
+
+
+def test_structured_data_requires_interface_contract() -> None:
+    item = entry()
+    item["discovery"]["data_interfaces"] = {"applies": True}  # type: ignore[index]
+    with pytest.raises(discovery.DiscoveryError, match="interface_types"):
+        discovery.require_operating_contract(item)
+
+
+def test_structured_data_accepts_complete_interface_contract() -> None:
+    item = entry()
+    item["discovery"]["data_interfaces"] = {  # type: ignore[index]
+        "applies": True,
+        "interface_types": ["api"],
+        "authoritative_sources": ["CRM OpenAPI specification"],
+        "entities": ["Account", "Opportunity"],
+        "identifiers": ["Account.id", "Opportunity.account_id"],
+        "relationships": ["Opportunity.account_id -> Account.id"],
+        "field_semantics": ["Opportunity.amount is decimal account currency"],
+        "invariants": ["Closed opportunities have a close_date"],
+        "freshness_and_pagination": ["Cursor pagination", "Five-minute cache maximum"],
+        "nullability": ["close_date is null before closure"],
+        "readiness_checks": ["A safe sample matches the documented schema"],
+    }
+    contract = discovery.require_operating_contract(item)["data_interfaces"]
+    assert contract["applies"] is True
+    assert contract["interface_types"] == ["api"]
 
 
 def test_operating_contract_accepts_bounded_read_only_skill() -> None:
@@ -193,6 +246,43 @@ def test_markdown_page_is_structured_deterministic_and_safe() -> None:
     assert "javascript:" not in page
     assert "\n# injected" not in page
     assert "```" not in page
+
+
+def test_markdown_page_exposes_software_representation_review() -> None:
+    item = entry()
+    item["discovery"]["software_mutation"] = {  # type: ignore[index]
+        "applies": True,
+        "affected_structures": ["SeatState"],
+        "invariants": ["A seat has exactly one state"],
+        "sources_of_truth": ["Seat state: Seat.state"],
+        "invalid_states_prevented": ["A seat cannot be held and sold"],
+        "state_transitions": ["open -> held", "held -> sold"],
+    }
+    page = discovery.render_skill_page(item)
+    assert "## Software representation review" in page
+    assert "### Invariants" in page
+    assert "A seat has exactly one state" in page
+
+
+def test_markdown_page_exposes_data_interface_contract() -> None:
+    item = entry()
+    item["discovery"]["data_interfaces"] = {  # type: ignore[index]
+        "applies": True,
+        "interface_types": ["mcp-resource"],
+        "authoritative_sources": ["CRM MCP resource schema"],
+        "entities": ["Account"],
+        "identifiers": ["Account.id"],
+        "relationships": ["Account.id identifies one account"],
+        "field_semantics": ["Account.arr is annual recurring revenue"],
+        "invariants": ["ARR is non-negative"],
+        "freshness_and_pagination": ["Cursor pagination; refreshed hourly"],
+        "nullability": ["Account.arr is required"],
+        "readiness_checks": ["One safe resource sample matches the schema"],
+    }
+    page = discovery.render_skill_page(item)
+    assert "## Data interface contract" in page
+    assert "### Authoritative sources" in page
+    assert "CRM MCP resource schema" in page
 
 
 def test_markdown_page_rejects_unsafe_registry_path() -> None:

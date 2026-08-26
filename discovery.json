@@ -43,6 +43,27 @@
     "mutation_boundary": "approval-required",
     "approval_required": ["User identifies or accepts the generated-skill destination"]
   },
+  "software_mutation": {
+    "applies": true,
+    "affected_structures": ["Generated skill package", "discovery.json", "skill.graph.json"],
+    "invariants": ["Every generated package has one canonical skill identity", "Every expected output is reachable from declared inputs", "Release evidence is bound to the generated content"],
+    "sources_of_truth": ["Skill identity: SKILL.md frontmatter", "Operating contract: discovery.json", "Artifact dependencies: skill.graph.json"],
+    "invalid_states_prevented": ["A package cannot pass release with unreachable expected outputs", "A software-mutating skill cannot proceed without a representation review"],
+    "state_transitions": ["discovered -> generated", "generated -> evaluated", "evaluated -> verified or verification-blocked"]
+  },
+  "data_interfaces": {
+    "applies": true,
+    "interface_types": ["api", "mcp-resource", "structured-file"],
+    "authoritative_sources": ["User-supplied API or MCP documentation", "Declared schemas in supplied workflow artifacts"],
+    "entities": ["Workflow input", "Generated skill package", "External data interface"],
+    "identifiers": ["Skill identity from SKILL.md frontmatter", "External entity identifiers from the authoritative interface schema"],
+    "relationships": ["Workflow inputs and external interfaces determine generated skill requirements"],
+    "field_semantics": ["External fields retain the meaning, units, and constraints declared by their authoritative source"],
+    "invariants": ["Undocumented field semantics are not invented", "A successful connection is not treated as schema readiness"],
+    "freshness_and_pagination": ["The generated skill records source-specific freshness and pagination behavior before processing"],
+    "nullability": ["The generated skill records required, optional, and nullable fields from authoritative evidence"],
+    "readiness_checks": ["Authoritative documentation is available", "A safe representative sample matches the declared schema when accessible"]
+  },
   "routing_tests": {
     "should_trigger": ["Create a skill for reviewing invoices", "Turn this workflow document into an agent skill", "Validate and publish this existing skill"],
     "should_not_trigger": ["Run this existing invoice skill", "Create a general-purpose autonomous agent", "Install an unrelated MCP server"]

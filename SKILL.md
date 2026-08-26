@@ -295,6 +295,27 @@ with the skill as an instant regression test, formatted so
 `references/phase2-eval-assessment.md` for criteria rules, the golden-case
 strategy, the JSON spec format, and the optimize handoff.
 
+**Phase 2 also classifies software mutation.** If the generated skill creates or
+modifies application code, schemas, models, persistence, serialization, caches,
+synchronization, migrations, or stateful features, review the affected representation
+before designing the implementation. Name the affected structures, invariants, single
+sources of truth, invalid states that must be unrepresentable, and allowed state
+transitions. Unknown invariants block implementation; do not substitute a generic
+checklist. Non-software skills declare that this conditional review does not apply.
+Read `references/discovery-metadata.md` for the schema, then record the result in
+`discovery.json`.
+
+**Phase 2 also classifies structured data interfaces.** If the generated skill reads
+an API, MCP tool/resource, database, structured file, event stream, or schema
+registry, establish the data contract before designing its processing logic. Inspect
+authoritative documentation and, when safely accessible, one representative sample;
+record entities, identifiers, relationships, field semantics, invariants, freshness
+and pagination, nullability, and blocking readiness checks. Do not infer undocumented
+semantics from field names or treat a successful connection as schema proof. Missing
+authority or unresolved ambiguity blocks useful execution. Non-structured workflows
+declare that this conditional contract does not apply. Read
+`references/discovery-metadata.md` for the schema.
+
 ### Phase 3: Architecture
 
 Structure the skill using the Agent Skills Open Standard:
@@ -328,7 +349,8 @@ Create all files in this order:
    outcome, intended users, input types, output artifacts, use cases, invocation
    examples, permissions/systems, typical completion time, declared platform
    compatibility, environment discovery/readiness, risk and mutation boundaries,
-   positive/negative routing tests, and support tier. Read
+   the conditional software-mutation representation review, the conditional structured
+   data-interface contract, positive/negative routing tests, and support tier. Read
    `references/discovery-metadata.md`. Never
    generate a skill without the five decision-contract fields; do not invent
    compatibility certification during creation.

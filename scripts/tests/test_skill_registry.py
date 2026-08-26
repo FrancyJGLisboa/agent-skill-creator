@@ -64,6 +64,8 @@ Demo body.
                         "readiness_checks": ["Fixture request exists"]},
         "risk": {"tier": "low", "permissions": ["Read fixture request"],
                  "mutation_boundary": "read-only", "approval_required": []},
+        "software_mutation": {"applies": False},
+        "data_interfaces": {"applies": False},
         "routing_tests": {"should_trigger": ["Registry one", "Registry two", "Registry three"],
                           "should_not_trigger": ["Reject one", "Reject two", "Reject three"]},
     }), encoding="utf-8")

@@ -11,12 +11,17 @@ DISCOVERY_FIELDS = (
     "question", "trigger", "decision", "evidence", "success_measure", "outcome",
     "intended_users", "input_types", "output_artifacts", "use_cases",
     "examples", "permissions_systems", "typical_completion_time", "compatibility",
-    "support_tier", "environment", "risk", "routing_tests",
+    "support_tier", "environment", "risk", "software_mutation", "data_interfaces",
+    "routing_tests",
     "metadata_completeness",
 )
 SUPPORT_TIERS = {"supported", "community", "deprecated"}
 RISK_TIERS = {"low", "moderate", "high", "critical"}
 MUTATION_BOUNDARIES = {"read-only", "approval-required", "prohibited"}
+DATA_INTERFACE_TYPES = {
+    "api", "mcp-tool", "mcp-resource", "database", "structured-file",
+    "event-stream", "schema-registry",
+}
 INSTALLABLE_LIFECYCLE_STATES = {"published"}
 _TOKEN = re.compile(r"[a-z0-9]+")
 _SLUG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -120,6 +125,71 @@ def _risk(value: object) -> dict[str, Any]:
     }
 
 
+def _software_mutation(value: object, *, required: bool = False) -> dict[str, Any]:
+    """Validate the conditional representation review for software-changing skills."""
+    if not isinstance(value, Mapping):
+        if required:
+            raise DiscoveryError("software_mutation must be an object")
+        return {"applies": False}
+    if not isinstance(value.get("applies"), bool):
+        raise DiscoveryError("software_mutation.applies must be true or false")
+    if value["applies"] is False:
+        return {"applies": False}
+
+    fields = (
+        "affected_structures",
+        "invariants",
+        "sources_of_truth",
+        "invalid_states_prevented",
+        "state_transitions",
+    )
+    review = {field: _list(value.get(field)) for field in fields}
+    missing = [field for field, items in review.items() if not items]
+    if missing:
+        raise DiscoveryError(
+            "required software_mutation field(s) missing or empty: " + ", ".join(missing)
+        )
+    return {"applies": True, **review}
+
+
+def _data_interfaces(value: object, *, required: bool = False) -> dict[str, Any]:
+    """Validate the conditional contract for structured external data."""
+    if not isinstance(value, Mapping):
+        if required:
+            raise DiscoveryError("data_interfaces must be an object")
+        return {"applies": False}
+    if not isinstance(value.get("applies"), bool):
+        raise DiscoveryError("data_interfaces.applies must be true or false")
+    if value["applies"] is False:
+        return {"applies": False}
+
+    fields = (
+        "interface_types",
+        "authoritative_sources",
+        "entities",
+        "identifiers",
+        "relationships",
+        "field_semantics",
+        "invariants",
+        "freshness_and_pagination",
+        "nullability",
+        "readiness_checks",
+    )
+    contract = {field: _list(value.get(field)) for field in fields}
+    missing = [field for field, items in contract.items() if not items]
+    if missing:
+        raise DiscoveryError(
+            "required data_interfaces field(s) missing or empty: " + ", ".join(missing)
+        )
+    unsupported = sorted(set(contract["interface_types"]) - DATA_INTERFACE_TYPES)
+    if unsupported:
+        raise DiscoveryError(
+            "data_interfaces.interface_types contains unsupported value(s): "
+            + ", ".join(unsupported)
+        )
+    return {"applies": True, **contract}
+
+
 def _routing_tests(value: object) -> dict[str, list[str]]:
     if not isinstance(value, Mapping):
         return {}
@@ -164,6 +234,8 @@ def normalize_discovery(entry: Mapping[str, Any]) -> dict[str, Any]:
     compatibility = _compatibility(raw.get("compatibility"), version)
     environment = _environment(raw.get("environment"))
     risk = _risk(raw.get("risk"))
+    software_mutation = _software_mutation(raw.get("software_mutation"))
+    data_interfaces = _data_interfaces(raw.get("data_interfaces"))
     routing_tests = _routing_tests(raw.get("routing_tests"))
     present = sum((
         question != "Not provided", bool(trigger), bool(decision), bool(evidence),
@@ -191,6 +263,8 @@ def normalize_discovery(entry: Mapping[str, Any]) -> dict[str, Any]:
         "support_tier": support,
         "environment": environment,
         "risk": risk,
+        "software_mutation": software_mutation,
+        "data_interfaces": data_interfaces,
         "routing_tests": routing_tests,
         "metadata_completeness": present,
     }
@@ -221,6 +295,12 @@ def require_operating_contract(entry: Mapping[str, Any]) -> dict[str, Any]:
     raw = raw if isinstance(raw, Mapping) else {}
     metadata["environment"] = _environment_required(raw.get("environment"))
     metadata["risk"] = _risk_required(raw.get("risk"))
+    metadata["software_mutation"] = _software_mutation(
+        raw.get("software_mutation"), required=True
+    )
+    metadata["data_interfaces"] = _data_interfaces(
+        raw.get("data_interfaces"), required=True
+    )
     metadata["routing_tests"] = _routing_tests_required(raw.get("routing_tests"))
     return metadata
 
@@ -394,4 +474,29 @@ def render_skill_page(entry: Mapping[str, Any]) -> str:
     else:
         for example in metadata["examples"]:
             lines += [f"- {_md(example['description'])}", f"    {_md(example['invocation'])}"]
+    review = metadata["software_mutation"]
+    if review["applies"]:
+        lines += [
+            "", "## Software representation review", "",
+            "### Affected structures", "", *_bullets(review["affected_structures"]), "",
+            "### Invariants", "", *_bullets(review["invariants"]), "",
+            "### Sources of truth", "", *_bullets(review["sources_of_truth"]), "",
+            "### Invalid states prevented", "", *_bullets(review["invalid_states_prevented"]), "",
+            "### State transitions", "", *_bullets(review["state_transitions"]),
+        ]
+    data = metadata["data_interfaces"]
+    if data["applies"]:
+        lines += [
+            "", "## Data interface contract", "",
+            "### Interface types", "", *_bullets(data["interface_types"]), "",
+            "### Authoritative sources", "", *_bullets(data["authoritative_sources"]), "",
+            "### Entities", "", *_bullets(data["entities"]), "",
+            "### Identifiers", "", *_bullets(data["identifiers"]), "",
+            "### Relationships", "", *_bullets(data["relationships"]), "",
+            "### Field semantics", "", *_bullets(data["field_semantics"]), "",
+            "### Data invariants", "", *_bullets(data["invariants"]), "",
+            "### Freshness and pagination", "", *_bullets(data["freshness_and_pagination"]), "",
+            "### Nullability", "", *_bullets(data["nullability"]), "",
+            "### Readiness checks", "", *_bullets(data["readiness_checks"]),
+        ]
     return "\n".join(lines) + "\n"
