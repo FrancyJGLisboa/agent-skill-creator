@@ -28,6 +28,22 @@ uses it for outcome-first search, and generates a structured skill page.
     "declared": ["codex", "cursor"],
     "certified": []
   },
+  "environment": {
+    "documentation_sources": ["Finance API OpenAPI document at the configured URL"],
+    "data_sources": ["Monthly revenue CSV supplied by the user"],
+    "required_capabilities": ["Read local CSV files"],
+    "readiness_checks": ["The input exists and contains the required columns"]
+  },
+  "risk": {
+    "tier": "low",
+    "permissions": ["Read the user-supplied CSV"],
+    "mutation_boundary": "read-only",
+    "approval_required": []
+  },
+  "routing_tests": {
+    "should_trigger": ["Review monthly revenue", "Why did revenue miss plan?", "Prepare the revenue variance review"],
+    "should_not_trigger": ["Write a sales email", "Forecast next year's hiring", "Delete the revenue ledger"]
+  },
   "support_tier": "supported"
 }
 ```
@@ -48,6 +64,13 @@ Rules:
 - `compatibility.declared` uses canonical names from `scripts/platforms.py`.
 - `compatibility.certified` is empty at creation. Only the governed marketplace
   writes certification after explicit current-version checks pass.
+- `environment` names the documentation, data, capabilities, and blocking readiness
+  checks the skill must inspect before useful work. Use explicit `None required`
+  entries when a category genuinely has no dependency; never omit the category.
+- `risk` declares least-privilege access and the mutation boundary. Low-risk skills
+  are read-only. High- and critical-risk mutations must name their approval gate.
+- `routing_tests` supplies at least three positive and three negative queries for
+  portfolio coexistence evaluation.
 
 ## Organizational metadata
 

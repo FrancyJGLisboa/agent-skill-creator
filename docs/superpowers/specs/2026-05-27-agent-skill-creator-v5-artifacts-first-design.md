@@ -2,7 +2,7 @@
 
 **Status:** Draft for review
 **Date:** 2026-05-27
-**Author:** Francy Lisboa Charuto (brainstormed with Claude)
+**Author:** Francy J G Lisboa, known as Charuto (brainstormed with Claude)
 **Supersedes:** Prior v6 spec drafts focused on five-axis composability
 
 ---

@@ -4,5 +4,16 @@
   "decision": ["Assign the next unblock action", "Declare the pull request ready to merge"],
   "evidence": ["Pull-request metadata", "Review state", "CI check results"],
   "success_measure": "Every active blocker has an evidence-backed owner and next action",
-  "outcome": "Produce an actionable pull-request blocker summary"
+  "outcome": "Produce an actionable pull-request blocker summary",
+  "environment": {
+    "documentation_sources": ["Pull-request provider API documentation"],
+    "data_sources": ["Pull-request metadata, reviews, and CI status"],
+    "required_capabilities": ["Read pull-request state"],
+    "readiness_checks": ["The pull request exists and is readable"]
+  },
+  "risk": {"tier": "low", "permissions": ["Read pull-request state"], "mutation_boundary": "read-only", "approval_required": []},
+  "routing_tests": {
+    "should_trigger": ["What blocks PR 42?", "Summarize unresolved pull-request checks", "Is this pull request ready to merge?"],
+    "should_not_trigger": ["Merge PR 42", "Write release notes", "Review this issue backlog"]
+  }
 }

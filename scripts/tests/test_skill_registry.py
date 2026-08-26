@@ -58,6 +58,14 @@ Demo body.
         "decision": ["Accept or correct the result"],
         "evidence": ["The request and generated output"],
         "success_measure": "The output satisfies the documented workflow",
+        "environment": {"documentation_sources": ["Registry fixture docs"],
+                        "data_sources": ["Fixture request"],
+                        "required_capabilities": ["Read fixture request"],
+                        "readiness_checks": ["Fixture request exists"]},
+        "risk": {"tier": "low", "permissions": ["Read fixture request"],
+                 "mutation_boundary": "read-only", "approval_required": []},
+        "routing_tests": {"should_trigger": ["Registry one", "Registry two", "Registry three"],
+                          "should_not_trigger": ["Reject one", "Reject two", "Reject three"]},
     }), encoding="utf-8")
     return skill
 

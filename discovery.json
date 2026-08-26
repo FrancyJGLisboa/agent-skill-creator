@@ -31,5 +31,21 @@
     "declared": ["codex", "claude-code", "github-copilot", "cursor"],
     "certified": []
   },
+  "environment": {
+    "documentation_sources": ["Agent Skills specification", "Target platform installation documentation"],
+    "data_sources": ["User-supplied workflow descriptions and artifacts"],
+    "required_capabilities": ["Read supplied artifacts", "Write to the user-approved output directory"],
+    "readiness_checks": ["Required inputs are readable", "The output path is explicitly in scope", "Target platform constraints are known"]
+  },
+  "risk": {
+    "tier": "moderate",
+    "permissions": ["Read supplied artifacts", "Write generated files under the approved target"],
+    "mutation_boundary": "approval-required",
+    "approval_required": ["User identifies or accepts the generated-skill destination"]
+  },
+  "routing_tests": {
+    "should_trigger": ["Create a skill for reviewing invoices", "Turn this workflow document into an agent skill", "Validate and publish this existing skill"],
+    "should_not_trigger": ["Run this existing invoice skill", "Create a general-purpose autonomous agent", "Install an unrelated MCP server"]
+  },
   "support_tier": "supported"
 }

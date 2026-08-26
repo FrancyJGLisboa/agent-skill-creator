@@ -13,9 +13,14 @@
 [Website](https://francyjglisboa.github.io/agent-skill-creator/) ·
 [Installation](docs/INSTALL.md) ·
 [Governed team marketplace](docs/TEAM_MARKETPLACE.md) ·
+[Product scope](docs/PRODUCT_SCOPE.md) ·
 [Organizational acceptance](docs/ORGANIZATIONAL_ACCEPTANCE.md) ·
 [GitLab team registry](docs/GITLAB_TEAM_REGISTRY.md) ·
 [Changelog](CHANGELOG.md)
+
+Copyright © 2026 Francy J G Lisboa, also known as Charuto. See
+[ownership](COPYRIGHT.md), [licence](LICENSE), and the required
+[contributor assignment](CONTRIBUTOR_ASSIGNMENT.md).
 
 Agent Skill Creator turns human expertise into tested, installable agent skills and
 provides the operating system for managing those skills through a user-defined
@@ -71,6 +76,11 @@ Creation and marketplace admission fail when any of these fields is missing.
 |---|---|---|
 | **Skill factory** | Turn expertise and artifacts into executable skills | Validation, security scan, eval suite, representative run |
 | **Marketplace operating system** | Govern publishing, discovery, installation, updates, and removal | Ownership, lifecycle state, immutable versions, rollback, quarantine |
+
+Every admitted skill also carries an operating contract: environment documentation,
+data sources, readiness checks, least-privilege permissions, risk tier, mutation
+boundary, and positive/negative routing tests. Installation plans expose this
+preflight instead of treating installation as proof of readiness.
 | **Organizational learning system** | Improve capabilities from real corrections and outcomes | Evolution log, regression evidence, health reports, privacy-safe success metrics |
 
 The decisive product test is automated: create three skills, publish a remote tag,

@@ -4,5 +4,16 @@
   "decision": ["Continue investment research", "Reject the candidate based on defined evidence gaps"],
   "evidence": ["Price history", "Volume history", "Calculated technical indicators"],
   "success_measure": "The analysis is reproducible from cited market inputs and exposes material evidence gaps",
-  "outcome": "Produce an evidence-backed technical stock analysis"
+  "outcome": "Produce an evidence-backed technical stock analysis",
+  "environment": {
+    "documentation_sources": ["Configured market-data provider documentation"],
+    "data_sources": ["Public equity price and volume history"],
+    "required_capabilities": ["Read market data"],
+    "readiness_checks": ["The ticker resolves and sufficient history is available"]
+  },
+  "risk": {"tier": "low", "permissions": ["Read public market data"], "mutation_boundary": "read-only", "approval_required": []},
+  "routing_tests": {
+    "should_trigger": ["Analyze AAPL technical indicators", "Does this stock warrant more research?", "Review price and volume for MSFT"],
+    "should_not_trigger": ["Buy AAPL", "Rebalance my portfolio", "Prepare a CRM report"]
+  }
 }

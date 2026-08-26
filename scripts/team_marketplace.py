@@ -38,7 +38,7 @@ from marketplace_trust import (  # noqa: E402
 )
 from marketplace_health import build_health_report, report_json, report_markdown  # noqa: E402
 from marketplace_discovery import (  # noqa: E402
-    DiscoveryError, render_skill_page, require_decision_contract,
+    DiscoveryError, evaluate_portfolio, render_skill_page, require_operating_contract,
     search_skills,
 )
 from marketplace_metrics import (  # noqa: E402
@@ -626,7 +626,7 @@ def add_skill(root: Path, skill: Path, department: str, bundle: str) -> dict[str
     if meta["lifecycle"] != APPROVED:
         raise MarketplaceError("skill lifecycle must be approved before marketplace intake")
     try:
-        normalized_discovery = require_decision_contract({
+        normalized_discovery = require_operating_contract({
             "name": meta["name"], "version": meta["version"], "discovery": meta["discovery"],
         })
     except DiscoveryError as exc:
@@ -764,7 +764,7 @@ def update_skill(root: Path, skill: Path, department: str) -> dict[str, Any]:
         )
 
     try:
-        normalized_discovery = require_decision_contract({
+        normalized_discovery = require_operating_contract({
             "name": meta["name"], "version": meta["version"], "discovery": meta["discovery"],
         })
     except DiscoveryError as exc:
@@ -865,7 +865,7 @@ def recreate_skill(root: Path, skill: Path, department: str, reason: str) -> dic
     if not meta["owners"] or meta["lifecycle"] != APPROVED:
         raise MarketplaceError("recreated skill must be approved and declare at least one owner")
     try:
-        normalized = require_decision_contract({
+        normalized = require_operating_contract({
             "name": meta["name"], "version": meta["version"], "discovery": meta["discovery"],
         })
     except DiscoveryError as exc:
@@ -976,7 +976,7 @@ def check_marketplace(
             if meta[field] != entry.get(field):
                 errors.append(f"{identity[1]}: SKILL.md {field} is inconsistent with registry.json")
         try:
-            normalized_discovery = require_decision_contract({
+            normalized_discovery = require_operating_contract({
                 "name": meta["name"], "version": meta["version"], "discovery": meta["discovery"],
             })
         except DiscoveryError as exc:
@@ -1016,6 +1016,17 @@ def check_marketplace(
         else:
             if actual_bundle != expected_bundle:
                 errors.append(f"bundle manifest is inconsistent: bundles/{bundle}.json")
+    if require_published:
+        try:
+            portfolio = evaluate_portfolio(data.get("skills", []))
+        except DiscoveryError as exc:
+            errors.append(f"portfolio routing contract is invalid: {exc}")
+        else:
+            for failure in portfolio["failures"]:
+                errors.append(
+                    f"portfolio routing: {failure['skill']} {failure['expectation']} "
+                    f"failed for {failure['query']!r}; observed {failure['observed_owner']}"
+                )
     return errors
 
 
@@ -1276,6 +1287,56 @@ def search_marketplace(
     )
 
 
+def portfolio_report(root: Path) -> dict[str, Any]:
+    """Return portfolio-level routing and coexistence evidence."""
+    return evaluate_portfolio(load_manifest(root).get("skills", []))
+
+
+def onboarding_report(root: Path) -> dict[str, Any]:
+    """Report whether every department can enter the governed lifecycle."""
+    data = load_manifest(root)
+    config = data.get("marketplace", {})
+    departments = config.get("departments", {})
+    departments = departments if isinstance(departments, dict) else {}
+    approvers = config.get("approvers", [])
+    platforms = config.get("supported_platforms", [])
+    skills = data.get("skills", [])
+    rows: list[dict[str, Any]] = []
+    for department, owner in sorted(departments.items()):
+        owned = [item for item in skills if item.get("department") == department]
+        published = [item for item in owned if item.get("lifecycle") == "published"]
+        rows.append({
+            "department": department,
+            "owner": owner,
+            "skills": len(owned),
+            "published": len(published),
+            "status": "operating" if published else "ready-to-create",
+        })
+    missing: list[str] = []
+    if len(departments) < 2:
+        missing.append("Configure at least two departments to prove cross-team reuse.")
+    if not approvers:
+        missing.append("Configure at least one independent marketplace approver.")
+    if not platforms:
+        missing.append("Configure at least one supported delivery platform.")
+    if not data.get("bundles"):
+        missing.append("Configure at least one governed starter bundle.")
+    return {
+        "status": "ready" if not missing else "incomplete",
+        "marketplace": config.get("name", ""),
+        "departments": rows,
+        "approvers": sorted(str(item) for item in approvers),
+        "supported_platforms": sorted(str(item) for item in platforms),
+        "missing": missing,
+        "next_gate": (
+            "Run the blind cross-department acceptance protocol."
+            if not missing and any(row["published"] for row in rows)
+            else "Publish one evaluated skill, then run cross-department acceptance."
+            if not missing else missing[0]
+        ),
+    }
+
+
 def _metrics_paths(root: Path) -> tuple[Path, Path, Path]:
     state = root / ".marketplace-state"
     return root / "metrics-consent.json", state / "metrics-salt", state / "metrics.jsonl"
@@ -1357,13 +1418,23 @@ def plan_distribution(
     if entry.get("lifecycle", entry.get("approval_status")) != "published" and remote:
         raise MarketplaceError("remote distribution requires a published skill")
     try:
-        return build_install_plan(
+        plan = build_install_plan(
             skill_name=name, skill_version=entry["version"], platforms=platforms,
             scope=scope, source=data["marketplace"]["repository"] if remote else str((root / entry["path"]).resolve()),
             release_ref=release_ref, remote=remote, home=home, project_root=project_root,
         )
     except DistributionError as exc:
         raise MarketplaceError(str(exc)) from exc
+    try:
+        contract = require_operating_contract(entry)
+    except DiscoveryError as exc:
+        raise MarketplaceError(f"invalid operating contract: {exc}") from exc
+    plan["preflight"] = {
+        "environment": contract["environment"],
+        "risk": contract["risk"],
+        "installation_does_not_imply_readiness": True,
+    }
+    return plan
 
 
 def certify_skill(
@@ -1532,6 +1603,12 @@ def build_parser() -> argparse.ArgumentParser:
     search.add_argument("--support-tier")
     search.add_argument("--json", action="store_true")
     search.add_argument("--marketplace", default=".")
+    portfolio = sub.add_parser("portfolio-check")
+    portfolio.add_argument("--marketplace", default=".")
+    portfolio.add_argument("--json", action="store_true")
+    onboarding = sub.add_parser("onboarding-report")
+    onboarding.add_argument("--marketplace", default=".")
+    onboarding.add_argument("--json", action="store_true")
     consent = sub.add_parser("metrics-consent")
     consent.add_argument("--expires-at", required=True, help="UTC RFC3339 expiry")
     consent.add_argument("--marketplace", default=".")
@@ -1640,6 +1717,39 @@ def main(argv: list[str] | None = None) -> int:
                 for item in results:
                     platforms = ",".join(item["certified_platforms"]) or "uncertified"
                     print(f"{item['department']}/{item['name']} v{item['version']} [{item['support_tier']}; {platforms}] — {item['question']}")
+        elif args.command == "portfolio-check":
+            report = portfolio_report(root)
+            if args.json:
+                print(json.dumps(report, indent=2, sort_keys=True))
+            else:
+                print(
+                    f"Portfolio routing {report['status']}: "
+                    f"{report['skills']} skill(s), {report['queries']} query checks"
+                )
+                for failure in report["failures"]:
+                    print(
+                        f"- {failure['skill']}: {failure['expectation']} failed for "
+                        f"{failure['query']!r}; observed {failure['observed_owner']}"
+                    )
+            if report["status"] != "passed":
+                return 1
+        elif args.command == "onboarding-report":
+            report = onboarding_report(root)
+            if args.json:
+                print(json.dumps(report, indent=2, sort_keys=True))
+            else:
+                print(f"Organizational onboarding: {report['status']}")
+                for item in report["departments"]:
+                    print(
+                        f"- {item['department']}: owner={item['owner']}; "
+                        f"skills={item['skills']}; published={item['published']}; "
+                        f"status={item['status']}"
+                    )
+                for missing in report["missing"]:
+                    print(f"- Missing: {missing}")
+                print(f"Next gate: {report['next_gate']}")
+            if report["status"] != "ready":
+                return 1
         elif args.command == "metrics-consent":
             path = configure_metrics_consent(root, args.expires_at)
             print(f"Metrics consent enabled until {args.expires_at}: {path}")

@@ -425,6 +425,43 @@ the equivalent scheduled-pipeline job. Run the same five checks locally:
 ```bash
 python3 scripts/team_marketplace.py health --marketplace ./acme-skills \
   --output MARKETPLACE_HEALTH.md --json-output marketplace-health.json
+
+## Environment, risk, and portfolio gates
+
+Marketplace intake rejects skills unless `discovery.json` contains:
+
+- documentation and data sources the skill must understand;
+- required capabilities and blocking readiness checks;
+- a risk tier, complete permission disclosure, and mutation boundary; and
+- at least three queries that should trigger and three that should not trigger.
+
+Installation is not readiness. `plan-install` includes the exact environment and risk
+preflight that must pass in the consumer environment before useful execution.
+
+Before release, run portfolio routing and coexistence checks:
+
+```bash
+python3 scripts/team_marketplace.py portfolio-check \
+  --marketplace ./acme-skills
+```
+
+The check fails when a positive query routes to the wrong skill, a negative query
+routes back to the prohibited skill, or the top two candidates tie. Release-mode
+marketplace checks enforce the same gate.
+
+## Guided organizational onboarding
+
+Generate a department readiness report after marketplace initialization:
+
+```bash
+python3 scripts/team_marketplace.py onboarding-report \
+  --marketplace ./acme-skills
+```
+
+The report blocks readiness until the marketplace has at least two departments,
+named owners, an independent approver, a supported platform, and a starter bundle.
+It then shows each department's owned and published skill counts and names the next
+acceptance gate.
 ```
 
 The report covers review staleness, dependency evidence, eval regressions, active

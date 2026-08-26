@@ -11,9 +11,12 @@ DISCOVERY_FIELDS = (
     "question", "trigger", "decision", "evidence", "success_measure", "outcome",
     "intended_users", "input_types", "output_artifacts", "use_cases",
     "examples", "permissions_systems", "typical_completion_time", "compatibility",
-    "support_tier", "metadata_completeness",
+    "support_tier", "environment", "risk", "routing_tests",
+    "metadata_completeness",
 )
 SUPPORT_TIERS = {"supported", "community", "deprecated"}
+RISK_TIERS = {"low", "moderate", "high", "critical"}
+MUTATION_BOUNDARIES = {"read-only", "approval-required", "prohibited"}
 INSTALLABLE_LIFECYCLE_STATES = {"published"}
 _TOKEN = re.compile(r"[a-z0-9]+")
 _SLUG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -73,6 +76,65 @@ def _compatibility(value: object, version: str) -> dict[str, list[str]]:
     return {"declared": declared, "certified": sorted(certified)}
 
 
+def _environment(value: object) -> dict[str, Any]:
+    if not isinstance(value, Mapping):
+        return {}
+    result = {
+        "documentation_sources": _list(value.get("documentation_sources")),
+        "data_sources": _list(value.get("data_sources")),
+        "required_capabilities": _list(value.get("required_capabilities")),
+        "readiness_checks": _list(value.get("readiness_checks")),
+    }
+    missing = [key for key, items in result.items() if not items]
+    if missing:
+        raise DiscoveryError(
+            "required environment field(s) missing or empty: " + ", ".join(missing)
+        )
+    return result
+
+
+def _risk(value: object) -> dict[str, Any]:
+    if not isinstance(value, Mapping):
+        return {}
+    tier = _text(value.get("tier"), default="", limit=20).lower()
+    boundary = _text(value.get("mutation_boundary"), default="", limit=40).lower()
+    permissions = _list(value.get("permissions"))
+    approvals = _list(value.get("approval_required"))
+    if tier not in RISK_TIERS:
+        raise DiscoveryError("risk.tier must be low, moderate, high, or critical")
+    if boundary not in MUTATION_BOUNDARIES:
+        raise DiscoveryError(
+            "risk.mutation_boundary must be read-only, approval-required, or prohibited"
+        )
+    if not permissions:
+        raise DiscoveryError("risk.permissions must name every required capability")
+    if tier == "low" and boundary != "read-only":
+        raise DiscoveryError("low-risk skills must be read-only")
+    if tier in {"high", "critical"} and boundary == "approval-required" and not approvals:
+        raise DiscoveryError("high/critical mutations must name an approval requirement")
+    return {
+        "tier": tier,
+        "permissions": permissions,
+        "mutation_boundary": boundary,
+        "approval_required": approvals,
+    }
+
+
+def _routing_tests(value: object) -> dict[str, list[str]]:
+    if not isinstance(value, Mapping):
+        return {}
+    result = {
+        "should_trigger": _list(value.get("should_trigger")),
+        "should_not_trigger": _list(value.get("should_not_trigger")),
+    }
+    if len(result["should_trigger"]) < 3 or len(result["should_not_trigger"]) < 3:
+        raise DiscoveryError("routing_tests requires at least 3 positive and 3 negative queries")
+    overlap = set(result["should_trigger"]) & set(result["should_not_trigger"])
+    if overlap:
+        raise DiscoveryError("routing_tests queries cannot be both positive and negative")
+    return result
+
+
 def normalize_discovery(entry: Mapping[str, Any]) -> dict[str, Any]:
     """Return canonical metadata with explicit low-confidence legacy defaults."""
     name = _text(entry.get("name"), default="", limit=100)
@@ -100,6 +162,9 @@ def normalize_discovery(entry: Mapping[str, Any]) -> dict[str, Any]:
     if support not in SUPPORT_TIERS:
         raise DiscoveryError("support_tier must be supported, community, or deprecated")
     compatibility = _compatibility(raw.get("compatibility"), version)
+    environment = _environment(raw.get("environment"))
+    risk = _risk(raw.get("risk"))
+    routing_tests = _routing_tests(raw.get("routing_tests"))
     present = sum((
         question != "Not provided", bool(trigger), bool(decision), bool(evidence),
         success_measure != "Not provided",
@@ -124,6 +189,9 @@ def normalize_discovery(entry: Mapping[str, Any]) -> dict[str, Any]:
         "typical_completion_time": completion,
         "compatibility": compatibility,
         "support_tier": support,
+        "environment": environment,
+        "risk": risk,
+        "routing_tests": routing_tests,
         "metadata_completeness": present,
     }
 
@@ -144,6 +212,35 @@ def require_decision_contract(entry: Mapping[str, Any]) -> dict[str, Any]:
             "required discovery field(s) missing or empty: " + ", ".join(missing)
         )
     return metadata
+
+
+def require_operating_contract(entry: Mapping[str, Any]) -> dict[str, Any]:
+    """Reject packages that cannot prove readiness, boundaries, and routing."""
+    metadata = require_decision_contract(entry)
+    raw = entry.get("discovery", {})
+    raw = raw if isinstance(raw, Mapping) else {}
+    metadata["environment"] = _environment_required(raw.get("environment"))
+    metadata["risk"] = _risk_required(raw.get("risk"))
+    metadata["routing_tests"] = _routing_tests_required(raw.get("routing_tests"))
+    return metadata
+
+
+def _environment_required(value: object) -> dict[str, Any]:
+    if not isinstance(value, Mapping):
+        raise DiscoveryError("environment must be an object")
+    return _environment(value)
+
+
+def _risk_required(value: object) -> dict[str, Any]:
+    if not isinstance(value, Mapping):
+        raise DiscoveryError("risk must be an object")
+    return _risk(value)
+
+
+def _routing_tests_required(value: object) -> dict[str, list[str]]:
+    if not isinstance(value, Mapping):
+        raise DiscoveryError("routing_tests must be an object")
+    return _routing_tests(value)
 
 
 def _tokens(value: object) -> set[str]:
@@ -209,6 +306,42 @@ def search_skills(
         })
     results.sort(key=lambda item: (-item["score"], item["department"], item["name"], item["version"]))
     return results
+
+
+def evaluate_portfolio(skills: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    """Evaluate routing ownership across the complete published portfolio."""
+    failures: list[dict[str, str]] = []
+    published = [item for item in skills if _installable(item)]
+    executed = 0
+    for entry in published:
+        metadata = require_operating_contract(entry)
+        identity = f"{entry.get('department', '')}/{entry.get('name', '')}"
+        for expectation, queries in metadata["routing_tests"].items():
+            for query in queries:
+                executed += 1
+                results = search_skills(published, query)
+                owner = (
+                    f"{results[0]['department']}/{results[0]['name']}" if results else "none"
+                )
+                strong_match = bool(
+                    results and results[0]["score"] >= metadata["metadata_completeness"] + 8
+                )
+                if expectation == "should_trigger" and (owner != identity or not strong_match):
+                    failures.append({"skill": identity, "query": query,
+                                     "expectation": expectation, "observed_owner": owner})
+                if expectation == "should_not_trigger" and owner == identity and strong_match:
+                    failures.append({"skill": identity, "query": query,
+                                     "expectation": expectation, "observed_owner": owner})
+                if len(results) > 1 and results[0]["score"] == results[1]["score"]:
+                    failures.append({"skill": identity, "query": query,
+                                     "expectation": "unambiguous routing",
+                                     "observed_owner": f"tie:{owner}"})
+    return {
+        "status": "passed" if not failures else "failed",
+        "skills": len(published),
+        "queries": executed,
+        "failures": failures,
+    }
 
 
 def _safe_path(value: object) -> str:

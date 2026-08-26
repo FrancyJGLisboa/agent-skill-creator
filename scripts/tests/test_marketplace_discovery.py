@@ -40,6 +40,18 @@ def entry(name: str = "revenue-review", outcome: str = "Prepare a monthly revenu
                 "certified": [{"platform": "codex", "passed": True, "version": "1.2.3"}],
             },
             "support_tier": "supported",
+            "environment": {
+                "documentation_sources": ["Finance schema"],
+                "data_sources": ["Revenue ledger"],
+                "required_capabilities": ["Read local input files"],
+                "readiness_checks": ["Revenue columns exist"],
+            },
+            "risk": {"tier": "low", "permissions": ["Read local input files"],
+                     "mutation_boundary": "read-only", "approval_required": []},
+            "routing_tests": {
+                "should_trigger": ["Review monthly revenue", "Explain revenue variance", "Analyze revenue plan"],
+                "should_not_trigger": ["Write sales email", "Merge pull request", "Delete customer account"],
+            },
         },
     }
 
@@ -88,6 +100,43 @@ def test_required_decision_contract_fails_when_missing(field: str) -> None:
         discovery.require_decision_contract(item)
 
 
+def test_operating_contract_requires_environment_risk_and_routing() -> None:
+    operating = {
+        "environment": {"documentation_sources": ["Docs"], "data_sources": ["Input"],
+                        "required_capabilities": ["Read input"],
+                        "readiness_checks": ["Input exists"]},
+        "risk": {"tier": "low", "permissions": ["Read input"],
+                 "mutation_boundary": "read-only", "approval_required": []},
+        "routing_tests": {"should_trigger": ["Positive one", "Positive two", "Positive three"],
+                          "should_not_trigger": ["Negative one", "Negative two", "Negative three"]},
+    }
+    for field in ("environment", "risk", "routing_tests"):
+        broken = entry()
+        broken["discovery"].update(operating)  # type: ignore[union-attr]
+        broken["discovery"].pop(field, None)  # type: ignore[index]
+        with pytest.raises(discovery.DiscoveryError, match=field):
+            discovery.require_operating_contract(broken)
+
+
+def test_operating_contract_accepts_bounded_read_only_skill() -> None:
+    item = entry()
+    item["discovery"].update({  # type: ignore[union-attr]
+        "environment": {
+            "documentation_sources": ["Fixture docs"],
+            "data_sources": ["Fixture input"],
+            "required_capabilities": ["Read fixture input"],
+            "readiness_checks": ["Fixture input exists"],
+        },
+        "risk": {"tier": "low", "permissions": ["Read fixture input"],
+                 "mutation_boundary": "read-only", "approval_required": []},
+        "routing_tests": {
+            "should_trigger": ["Review revenue", "Explain revenue", "Report revenue"],
+            "should_not_trigger": ["Write email", "Merge code", "Delete ledger"],
+        },
+    })
+    assert discovery.require_operating_contract(item)["risk"]["tier"] == "low"
+
+
 def test_search_prioritizes_outcome_over_name_and_description() -> None:
     outcome_match = entry("close-helper", "Prepare quarterly tax filings")
     name_match = entry("tax-filings-tool", "Prepare generic finance summaries")
@@ -112,6 +161,11 @@ def test_search_filters_certified_platform_and_support_tier() -> None:
     community["discovery"]["support_tier"] = "community"  # type: ignore[index]
     assert [r["name"] for r in discovery.search_skills([community, supported], "revenue", platform="codex", support_tier="supported")] == ["revenue-review"]
     assert discovery.search_skills([supported], "revenue", platform="cursor") == []
+
+
+def test_portfolio_evaluation_runs_positive_and_negative_routes() -> None:
+    report = discovery.evaluate_portfolio([entry()])
+    assert report == {"status": "passed", "skills": 1, "queries": 6, "failures": []}
 
 
 @pytest.mark.parametrize("state", ["draft", "in-review", "approved", "quarantined", "deprecated", "retired"])

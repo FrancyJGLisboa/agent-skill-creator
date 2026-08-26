@@ -6,11 +6,14 @@ correct and its tests green.
 
 ## Workflow
 
-1. Fork the repository and create a feature branch.
-2. Make your changes.
-3. Add or update tests under `scripts/tests/`.
+1. Read and sign the [Contributor Copyright Assignment](CONTRIBUTOR_ASSIGNMENT.md).
+2. Fork the repository and create a feature branch.
+3. Make your changes and add or update tests under `scripts/tests/`.
 4. Run the checks below — they must pass.
-5. Open a pull request describing what changed and why.
+5. Open a pull request describing what changed and why, with the signed assignment.
+
+Pull requests cannot be accepted until the copyright assignment is countersigned.
+Discussion, bug reports, and feature requests do not require an assignment.
 
 ## Local checks
 
@@ -116,5 +119,7 @@ run evals from specs you or your team wrote.
 
 ## License
 
-By contributing, you agree that your contributions are licensed under the
-[MIT License](LICENSE).
+Accepted contributions are owned by Francy J G Lisboa under the signed
+[Contributor Copyright Assignment](CONTRIBUTOR_ASSIGNMENT.md) and distributed under
+the [MIT License](LICENSE). Opening a pull request by itself does not transfer
+copyright.

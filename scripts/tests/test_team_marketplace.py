@@ -56,6 +56,18 @@ None known.
         "evidence": ["The supplied input and produced output"],
         "success_measure": "The result passes the skill's evaluation criteria.",
         "outcome": f"Complete the {name} workflow",
+        "environment": {
+            "documentation_sources": ["Test fixture documentation"],
+            "data_sources": ["Test fixture input"],
+            "required_capabilities": ["Read fixture input"],
+            "readiness_checks": ["Fixture input exists"],
+        },
+        "risk": {"tier": "low", "permissions": ["Read fixture input"],
+                 "mutation_boundary": "read-only", "approval_required": []},
+        "routing_tests": {
+            "should_trigger": [f"Run {name} one", f"Run {name} two", f"Run {name} three"],
+            "should_not_trigger": ["Write a sales email", "Merge a pull request", "Delete an account"],
+        },
     }), encoding="utf-8")
     subprocess.run(["git", "init", "-q", str(skill)], check=True)
     subprocess.run(["git", "-C", str(skill), "add", "."], check=True)
@@ -161,6 +173,28 @@ def test_init_rejects_malformed_department_option(
     ])
     assert result == 1
     assert "department=owner" in capsys.readouterr().err
+
+
+def test_onboarding_report_names_missing_configuration_and_ready_departments(
+    tmp_path: Path,
+) -> None:
+    incomplete = init_marketplace(tmp_path)
+    report = market.onboarding_report(incomplete)
+    assert report["status"] == "incomplete"
+    assert "two departments" in report["missing"][0]
+
+    ready = tmp_path / "ready"
+    market.init_marketplace(
+        ready, "Ready Skills", "Ready/skills",
+        departments={"finance": "finance-owner", "operations": "ops-owner"},
+        approvers=["platform-reviewer"], supported_platforms=["codex"],
+        starter_bundles=["starter"],
+    )
+    report = market.onboarding_report(ready)
+    assert report["status"] == "ready"
+    assert [item["department"] for item in report["departments"]] == [
+        "finance", "operations",
+    ]
 
 
 def test_recreate_starts_fresh_lineage_and_preserves_bundle(tmp_path: Path) -> None:
@@ -842,8 +876,16 @@ def test_certification_enables_filtered_search_and_distribution_plan(tmp_path: P
         "success_measure": "Leadership can act on every material variance.",
         "outcome": "Prepare monthly revenue reporting",
         "support_tier": "supported",
-        "compatibility": {"declared": ["codex"]},
-    }), encoding="utf-8")
+            "compatibility": {"declared": ["codex"]},
+            "environment": {"documentation_sources": ["Finance docs"],
+                            "data_sources": ["Revenue ledger"],
+                            "required_capabilities": ["Read revenue ledger"],
+                            "readiness_checks": ["Revenue columns exist"]},
+            "risk": {"tier": "low", "permissions": ["Read revenue ledger"],
+                     "mutation_boundary": "read-only", "approval_required": []},
+            "routing_tests": {"should_trigger": ["Review monthly revenue", "Explain revenue variance", "Analyze revenue plan"],
+                              "should_not_trigger": ["Write sales email", "Merge pull request", "Delete account"]},
+        }), encoding="utf-8")
     recommit_and_attest(skill)
     market.add_skill(repo, skill, "finance", "base")
     evidence = {
@@ -876,8 +918,16 @@ def test_add_persists_discovery_compatibility_for_health_governance(tmp_path: Pa
         "success_measure": "Leadership can act on every material variance.",
         "outcome": "Prepare monthly revenue reporting",
         "support_tier": "supported",
-        "compatibility": {"declared": ["codex", "cursor"]},
-    }), encoding="utf-8")
+            "compatibility": {"declared": ["codex", "cursor"]},
+            "environment": {"documentation_sources": ["Finance docs"],
+                            "data_sources": ["Revenue ledger"],
+                            "required_capabilities": ["Read revenue ledger"],
+                            "readiness_checks": ["Revenue columns exist"]},
+            "risk": {"tier": "low", "permissions": ["Read revenue ledger"],
+                     "mutation_boundary": "read-only", "approval_required": []},
+            "routing_tests": {"should_trigger": ["Review monthly revenue", "Explain revenue variance", "Analyze revenue plan"],
+                              "should_not_trigger": ["Write sales email", "Merge pull request", "Delete account"]},
+        }), encoding="utf-8")
     recommit_and_attest(skill)
     market.add_skill(repo, skill, "finance", "base")
     data = market.load_manifest(repo)

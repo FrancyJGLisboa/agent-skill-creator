@@ -20,7 +20,7 @@ import sys
 from pathlib import Path
 
 from skill_document import SkillDoc
-from marketplace_discovery import DiscoveryError, require_decision_contract
+from marketplace_discovery import DiscoveryError, require_operating_contract
 
 
 # --- Constants ---
@@ -236,7 +236,7 @@ def validate_skill(skill_path: str) -> dict:
             discovery = json.loads(discovery_path.read_text(encoding="utf-8"))
             if not isinstance(discovery, dict):
                 raise DiscoveryError("discovery.json must contain a JSON object")
-            require_decision_contract({
+            require_operating_contract({
                 "name": doc.name or skill_dir.name,
                 "version": str(doc.subfield("metadata", "version") or ""),
                 "discovery": discovery,

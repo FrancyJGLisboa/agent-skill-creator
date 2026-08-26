@@ -47,6 +47,18 @@ metadata:
         "decision": ["Accept or correct the result"],
         "evidence": ["The supplied input and produced output"],
         "success_measure": "The result passes the skill's evaluation criteria.",
+        "environment": {
+            "documentation_sources": ["Test fixture documentation"],
+            "data_sources": ["Test fixture input"],
+            "required_capabilities": ["Read fixture input"],
+            "readiness_checks": ["Fixture input exists"],
+        },
+        "risk": {"tier": "low", "permissions": ["Read fixture input"],
+                 "mutation_boundary": "read-only", "approval_required": []},
+        "routing_tests": {
+            "should_trigger": ["Run fixture one", "Run fixture two", "Run fixture three"],
+            "should_not_trigger": ["Ignore fixture one", "Ignore fixture two", "Ignore fixture three"],
+        },
     }), encoding="utf-8")
     return skill
 

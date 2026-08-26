@@ -14,13 +14,13 @@ description: >-
 license: MIT
 activation: /agent-skill-creator
 metadata:
-  author: Francy Lisboa Charuto
+  author: Francy J G Lisboa
   version: 6.1.0
   created: 2025-10-18
   last_reviewed: 2026-08-11
   review_interval_days: 180
 provenance:
-  maintainer: Francy Lisboa Charuto
+  maintainer: Francy J G Lisboa
   version: 6.1.0
   created: 2025-10-18
   source_references:
@@ -327,7 +327,9 @@ Create all files in this order:
    `trigger`, `decision`, `evidence`, and `success_measure`), plus the real-world
    outcome, intended users, input types, output artifacts, use cases, invocation
    examples, permissions/systems, typical completion time, declared platform
-   compatibility, and support tier. Read `references/discovery-metadata.md`. Never
+   compatibility, environment discovery/readiness, risk and mutation boundaries,
+   positive/negative routing tests, and support tier. Read
+   `references/discovery-metadata.md`. Never
    generate a skill without the five decision-contract fields; do not invent
    compatibility certification during creation.
    If the user has named a target governed marketplace and its published governance

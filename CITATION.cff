@@ -3,8 +3,8 @@ title: Agent Skill Creator
 message: "If you use this project, please cite it."
 type: software
 authors:
-  - given-names: Francy
-    family-names: Lisboa Charuto
+  - given-names: Francy J G
+    family-names: Lisboa
 repository-code: "https://github.com/FrancyJGLisboa/agent-skill-creator"
 abstract: >-
   Turn any workflow description into a validated, security-scanned agent skill

@@ -55,6 +55,14 @@ Demo body.
         "decision": ["Accept or reject the export package"],
         "evidence": ["Source skill", "Generated package"],
         "success_measure": "The package preserves the requested version and target format",
+        "environment": {"documentation_sources": ["Export format docs"],
+                        "data_sources": ["Source skill"],
+                        "required_capabilities": ["Read source skill"],
+                        "readiness_checks": ["Source skill exists"]},
+        "risk": {"tier": "low", "permissions": ["Read source skill"],
+                 "mutation_boundary": "read-only", "approval_required": []},
+        "routing_tests": {"should_trigger": ["Export one", "Export two", "Export three"],
+                          "should_not_trigger": ["Skip one", "Skip two", "Skip three"]},
     }), encoding="utf-8")
     return skill
 

@@ -4,5 +4,16 @@
   "decision": ["Investigate a regional variance", "Accept the weekly regional totals"],
   "evidence": ["CRM export rows", "Deduplication and regional-total output"],
   "success_measure": "Every reported regional total reconciles to the cleaned CRM export",
-  "outcome": "Produce a clean weekly regional sales summary"
+  "outcome": "Produce a clean weekly regional sales summary",
+  "environment": {
+    "documentation_sources": ["CRM export schema supplied by the owner"],
+    "data_sources": ["Weekly CRM export"],
+    "required_capabilities": ["Read the supplied CRM export"],
+    "readiness_checks": ["Required CRM columns exist and the close period is known"]
+  },
+  "risk": {"tier": "low", "permissions": ["Read the supplied CRM export"], "mutation_boundary": "read-only", "approval_required": []},
+  "routing_tests": {
+    "should_trigger": ["Prepare this week's CRM report", "Which sales regions missed plan?", "Reconcile the weekly regional totals"],
+    "should_not_trigger": ["Update CRM opportunities", "Analyze a public stock", "Merge a pull request"]
+  }
 }
