@@ -50,6 +50,7 @@ def entry(name: str = "revenue-review", outcome: str = "Prepare a monthly revenu
                      "mutation_boundary": "read-only", "approval_required": []},
             "software_mutation": {"applies": False},
             "data_interfaces": {"applies": False},
+            "semantic_contract": {"applies": False},
             "routing_tests": {
                 "should_trigger": ["Review monthly revenue", "Explain revenue variance", "Analyze revenue plan"],
                 "should_not_trigger": ["Write sales email", "Merge pull request", "Delete customer account"],
@@ -113,7 +114,8 @@ def test_operating_contract_requires_environment_risk_and_routing() -> None:
                           "should_not_trigger": ["Negative one", "Negative two", "Negative three"]},
     }
     for field in (
-        "environment", "risk", "software_mutation", "data_interfaces", "routing_tests"
+        "environment", "risk", "software_mutation", "data_interfaces",
+        "semantic_contract", "routing_tests"
     ):
         broken = entry()
         broken["discovery"].update(operating)  # type: ignore[union-attr]
@@ -169,6 +171,58 @@ def test_structured_data_accepts_complete_interface_contract() -> None:
     contract = discovery.require_operating_contract(item)["data_interfaces"]
     assert contract["applies"] is True
     assert contract["interface_types"] == ["api"]
+
+
+def semantic_contract() -> dict[str, object]:
+    return {
+        "applies": True,
+        "definitions": [{
+            "id": "active-customer",
+            "version": "2.1.0",
+            "definition": "Customer eligible for commercial active-base reporting",
+            "scope": "Direct B2B customers",
+            "grain": "customer_id",
+            "unit": "customers",
+            "source_precedence": ["billing.customer_contract", "crm.account_status"],
+            "owner": "commercial-analytics",
+            "valid_from": "2026-07-01",
+            "last_reviewed": "2026-08-18",
+            "review_interval_days": 30,
+        }],
+        "dependencies": [{"id": "active-customer", "version": "2.1.0"}],
+        "ambiguity": {
+            "allowed_outcomes": ["answer", "ask", "refuse_unknown"],
+            "unresolved_action": "ask",
+            "clarification": "Which active-customer context do you mean?",
+        },
+    }
+
+
+def test_semantic_meaning_requires_complete_contract() -> None:
+    item = entry()
+    item["discovery"]["semantic_contract"] = {"applies": True}  # type: ignore[index]
+    with pytest.raises(discovery.DiscoveryError, match="definitions"):
+        discovery.require_operating_contract(item)
+
+
+def test_semantic_contract_preserves_source_precedence_and_dependencies() -> None:
+    item = entry()
+    item["discovery"]["semantic_contract"] = semantic_contract()  # type: ignore[index]
+    contract = discovery.require_operating_contract(item)["semantic_contract"]
+    assert contract["definitions"][0]["source_precedence"] == [
+        "billing.customer_contract", "crm.account_status",
+    ]
+    assert contract["dependencies"] == [{"id": "active-customer", "version": "2.1.0"}]
+    assert contract["ambiguity"]["unresolved_action"] == "ask"
+
+
+def test_ask_outcome_requires_clarification_prompt() -> None:
+    item = entry()
+    contract = semantic_contract()
+    contract["ambiguity"].pop("clarification")  # type: ignore[union-attr]
+    item["discovery"]["semantic_contract"] = contract  # type: ignore[index]
+    with pytest.raises(discovery.DiscoveryError, match="clarification"):
+        discovery.require_operating_contract(item)
 
 
 def test_operating_contract_accepts_bounded_read_only_skill() -> None:

@@ -57,7 +57,7 @@ def registry(entry: dict[str, object]) -> dict[str, object]:
     return {"schema_version": 2, "marketplace": {"name": "ACME Skills"}, "skills": [entry]}
 
 
-def test_healthy_skill_evaluates_exactly_five_dimensions(tmp_path: Path) -> None:
+def test_healthy_skill_evaluates_every_health_dimension(tmp_path: Path) -> None:
     write_skill(tmp_path)
     report = health.build_health_report(registry(skill_entry()), tmp_path, TODAY, {"alice"})
     item = report["skills"][0]
@@ -66,7 +66,7 @@ def test_healthy_skill_evaluates_exactly_five_dimensions(tmp_path: Path) -> None
     assert report["summary"] == {"status": "healthy", "skills": 1, "findings": 0, "critical": 0, "warning": 0}
 
 
-def test_all_five_dimensions_emit_actionable_findings(tmp_path: Path) -> None:
+def test_all_dimensions_emit_actionable_findings(tmp_path: Path) -> None:
     write_skill(tmp_path, reviewed="2025-01-01")
     entry = skill_entry()
     entry["dependency_health"] = [{"name": "ledger-api", "status": "unreachable", "checked_at": "2026-08-24T12:00:00Z"}]
@@ -75,6 +75,21 @@ def test_all_five_dimensions_emit_actionable_findings(tmp_path: Path) -> None:
     entry["compatibility"] = {
         "declared": ["codex", "cursor"],
         "certified": [{"platform": "codex", "passed": True, "version": "1.2.3"}],
+    }
+    entry["discovery"] = {
+        "semantic_contract": {
+            "applies": True,
+            "definitions": [{
+                "id": "revenue", "version": "1.0.0", "definition": "Booked revenue",
+                "scope": "Finance reporting", "grain": "invoice_id", "unit": "USD",
+                "source_precedence": ["ledger"], "owner": "finance",
+                "valid_from": "2025-01-01", "last_reviewed": "2025-01-01",
+                "review_interval_days": 30,
+            }],
+            "dependencies": [{"id": "revenue", "version": "1.0.0"}],
+            "ambiguity": {"allowed_outcomes": ["answer", "ask", "refuse_unknown"],
+                          "unresolved_action": "ask", "clarification": "Which revenue?"},
+        },
     }
     report = health.build_health_report(registry(entry), tmp_path, TODAY, {"alice"})
     findings = report["findings"]
@@ -140,6 +155,31 @@ def test_healthy_discovery_compatibility_renders_without_legacy_registry_field(t
     }
     report = health.build_health_report(registry(entry), tmp_path, TODAY, {"alice"})
     assert report["skills"][0]["checks"]["compatibility"]["status"] == "healthy"
+
+
+def test_stale_semantic_definition_is_critical(tmp_path: Path) -> None:
+    write_skill(tmp_path)
+    entry = skill_entry()
+    entry["discovery"] = {
+        "semantic_contract": {
+            "applies": True,
+            "definitions": [{
+                "id": "active-customer", "version": "1.0.0",
+                "definition": "Commercial active customer", "scope": "Direct B2B",
+                "grain": "customer_id", "unit": "customers",
+                "source_precedence": ["billing.contract"], "owner": "finance",
+                "valid_from": "2025-01-01", "last_reviewed": "2025-01-01",
+                "review_interval_days": 30,
+            }],
+            "dependencies": [{"id": "active-customer", "version": "1.0.0"}],
+            "ambiguity": {"allowed_outcomes": ["answer", "ask", "refuse_unknown"],
+                          "unresolved_action": "ask", "clarification": "Which context?"},
+        },
+    }
+    findings = health.build_health_report(registry(entry), tmp_path, TODAY, {"alice"})["findings"]
+    finding = next(item for item in findings if item["dimension"] == "semantic_freshness")
+    assert finding["severity"] == "critical"
+    assert "active-customer" in finding["reason"]
 
 
 def test_report_json_is_deterministic_and_round_trippable(tmp_path: Path) -> None:

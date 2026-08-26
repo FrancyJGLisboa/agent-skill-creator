@@ -56,6 +56,28 @@ uses it for outcome-first search, and generates a structured skill page.
     "nullability": ["amount and account_id are required"],
     "readiness_checks": ["One safe sample matches the approved schema"]
   },
+  "semantic_contract": {
+    "applies": true,
+    "definitions": [{
+      "id": "recognized-revenue",
+      "version": "1.0.0",
+      "definition": "Revenue recognized under the approved finance policy",
+      "scope": "Monthly management reporting",
+      "grain": "revenue_record_id",
+      "unit": "account currency",
+      "source_precedence": ["approved revenue ledger", "CRM opportunity"],
+      "owner": "commercial-analytics",
+      "valid_from": "2026-07-01",
+      "last_reviewed": "2026-08-18",
+      "review_interval_days": 30
+    }],
+    "dependencies": [{"id": "recognized-revenue", "version": "1.0.0"}],
+    "ambiguity": {
+      "allowed_outcomes": ["answer", "ask", "refuse_unknown"],
+      "unresolved_action": "ask",
+      "clarification": "Do you mean recognized revenue or CRM pipeline value?"
+    }
+  },
   "routing_tests": {
     "should_trigger": ["Review monthly revenue", "Why did revenue miss plan?", "Prepare the revenue variance review"],
     "should_not_trigger": ["Write a sales email", "Forecast next year's hiring", "Delete the revenue ledger"]
@@ -117,6 +139,14 @@ Rules:
   semantic readiness. Unresolved field meaning, identity, or relationship ambiguity
   blocks useful execution. For unstructured inputs with no structured interface, use
   only `{"applies": false}`.
+- `semantic_contract.applies` is required. Set it to `true` when correctness depends
+  on organizational meaning, source precedence, business scope, grain, units, or time
+  interpretation. Each definition has a safe ID, exact semantic version, human owner,
+  ordered sources, validity date, review date, and positive review interval. Declare
+  exact dependencies and all three legitimate outcomes: `answer`, `ask`, and
+  `refuse_unknown`. Unresolved meaning must ask a declared clarification or refuse;
+  it must never silently choose. Use only `{"applies": false}` when no organizational
+  interpretation is required. Marketplace release checks block overdue definitions.
 - `routing_tests` supplies at least three positive and three negative queries for
   portfolio coexistence evaluation.
 

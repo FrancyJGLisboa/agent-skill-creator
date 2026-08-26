@@ -89,8 +89,12 @@ Creation and marketplace admission fail when any of these fields is missing.
 
 Every admitted skill also carries an operating contract: environment documentation,
 data sources, readiness checks, least-privilege permissions, risk tier, mutation
-boundary, and positive/negative routing tests. Installation plans expose this
-preflight instead of treating installation as proof of readiness.
+boundary, and positive/negative routing tests. When business meaning affects
+correctness, a conditional semantic contract adds authoritative definitions, ordered
+source precedence, exact dependencies, ambiguity behavior, and owner-review freshness.
+Installation plans expose this preflight instead of treating installation as proof of
+readiness. Use the bounded [semantic-contract experiment](references/semantic-contract-experiment.md)
+before expanding that capability.
 | **Organizational learning system** | Improve capabilities from real corrections and outcomes | Evolution log, regression evidence, health reports, privacy-safe success metrics |
 
 The decisive product test is automated: create three skills, publish a remote tag,

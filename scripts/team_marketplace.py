@@ -39,7 +39,7 @@ from marketplace_trust import (  # noqa: E402
 from marketplace_health import build_health_report, report_json, report_markdown  # noqa: E402
 from marketplace_discovery import (  # noqa: E402
     DiscoveryError, evaluate_portfolio, render_skill_page, require_operating_contract,
-    search_skills,
+    search_skills, semantic_freshness_failures,
 )
 from marketplace_metrics import (  # noqa: E402
     CONSENT_SCHEMA, EVENT_TYPES, MetricsError, aggregate_events, create_event,
@@ -1009,6 +1009,14 @@ def check_marketplace(
                 "certified": certified,
             }
             if require_published:
+                stale_semantics = semantic_freshness_failures(
+                    normalized_discovery["semantic_contract"], date.today()
+                )
+                if stale_semantics:
+                    errors.append(
+                        f"{identity[1]}: release requires current semantic owner review for: "
+                        f"{', '.join(stale_semantics)}"
+                    )
                 declared = set(entry["compatibility"]["declared"])
                 current_certified = {
                     normalize_platform_name(str(item.get("platform", ""))) for item in certified

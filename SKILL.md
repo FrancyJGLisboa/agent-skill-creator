@@ -323,6 +323,16 @@ authority or unresolved ambiguity blocks useful execution. Non-structured workfl
 declare that this conditional contract does not apply. Read
 `references/discovery-metadata.md` for the schema.
 
+**Phase 2 also classifies organizational semantics.** When a correct answer depends
+on business definitions, scope, grain, units, time interpretation, or which source
+wins, require the human domain owner to approve a versioned semantic contract. Record
+ordered source precedence, owner, validity and review dates, exact dependencies, and
+the legitimate `answer`, `ask`, and `refuse_unknown` outcomes. The agent may draft and
+document this representation but cannot establish authority. Unresolved meaning must
+ask the declared clarification or refuse. Skills with no organizational interpretation
+declare that this conditional contract does not apply. Read
+`references/discovery-metadata.md` for the schema.
+
 ### Phase 3: Architecture
 
 Structure the skill using the Agent Skills Open Standard:
@@ -357,7 +367,8 @@ Create all files in this order:
    examples, permissions/systems, typical completion time, declared platform
    compatibility, environment discovery/readiness, risk and mutation boundaries,
    the conditional software-mutation representation review, the conditional structured
-   data-interface contract, positive/negative routing tests, and support tier. Read
+   data-interface contract, the conditional governed semantic contract,
+   positive/negative routing tests, and support tier. Read
    `references/discovery-metadata.md`. Never
    generate a skill without the five decision-contract fields; do not invent
    compatibility certification during creation.
@@ -604,3 +615,4 @@ Read these on demand — each one when its moment arrives, not upfront.
 | `references/skill-graph.md` | Normalized artifact graph, blocking reachability constraints, parallel gates, and content-addressed caching |
 | `references/product-success.md` | Local lifecycle event schema, privacy boundary, Durable Active Skills definition, and metric formulas |
 | `references/discovery-metadata.md` | Generated discovery.json schema used by governed marketplace search and skill pages |
+| `references/semantic-contract-experiment.md` | Bounded three-skill, four-configuration evidence protocol for semantic-contract product success |

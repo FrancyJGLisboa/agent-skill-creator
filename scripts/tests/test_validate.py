@@ -57,6 +57,7 @@ metadata:
                  "mutation_boundary": "read-only", "approval_required": []},
         "software_mutation": {"applies": False},
         "data_interfaces": {"applies": False},
+        "semantic_contract": {"applies": False},
         "routing_tests": {
             "should_trigger": ["Run fixture one", "Run fixture two", "Run fixture three"],
             "should_not_trigger": ["Ignore fixture one", "Ignore fixture two", "Ignore fixture three"],

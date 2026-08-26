@@ -63,6 +63,7 @@ Demo body.
                  "mutation_boundary": "read-only", "approval_required": []},
         "software_mutation": {"applies": False},
         "data_interfaces": {"applies": False},
+        "semantic_contract": {"applies": False},
         "routing_tests": {"should_trigger": ["Export one", "Export two", "Export three"],
                           "should_not_trigger": ["Skip one", "Skip two", "Skip three"]},
     }), encoding="utf-8")

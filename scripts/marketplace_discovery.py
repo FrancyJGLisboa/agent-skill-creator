@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import re
+from datetime import date
 from pathlib import PurePosixPath
 from typing import Any, Mapping, Sequence
 
@@ -14,6 +15,7 @@ DISCOVERY_FIELDS = (
     "intended_users", "input_types", "output_artifacts", "use_cases",
     "examples", "permissions_systems", "typical_completion_time", "compatibility",
     "support_tier", "environment", "risk", "software_mutation", "data_interfaces",
+    "semantic_contract",
     "routing_tests",
     "metadata_completeness",
 )
@@ -25,6 +27,7 @@ DATA_INTERFACE_TYPES = {
     "event-stream", "schema-registry",
 }
 INSTALLABLE_LIFECYCLE_STATES = {"published"}
+SEMANTIC_OUTCOMES = {"answer", "ask", "refuse_unknown"}
 _TOKEN = re.compile(r"[a-z0-9]+")
 _SLUG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 _SEMVER = re.compile(r"^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:[-+][0-9A-Za-z.-]+)?$")
@@ -51,6 +54,18 @@ def _list(value: object) -> list[str]:
     if not isinstance(value, list):
         return []
     return sorted({_text(item, default="", limit=200) for item in value if _text(item, default="", limit=200)})
+
+
+def _ordered_list(value: object) -> list[str]:
+    """Normalize a list without destroying authority or fallback precedence."""
+    if not isinstance(value, list):
+        return []
+    result: list[str] = []
+    for item in value:
+        normalized = _text(item, default="", limit=200)
+        if normalized and normalized not in result:
+            result.append(normalized)
+    return result
 
 
 def _examples(value: object, name: str) -> list[dict[str, str]]:
@@ -199,6 +214,128 @@ def _data_interfaces(value: object, *, required: bool = False) -> dict[str, Any]
     return {"applies": True, **contract}
 
 
+def _iso_date(value: object, field: str) -> str:
+    normalized = _text(value, default="", limit=10)
+    try:
+        return date.fromisoformat(normalized).isoformat()
+    except ValueError as exc:
+        raise DiscoveryError(f"semantic_contract {field} must use YYYY-MM-DD") from exc
+
+
+def _semantic_contract(value: object, *, required: bool = False) -> dict[str, Any]:
+    """Validate human-authoritative meaning required by data-dependent answers."""
+    if not isinstance(value, Mapping):
+        if required:
+            raise DiscoveryError("semantic_contract must be an object")
+        return {"applies": False}
+    if not isinstance(value.get("applies"), bool):
+        raise DiscoveryError("semantic_contract.applies must be true or false")
+    if value["applies"] is False:
+        return {"applies": False}
+
+    raw_definitions = value.get("definitions")
+    if not isinstance(raw_definitions, list) or not raw_definitions:
+        raise DiscoveryError("semantic_contract.definitions must be a non-empty list")
+    definitions: list[dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+    for raw in raw_definitions:
+        if not isinstance(raw, Mapping):
+            raise DiscoveryError("semantic_contract definitions must be objects")
+        contract_id = _text(raw.get("id"), default="", limit=100)
+        version = _text(raw.get("version"), default="", limit=80)
+        if not _SLUG.fullmatch(contract_id):
+            raise DiscoveryError("semantic_contract definition id must be a safe lowercase slug")
+        if not _SEMVER.fullmatch(version):
+            raise DiscoveryError("semantic_contract definition version must use semantic versioning")
+        identity = (contract_id, version)
+        if identity in seen:
+            raise DiscoveryError(f"duplicate semantic_contract definition: {contract_id}@{version}")
+        seen.add(identity)
+        text_fields = ("definition", "scope", "grain", "unit", "owner")
+        normalized = {field: _text(raw.get(field), default="") for field in text_fields}
+        missing = [field for field, item in normalized.items() if not item]
+        precedence = _ordered_list(raw.get("source_precedence"))
+        if not precedence:
+            missing.append("source_precedence")
+        interval = raw.get("review_interval_days")
+        if not isinstance(interval, int) or isinstance(interval, bool) or interval <= 0:
+            missing.append("review_interval_days")
+        if missing:
+            raise DiscoveryError(
+                "required semantic_contract definition field(s) missing or invalid: "
+                + ", ".join(missing)
+            )
+        definitions.append({
+            "id": contract_id, "version": version, **normalized,
+            "source_precedence": precedence,
+            "valid_from": _iso_date(raw.get("valid_from"), "valid_from"),
+            "last_reviewed": _iso_date(raw.get("last_reviewed"), "last_reviewed"),
+            "review_interval_days": interval,
+        })
+
+    raw_dependencies = value.get("dependencies")
+    if not isinstance(raw_dependencies, list) or not raw_dependencies:
+        raise DiscoveryError("semantic_contract.dependencies must be a non-empty list")
+    dependencies: list[dict[str, str]] = []
+    for raw in raw_dependencies:
+        if not isinstance(raw, Mapping):
+            raise DiscoveryError("semantic_contract dependencies must be objects")
+        contract_id = _text(raw.get("id"), default="", limit=100)
+        version = _text(raw.get("version"), default="", limit=80)
+        if not _SLUG.fullmatch(contract_id) or not _SEMVER.fullmatch(version):
+            raise DiscoveryError("semantic_contract dependencies require safe id and exact version")
+        item = {"id": contract_id, "version": version}
+        if item not in dependencies:
+            dependencies.append(item)
+    dependency_identities = {(item["id"], item["version"]) for item in dependencies}
+    if dependency_identities != seen:
+        raise DiscoveryError(
+            "semantic_contract dependencies must exactly reference the governed definitions"
+        )
+
+    raw_ambiguity = value.get("ambiguity")
+    if not isinstance(raw_ambiguity, Mapping):
+        raise DiscoveryError("semantic_contract.ambiguity must be an object")
+    outcomes = _ordered_list(raw_ambiguity.get("allowed_outcomes"))
+    if set(outcomes) != SEMANTIC_OUTCOMES:
+        raise DiscoveryError(
+            "semantic_contract ambiguity.allowed_outcomes must contain answer, ask, and refuse_unknown"
+        )
+    action = _text(raw_ambiguity.get("unresolved_action"), default="", limit=40)
+    if action not in {"ask", "refuse_unknown"}:
+        raise DiscoveryError("semantic_contract ambiguity.unresolved_action must be ask or refuse_unknown")
+    clarification = _text(raw_ambiguity.get("clarification"), default="", limit=300)
+    if action == "ask" and not clarification:
+        raise DiscoveryError("semantic_contract ambiguity.clarification is required when action is ask")
+    return {
+        "applies": True,
+        "definitions": sorted(definitions, key=lambda item: (item["id"], item["version"])),
+        "dependencies": sorted(dependencies, key=lambda item: (item["id"], item["version"])),
+        "ambiguity": {
+            "allowed_outcomes": outcomes,
+            "unresolved_action": action,
+            "clarification": clarification,
+        },
+    }
+
+
+def semantic_freshness_failures(
+    contract: Mapping[str, Any], as_of: date,
+) -> list[str]:
+    """Return stable identities for definitions whose owner review is overdue."""
+    if not contract.get("applies"):
+        return []
+    failures: list[str] = []
+    for definition in contract.get("definitions", []):
+        if not isinstance(definition, Mapping):
+            continue
+        reviewed = date.fromisoformat(str(definition["last_reviewed"]))
+        interval = int(definition["review_interval_days"])
+        if (as_of - reviewed).days > interval:
+            failures.append(f"{definition['id']}@{definition['version']}")
+    return sorted(failures)
+
+
 def _routing_tests(value: object) -> dict[str, list[str]]:
     if not isinstance(value, Mapping):
         return {}
@@ -245,6 +382,7 @@ def normalize_discovery(entry: Mapping[str, Any]) -> dict[str, Any]:
     risk = _risk(raw.get("risk"))
     software_mutation = _software_mutation(raw.get("software_mutation"))
     data_interfaces = _data_interfaces(raw.get("data_interfaces"))
+    semantic_contract = _semantic_contract(raw.get("semantic_contract"))
     routing_tests = _routing_tests(raw.get("routing_tests"))
     present = sum((
         question != "Not provided", bool(trigger), bool(decision), bool(evidence),
@@ -274,6 +412,7 @@ def normalize_discovery(entry: Mapping[str, Any]) -> dict[str, Any]:
         "risk": risk,
         "software_mutation": software_mutation,
         "data_interfaces": data_interfaces,
+        "semantic_contract": semantic_contract,
         "routing_tests": routing_tests,
         "metadata_completeness": present,
     }
@@ -309,6 +448,9 @@ def require_operating_contract(entry: Mapping[str, Any]) -> dict[str, Any]:
     )
     metadata["data_interfaces"] = _data_interfaces(
         raw.get("data_interfaces"), required=True
+    )
+    metadata["semantic_contract"] = _semantic_contract(
+        raw.get("semantic_contract"), required=True
     )
     metadata["routing_tests"] = _routing_tests_required(raw.get("routing_tests"))
     return metadata
@@ -526,5 +668,25 @@ def render_skill_page(entry: Mapping[str, Any]) -> str:
             "### Freshness and pagination", "", *_bullets(data["freshness_and_pagination"]), "",
             "### Nullability", "", *_bullets(data["nullability"]), "",
             "### Readiness checks", "", *_bullets(data["readiness_checks"]),
+        ]
+    semantic = metadata["semantic_contract"]
+    if semantic["applies"]:
+        lines += ["", "## Semantic contract", ""]
+        for definition in semantic["definitions"]:
+            lines += [
+                f"### {_md(definition['id'])}@{_md(definition['version'])}", "",
+                _md(definition["definition"]), "",
+                f"Owner: **{_md(definition['owner'])}**", "",
+                f"Scope: {_md(definition['scope'])}", "",
+                f"Grain/unit: {_md(definition['grain'])} / {_md(definition['unit'])}", "",
+                "Source precedence:", "", *_bullets(definition["source_precedence"]), "",
+                f"Last reviewed: `{_md(definition['last_reviewed'])}` every "
+                f"{definition['review_interval_days']} days", "",
+            ]
+        ambiguity = semantic["ambiguity"]
+        lines += [
+            "### Unresolved meaning", "",
+            f"Action: **{_md(ambiguity['unresolved_action'])}**", "",
+            _md(ambiguity["clarification"] or "No clarification prompt required."),
         ]
     return "\n".join(lines) + "\n"

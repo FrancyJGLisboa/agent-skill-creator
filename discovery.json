@@ -64,6 +64,9 @@
     "nullability": ["The generated skill records required, optional, and nullable fields from authoritative evidence"],
     "readiness_checks": ["Authoritative documentation is available", "A safe representative sample matches the declared schema when accessible"]
   },
+  "semantic_contract": {
+    "applies": false
+  },
   "routing_tests": {
     "should_trigger": ["Create a skill for reviewing invoices", "Turn this workflow document into an agent skill", "Validate and publish this existing skill"],
     "should_not_trigger": ["Run this existing invoice skill", "Create a general-purpose autonomous agent", "Install an unrelated MCP server"]

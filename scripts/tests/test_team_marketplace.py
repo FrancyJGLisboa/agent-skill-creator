@@ -66,6 +66,7 @@ None known.
                  "mutation_boundary": "read-only", "approval_required": []},
         "software_mutation": {"applies": False},
         "data_interfaces": {"applies": False},
+        "semantic_contract": {"applies": False},
         "routing_tests": {
             "should_trigger": [f"Run {name} one", f"Run {name} two", f"Run {name} three"],
             "should_not_trigger": ["Write a sales email", "Merge a pull request", "Delete an account"],
@@ -975,8 +976,9 @@ def test_certification_enables_filtered_search_and_distribution_plan(tmp_path: P
                             "readiness_checks": ["Revenue columns exist"]},
             "risk": {"tier": "low", "permissions": ["Read revenue ledger"],
                      "mutation_boundary": "read-only", "approval_required": []},
-            "software_mutation": {"applies": False},
-            "data_interfaces": {"applies": False},
+                "software_mutation": {"applies": False},
+                "data_interfaces": {"applies": False},
+                "semantic_contract": {"applies": False},
             "routing_tests": {"should_trigger": ["Review monthly revenue", "Explain revenue variance", "Analyze revenue plan"],
                               "should_not_trigger": ["Write sales email", "Merge pull request", "Delete account"]},
         }), encoding="utf-8")
@@ -1016,6 +1018,33 @@ def test_release_check_blocks_uncertified_declared_platform(tmp_path: Path) -> N
     )
 
 
+def test_release_check_blocks_stale_semantic_contract(tmp_path: Path) -> None:
+    repo = init_marketplace(tmp_path)
+    skill = make_skill(tmp_path, "report-skill")
+    discovery_path = skill / "discovery.json"
+    payload = json.loads(discovery_path.read_text(encoding="utf-8"))
+    payload["semantic_contract"] = {
+        "applies": True,
+        "definitions": [{
+            "id": "recognized-revenue", "version": "1.0.0",
+            "definition": "Revenue recognized under approved finance policy",
+            "scope": "Monthly management reporting", "grain": "invoice_id", "unit": "USD",
+            "source_precedence": ["ledger", "crm"], "owner": "finance",
+            "valid_from": "2025-01-01", "last_reviewed": "2025-01-01",
+            "review_interval_days": 30,
+        }],
+        "dependencies": [{"id": "recognized-revenue", "version": "1.0.0"}],
+        "ambiguity": {"allowed_outcomes": ["answer", "ask", "refuse_unknown"],
+                      "unresolved_action": "ask", "clarification": "Which revenue?"},
+    }
+    discovery_path.write_text(json.dumps(payload), encoding="utf-8")
+    recommit_and_attest(skill)
+    market.add_skill(repo, skill, "finance", "base")
+    market.transition_skill(repo, "finance", "report-skill", "published")
+    errors = market.check_marketplace(repo, refresh=False, require_published=True)
+    assert any("current semantic owner review" in error for error in errors)
+
+
 def test_add_persists_discovery_compatibility_for_health_governance(tmp_path: Path) -> None:
     repo = init_marketplace(tmp_path)
     skill = make_skill(tmp_path, "report-skill")
@@ -1034,9 +1063,10 @@ def test_add_persists_discovery_compatibility_for_health_governance(tmp_path: Pa
                             "readiness_checks": ["Revenue columns exist"]},
             "risk": {"tier": "low", "permissions": ["Read revenue ledger"],
                      "mutation_boundary": "read-only", "approval_required": []},
-            "software_mutation": {"applies": False},
-            "data_interfaces": {"applies": False},
-            "routing_tests": {"should_trigger": ["Review monthly revenue", "Explain revenue variance", "Analyze revenue plan"],
+                "software_mutation": {"applies": False},
+                "data_interfaces": {"applies": False},
+                "semantic_contract": {"applies": False},
+                "routing_tests": {"should_trigger": ["Review monthly revenue", "Explain revenue variance", "Analyze revenue plan"],
                               "should_not_trigger": ["Write sales email", "Merge pull request", "Delete account"]},
         }), encoding="utf-8")
     recommit_and_attest(skill)

@@ -16,6 +16,7 @@ from marketplace_discovery import DiscoveryError, normalize_discovery
 
 HEALTH_DIMENSIONS = (
     "review_staleness",
+    "semantic_freshness",
     "dependency_health",
     "eval_regression",
     "owner_presence",
@@ -75,6 +76,52 @@ def _review_check(entry: Mapping[str, Any], root: Path, today: date, identity: s
         item = _finding(identity, "review_staleness", "warning", f"Review is due soon on {deadline.isoformat()}.", "Schedule owner review before the deadline.")
         return {"status": "warning", "detail": item["reason"]}, [item]
     return {"status": "healthy", "detail": f"Reviewed {reviewed.isoformat()}; deadline {deadline.isoformat()}."}, []
+
+
+def _semantic_freshness_check(
+    entry: Mapping[str, Any], today: date, identity: str,
+) -> tuple[dict[str, str], list[dict[str, str]]]:
+    discovery = entry.get("discovery", {})
+    discovery = discovery if isinstance(discovery, Mapping) else {}
+    try:
+        semantic = normalize_discovery({
+            "name": str(entry.get("name", "")),
+            "version": str(entry.get("version", "")),
+            "discovery": discovery,
+        })["semantic_contract"]
+    except DiscoveryError as exc:
+        reason = f"Semantic contract is invalid: {exc}."
+        item = _finding(identity, "semantic_freshness", "critical", reason,
+                        "Repair the semantic contract and obtain owner review.")
+        return {"status": "critical", "detail": reason}, [item]
+    if not semantic.get("applies"):
+        return {"status": "healthy", "detail": "No semantic contract is required."}, []
+    stale: list[str] = []
+    due_soon: list[str] = []
+    for definition in semantic["definitions"]:
+        reviewed = date.fromisoformat(definition["last_reviewed"])
+        status, _, _ = classify_staleness(
+            reviewed, definition["review_interval_days"], today,
+        )
+        label = f"{definition['id']}@{definition['version']}"
+        if status == "overdue":
+            stale.append(label)
+        elif status == "due_soon":
+            due_soon.append(label)
+    if stale:
+        reason = "Semantic review is overdue for: " + ", ".join(stale) + "."
+        item = _finding(identity, "semantic_freshness", "critical", reason,
+                        "Have each semantic owner review the meaning and publish a current version.")
+        return {"status": "critical", "detail": reason}, [item]
+    if due_soon:
+        reason = "Semantic review is due soon for: " + ", ".join(due_soon) + "."
+        item = _finding(identity, "semantic_freshness", "warning", reason,
+                        "Schedule semantic owner review before the deadline.")
+        return {"status": "warning", "detail": reason}, [item]
+    return {
+        "status": "healthy",
+        "detail": f"{len(semantic['definitions'])} semantic definition(s) are current.",
+    }, []
 
 
 def _dependency_check(entry: Mapping[str, Any], identity: str) -> tuple[dict[str, str], list[dict[str, str]]]:
@@ -171,7 +218,7 @@ def _compatibility_check(entry: Mapping[str, Any], identity: str) -> tuple[dict[
 
 
 def build_health_report(registry: Mapping[str, Any], root: Path, today: date, active_owners: set[str]) -> dict[str, Any]:
-    """Evaluate exactly five local health dimensions for each schema-v2 skill."""
+    """Evaluate every governed local health dimension for each schema-v2 skill."""
     if registry.get("schema_version") != 2:
         raise ValueError("marketplace health requires registry schema_version 2")
     marketplace = registry.get("marketplace", {})
@@ -186,6 +233,7 @@ def build_health_report(registry: Mapping[str, Any], root: Path, today: date, ac
         checks: dict[str, dict[str, str]] = {}
         for dimension, result in (
             ("review_staleness", _review_check(entry, root, today, identity)),
+            ("semantic_freshness", _semantic_freshness_check(entry, today, identity)),
             ("dependency_health", _dependency_check(entry, identity)),
             ("eval_regression", _eval_check(entry, identity)),
             ("owner_presence", _owner_check(entry, active_owners, identity)),
