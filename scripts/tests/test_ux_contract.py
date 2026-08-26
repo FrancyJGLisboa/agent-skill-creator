@@ -120,6 +120,16 @@ def test_public_onboarding_does_not_require_a_perfect_prompt_or_schema() -> None
     assert "structured_interview.py gate" in factory
 
 
+def test_public_surfaces_state_reasoning_and_reproducibility_boundary() -> None:
+    readme = " ".join(read("README.md").lower().replace(">", " ").split())
+    page = " ".join(re.sub(r"<[^>]+>", " ", read("docs/index.html")).lower().split())
+
+    for surface in (readme, page):
+        assert "reason where interpretation is necessary" in surface
+        assert "deterministic controls where reproducibility matters" in surface
+        assert "rather than promising identical outputs" in surface
+
+
 def test_public_onboarding_shows_the_resumable_interview_flow() -> None:
     readme = read("README.md")
     page = read("docs/index.html")

@@ -5,7 +5,7 @@
 ![Agent Skill Creator: question to tested skill to governed marketplace](docs/assets/agent-skill-creator-social-preview.png)
 
 [![CI](https://github.com/FrancyJGLisboa/agent-skill-creator/actions/workflows/ci.yml/badge.svg)](https://github.com/FrancyJGLisboa/agent-skill-creator/actions/workflows/ci.yml)
-[![Agent Skills Open Standard](https://img.shields.io/badge/Agent%20Skills-Open%20Standard-blue)](https://github.com/anthropics/agent-skills-spec)
+[![Agent Skills Open Standard](https://img.shields.io/badge/Agent%20Skills-Open%20Standard-blue)](https://github.com/agentskills/agentskills/blob/main/docs/specification.mdx)
 [![Platforms](https://img.shields.io/badge/installs%20on-17%20platforms-7c3aed)](docs/INSTALL.md)
 [![Version](https://img.shields.io/badge/version-6.1.0-brightgreen)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)]()
@@ -52,6 +52,14 @@ server, or agent runtime.
 
 **RAG supplies knowledge. MCP supplies capabilities. The harness supplies execution.
 A skill organizes them into a governed path toward a verified outcome.**
+
+> **Reason where interpretation is necessary. Execute and verify with deterministic
+> controls where reproducibility matters.**
+>
+> Agent Skill Creator combines LLM reasoning with human-authorized meaning,
+> executable scripts, pinned dependencies, validation, and evals. External models,
+> APIs, and changing data may still vary; the product governs those conditions rather
+> than promising identical outputs.
 
 ## Who it is for
 
