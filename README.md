@@ -140,17 +140,42 @@ totals, and email a PDF sales report.
 ```
 
 You can attach the CRM export, an old report, or the script you currently use. The
-creator first gives you a short decision contract to confirm:
+creator does not expect you to know the correct prompt or semantic contract. It first
+inspects what you supplied, keeps a resumable evidence/decision record, and asks one
+bounded question at a time. For example:
 
 ```text
-Question: Which region needs attention this week?
-Trigger: the Friday CRM export is available
-Decision: investigate a variance or accept the reported totals
-Evidence: the CRM export and reconciliation output
-Success: every material variance has an owner and next action
+I found two meanings for “active customer”:
 
-Reply “yes” or correct the part I got wrong.
+1. CRM: any open account
+2. Billing: at least one billable event in the previous 30 days
+
+The report is used for revenue planning. Which definition does the Commercial
+Analytics owner authorize for that decision?
 ```
+
+Agent findings remain `proposed`; competing meanings remain `conflicting`. Generation
+starts only after an identified human confirms the consequential objective, authority,
+success measure, failure impact, and—when required—semantic meaning. The agent carries
+document/schema inspection, comparison, state tracking, contract drafting, and eval
+generation. Read the [structured interview](references/structured-interview.md).
+
+```text
+Messy problem
+    ↓
+Agent inspects evidence
+    ↓
+Proposed / conflicting meanings
+    ↓
+Human authority decision
+    ↓
+Interview READY
+    ↓
+Build, prove, publish
+```
+
+`BLOCKED` is a valid outcome when evidence or authority is missing. The creator saves
+the interview so the owner can resolve the decision and resume without starting over.
 
 ### 3. Judge the first result
 

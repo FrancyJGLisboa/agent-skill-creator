@@ -129,6 +129,7 @@ def test_init_generates_governance_scaffold(tmp_path: Path) -> None:
     assert (repo / "CATALOG.md").exists()
     assert (repo / "CODEOWNERS").exists()
     assert (repo / "GOVERNANCE.md").exists()
+    assert (repo / "scripts/structured_interview.py").exists()
 
 
 def test_init_normalizes_legacy_copilot_platform_alias(tmp_path: Path) -> None:

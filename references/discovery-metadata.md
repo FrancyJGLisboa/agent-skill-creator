@@ -4,6 +4,11 @@ Every generated skill includes `discovery.json`. The file describes the job a us
 can complete, not implementation keywords. The governed marketplace validates it,
 uses it for outcome-first search, and generates a structured skill page.
 
+Every factory-generated skill also preserves the ready `interview.json` that produced
+this contract. The interview is the evidence and authority trail; `discovery.json` is
+the compiled marketplace representation. Do not ask users to author either schema.
+Use `scripts/structured_interview.py` and read `references/structured-interview.md`.
+
 ```json
 {
   "question": "Why did monthly revenue deviate from plan?",

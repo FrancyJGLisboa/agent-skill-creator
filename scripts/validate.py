@@ -21,6 +21,7 @@ from pathlib import Path
 
 from skill_document import SkillDoc
 from marketplace_discovery import DiscoveryError, require_operating_contract
+from structured_interview import InterviewError, load as load_interview, readiness_report
 
 
 # --- Constants ---
@@ -248,6 +249,20 @@ def validate_skill(skill_path: str) -> dict:
                 )
         except (json.JSONDecodeError, OSError, DiscoveryError) as exc:
             errors.append(f"invalid discovery.json decision contract: {exc}")
+
+    # Generated skills preserve the evidence-backed intake that authorized
+    # generation. Third-party skills remain valid without this factory artifact,
+    # but once interview.json is present it must be structurally valid and ready.
+    interview_path = skill_dir / "interview.json"
+    if interview_path.exists():
+        try:
+            interview = load_interview(interview_path)
+            interview_report = readiness_report(interview)
+            if not interview_report["ready"]:
+                fields = ", ".join(interview_report["blocking_fields"])
+                errors.append(f"interview.json is not ready for generation; unresolved: {fields}")
+        except InterviewError as exc:
+            errors.append(f"invalid interview.json: {exc}")
 
     # --- Check: name field ---
     name_value = doc.name

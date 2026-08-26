@@ -107,6 +107,36 @@ def test_public_docs_state_semantic_authority_boundary_and_evidence_limit() -> N
     assert "semantic-contract experiment" in page
 
 
+def test_public_onboarding_does_not_require_a_perfect_prompt_or_schema() -> None:
+    readme = " ".join(read("README.md").lower().split())
+    page = " ".join(re.sub(r"<[^>]+>", " ", read("docs/index.html")).lower().split())
+    factory = read("SKILL.md").lower()
+
+    assert "does not expect you to know the correct prompt or semantic contract" in readme
+    assert "one bounded question at a time" in readme
+    assert "no perfect prompt required" in page
+    assert "agent proposals cannot silently become organizational truth" in page
+    assert "structured interview gate" in factory
+    assert "structured_interview.py gate" in factory
+
+
+def test_public_onboarding_shows_the_resumable_interview_flow() -> None:
+    readme = read("README.md")
+    page = read("docs/index.html")
+
+    for label in (
+        "Messy problem",
+        "Agent inspects evidence",
+        "Proposed / conflicting meanings",
+        "Human authority decision",
+        "Interview READY",
+        "Build, prove, publish",
+    ):
+        assert label in readme
+    assert 'class="skill-flow skill-flow--interview"' in page
+    assert "Missing evidence or authority remains BLOCKED and resumable." in page
+
+
 def test_public_docs_present_the_normalized_graph_release_gate() -> None:
     command = "python3 scripts/skill_graph.py run ./the-skill/ --jobs 4"
     readme = read("README.md")

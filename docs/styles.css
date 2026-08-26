@@ -166,6 +166,7 @@ code { overflow-wrap: anywhere; }
   gap: var(--space-lg);
   list-style: none;
 }
+.skill-flow--interview ol { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 .skill-flow li {
   position: relative;
   min-width: 0;

@@ -16,6 +16,7 @@ ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from validate import validate_skill  # noqa: E402
+from structured_interview import CORE_FIELDS, confirm, new_interview, save  # noqa: E402
 
 GOTCHAS_HINT = "'## Gotchas' section"
 
@@ -139,6 +140,30 @@ class TestGotchasCheck(unittest.TestCase):
 
         self.assertTrue(result["valid"])
         self.assertTrue(any("legacy discovery.json" in warning for warning in result["warnings"]))
+
+    def test_present_interview_state_blocks_an_unresolved_generated_skill(self):
+        skill = write_skill(self.base, "unresolved-interview-skill", "## Gotchas\n\nNone known.")
+        save(skill / "interview.json", new_interview("Build report", created_by="owner"))
+
+        result = validate_skill(str(skill))
+
+        self.assertFalse(result["valid"])
+        self.assertTrue(any("interview.json is not ready" in error for error in result["errors"]))
+
+    def test_confirmed_nonsemantic_interview_state_passes_validation(self):
+        skill = write_skill(self.base, "ready-interview-skill", "## Gotchas\n\nNone known.")
+        state = new_interview("Build report", created_by="owner")
+        for field in CORE_FIELDS:
+            value = False if field == "semantic_contract_applies" else f"approved {field}"
+            confirm(
+                state, field, value=value, actor="owner", evidence=["owner-review"],
+                authorized_human=True,
+            )
+        save(skill / "interview.json", state)
+
+        result = validate_skill(str(skill))
+
+        self.assertTrue(result["valid"], result["errors"])
 
 
 LABEL_HINT = "do not say what to do with the file"

@@ -62,8 +62,8 @@ COPY_IGNORE_PATTERNS = shutil.ignore_patterns(
 )
 SCAFFOLD_SCRIPTS = (
     "team_marketplace.py", "check_pipeline.py", "security_scan.py",
-    "skill_document.py", "validate.py", "marketplace_trust.py", "marketplace_health.py",
-    "marketplace_discovery.py",
+    "skill_document.py", "structured_interview.py", "validate.py",
+    "marketplace_trust.py", "marketplace_health.py", "marketplace_discovery.py",
     "marketplace_metrics.py",
     "marketplace_distribution.py", "platforms.py", "review_staleness.py",
 )

@@ -46,6 +46,14 @@ to semantic versioning where practical.
   runners are re-synced from the template.
 
 ### Added
+- **Resumable structured workflow interview** (`scripts/structured_interview.py`):
+  users may begin with an incomplete problem and raw materials instead of a perfect
+  prompt or semantic schema. The agent records inspected evidence as proposals,
+  preserves competing meanings as conflicts, and asks one bounded decision at a time.
+  Generation is blocked until consequential core decisions—and conditional semantic
+  definitions, precedence, grain/unit, time, ambiguity, and freshness—are confirmed
+  by an identified human or safely marked not applicable. The ready `interview.json`
+  is preserved in generated skills and validated during marketplace admission.
 - **Conditional governed semantic contracts**: data-dependent skills can carry
   human-approved, versioned definitions with scope, grain, units, ordered source
   precedence, exact dependencies, ambiguity behavior (`answer`, `ask`, or

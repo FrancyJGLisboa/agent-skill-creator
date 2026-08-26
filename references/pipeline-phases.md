@@ -35,11 +35,25 @@ Phase 5: IMPLEMENTATION  -> Create all files, validate, security scan
 
 ## Objective
 
-Research and **DECIDE** autonomously which API or data source to use for the skill being created.
+Research the environment, propose evidence-backed implementation choices, and expose
+the business decisions that require human authority. Do not make the user translate
+their workflow into a complete prompt or semantic schema.
 
 ## Detailed Process
 
 ### Step 0: Input Triage
+
+Start the resumable interview before triage:
+
+```bash
+python3 scripts/structured_interview.py start interview.json \
+  --problem "<user's words>" --created-by "<identified workflow expert>"
+```
+
+Read `references/structured-interview.md`. Inspect first, record agent findings as
+`proposed` or `conflicting`, then ask the one `next_question` returned by `status`.
+Only an identified human may confirm meaning, authority, consequences, or risk. Run
+`gate` after discovery; exit 2 blocks Phase 2.
 
 Before identifying the domain, classify what the user actually provided:
 
@@ -55,12 +69,13 @@ Before identifying the domain, classify what the user actually provided:
 | "here" + files | The files ARE the input. Process them all. Present your understanding. |
 | Pasted reference material (guidelines, policies, wiki pages, style guides) | This IS the knowledge to codify. Read it all. Identify what it governs (writing, design, compliance, process). The user wants an active skill that enforces these rules, not a summary |
 
-**After triage, ALWAYS present your understanding before proceeding:**
+**After triage, present your evidence-backed understanding before proceeding:**
 
 "From your [files/URLs/screenshot], I understand you [reconstructed workflow].
 The output goes to [inferred recipient]. [Specific question if needed]. Right?"
 
-The user confirms with one word. Then proceed to Step 1.
+Record the user's confirmation in `interview.json`. Then proceed to Step 1. If the
+understanding contains several independent decisions, confirm them one at a time.
 
 **Discovery check (before building):**
 Before designing a new skill, verify:
@@ -208,7 +223,7 @@ Create comparison table:
 - Documentation (facilitates implementation): 10% weight
 - Ease of use (format, structure): 10% weight
 
-### Step 6: DECIDE
+### Step 6: Propose and resolve
 
 **Consider user constraints:**
 - Mentioned "free"? Eliminate paid options
@@ -218,7 +233,10 @@ Create comparison table:
 **Apply logic:**
 1. Eliminate APIs that violate constraints
 2. Of remaining, choose highest score
-3. If tie, prefer: official > private, better docs, easier to use
+3. If tied, prefer: official > private, better docs, easier to use
+4. Record the result as an evidence-backed proposal
+5. Ask for human confirmation only when the choice establishes organizational
+   authority, materially changes consequences, or accepts high/critical risk
 
 **Document the final decision:**
 
@@ -371,6 +389,11 @@ WebSearch: "weather API historical data global"
 
 ## Phase 1 Checklist
 
+- [ ] `interview.json` started from the user's own problem statement
+- [ ] Inspectable facts discovered before questions were asked
+- [ ] Agent inferences recorded as `proposed`; disagreements as `conflicting`
+- [ ] Human authority recorded for consequential confirmations
+- [ ] Interview gate exits 0 and reports `READY`
 - [ ] Research completed (WebSearch + WebFetch)
 - [ ] Minimum 3 APIs compared
 - [ ] Decision made with clear justification
@@ -1673,6 +1696,7 @@ primary handoff.
 | 6 | `install.sh` | Cross-platform installer, `chmod +x` |
 | 6.5 | `.claude-plugin/*.json` | Plugin manifests from `scripts/claude-plugin-template/`; names match SKILL.md |
 | 6.6 | `scripts/evolve.py` + maintenance modules + `success_ledger.py` | Self-maintenance plus private local lifecycle measurement |
+| 6.7 | `interview.json` | Ready evidence, conflict, confirmation, and authority trail |
 | 7 | `README.md` | Multi-platform install instructions |
 | 7.5 | `skill.graph.json` | Normalized typed IR; build with `scripts/skill_graph.py` |
 | 8 | Run `skill_graph.py run` | Constraints + spec/security/pipeline/eval gates must pass |
@@ -1715,6 +1739,7 @@ primary handoff.
 - [ ] `.claude-plugin/plugin.json` + `marketplace.json` generated (valid JSON, `name` fields match SKILL.md)
 - [ ] Evolution toolkit shipped (`scripts/evolve.py` + staleness/drift/dep-health modules; `python3 scripts/evolve.py` exits 0)
 - [ ] Eval spec has a `judge` block with a pinned model + known-bad canary when any criterion is `llm-judge`
+- [ ] `interview.json` preserved and `structured_interview.py gate` exits 0 (`READY`)
 - [ ] `README.md` written with multi-platform install instructions (including `/plugin marketplace add`)
 - [ ] `requirements.txt` created (if third-party dependencies used)
 - [ ] Spec validation passed (`scripts/validate.py`)
