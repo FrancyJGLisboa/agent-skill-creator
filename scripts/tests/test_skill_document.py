@@ -135,6 +135,15 @@ class ListOfObjectsTest(unittest.TestCase):
         doc = SkillDoc.from_text(FULL)
         self.assertEqual(doc.list_of_objects("metadata", "schema_expectations"), [])
 
+    def test_parses_block_list_of_scalars(self) -> None:
+        doc = SkillDoc.from_text(
+            "---\nname: demo-skill\nmetadata:\n  owners:\n    - finance-team\n    - '@platform-team'\n---\nbody\n"
+        )
+        self.assertEqual(
+            doc.list_of_scalars("metadata", "owners"),
+            ["finance-team", "@platform-team"],
+        )
+
 
 NESTED_SHADOW = """---
 name: test-skill

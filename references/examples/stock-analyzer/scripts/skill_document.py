@@ -209,6 +209,42 @@ class SkillDoc:
             items.append(current_item)
         return items
 
+    def list_of_scalars(self, parent: str, child: str) -> list[str]:
+        """Parse a YAML block list of scalar values under ``parent.child``."""
+        if self._frontmatter is None:
+            return []
+        lines = self._frontmatter.split("\n")
+        in_parent = False
+        in_child = False
+        child_indent: int | None = None
+        values: list[str] = []
+        for line in lines:
+            stripped = line.strip()
+            indent = len(line) - len(line.lstrip())
+            if not in_parent:
+                if indent == 0 and stripped == f"{parent}:":
+                    in_parent = True
+                continue
+            if indent == 0 and stripped:
+                break
+            if not in_child:
+                if stripped == f"{child}:":
+                    in_child = True
+                    child_indent = indent
+                continue
+            if not stripped:
+                continue
+            if child_indent is not None and indent <= child_indent:
+                break
+            if not stripped.startswith("- "):
+                break
+            value = stripped[2:].strip()
+            if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+                value = value[1:-1]
+            if value:
+                values.append(value)
+        return values
+
     def _collect_scalar_children(self, parent: str) -> dict[str, str]:
         """All direct scalar children of `parent:` with non-empty inline values."""
         if self._frontmatter is None:

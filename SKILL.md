@@ -19,6 +19,13 @@ metadata:
   created: 2025-10-18
   last_reviewed: 2026-08-11
   review_interval_days: 180
+  dependencies:
+    - name: GitHub repository transport
+      url: https://github.com/FrancyJGLisboa/agent-skill-creator
+      type: service
+    - name: GitHub raw bootstrap transport
+      url: https://raw.githubusercontent.com/FrancyJGLisboa/agent-skill-creator/main/scripts/bootstrap.sh
+      type: service
 provenance:
   maintainer: Francy J G Lisboa
   version: 6.1.0
@@ -359,7 +366,7 @@ Create all files in this order:
    write those exact values as `metadata.owners` and `metadata.approval_status` in
    `SKILL.md`. Do not guess an owner, approver, department, or approval status when
    no target marketplace is known; leave organizational assignment to intake.
-8. Generate `install.sh` from `scripts/install-template.sh` (replace `{{SKILL_NAME}}` with actual name, `chmod +x`)
+8. Generate both installers deterministically with **`python3 scripts/render_installers.py <skill-directory>`**. Never copy the factory's root `install.sh` or `install.ps1`; the renderer binds the generated skill name and version into the canonical templates and marks `install.sh` executable.
 8.5. Generate `.claude-plugin/plugin.json` + `marketplace.json` from `scripts/claude-plugin-template/` (placeholders from frontmatter — makes the skill installable via `/plugin marketplace add`), and **ship the evolution toolkit and local success ledger**: copy `scripts/evolve_template.py` → `scripts/evolve.py`, `scripts/success_ledger.py`, plus the staleness/drift/dep-health modules. See `references/pipeline-phases.md` Steps 6.5–6.6
 9. Write `README.md` (multi-platform install instructions showing the `/plugin marketplace add` path for Claude Code and `git clone` to each tool's **native** path)
 9.5. Build the normalized IR with **`python3 scripts/skill_graph.py build <skill> --output <skill>/skill.graph.json`**. This typed artifact/dependency graph is the validation source of truth; the five phases remain its user-facing projection. Read `references/skill-graph.md` for its schema and invariants.

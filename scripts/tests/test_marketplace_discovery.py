@@ -208,6 +208,21 @@ def test_search_uses_use_cases_description_and_name_with_deterministic_ties() ->
     assert [result["name"] for result in results] == ["alpha-skill", "beta-skill"]
 
 
+def test_search_ignores_generic_language_and_weak_single_token_matches() -> None:
+    earthquake = entry("earthquake-brief-skill", "Summarize earthquake activity for review")
+    earthquake["discovery"]["question"] = "Which earthquakes warrant situational review?"  # type: ignore[index]
+    earthquake["discovery"]["trigger"] = ["A user asks to review earthquake activity"]  # type: ignore[index]
+    assert discovery.search_skills([earthquake], "Translate a contract to French") == []
+
+
+def test_search_uses_negative_routing_examples_as_exclusion_evidence() -> None:
+    item = entry()
+    item["discovery"]["routing_tests"]["should_not_trigger"] = [  # type: ignore[index]
+        "Draft a revenue sales email", "Write a sales email", "Prepare customer outreach"
+    ]
+    assert discovery.search_skills([item], "Write a revenue sales email") == []
+
+
 def test_search_filters_certified_platform_and_support_tier() -> None:
     supported = entry()
     community = entry("community-skill", "Prepare a monthly revenue review")

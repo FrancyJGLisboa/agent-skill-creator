@@ -164,9 +164,16 @@ class GitHubProvider(MarketplaceProvider):
                 command += ["--pin", pin]
             if force:
                 command.append("--force")
-            result = subprocess.run(command, cwd=run_cwd, text=True, check=False)
+            result = subprocess.run(
+                command, cwd=run_cwd, text=True, check=False, capture_output=True,
+            )
             if result.returncode:
-                raise MarketplaceError(f"gh skill install failed for {path}")
+                detail = "\n".join(
+                    part.strip() for part in (result.stdout, result.stderr) if part and part.strip()
+                )
+                raise MarketplaceError(
+                    f"gh skill install failed for {path}" + (f": {detail}" if detail else "")
+                )
             commands.append(command)
         return commands
 
@@ -462,6 +469,8 @@ def _metadata(skill: Path) -> dict[str, Any]:
     owners = metadata.get("owners", [])
     if isinstance(owners, str):
         owners = [part.strip() for part in owners.strip("[]").split(",") if part.strip()]
+    if not owners:
+        owners = doc.list_of_scalars("metadata", "owners")
     discovery: dict[str, Any] = {}
     discovery_path = skill / "discovery.json"
     if discovery_path.exists():
@@ -988,6 +997,19 @@ def check_marketplace(
                 "declared": normalized_discovery["compatibility"]["declared"],
                 "certified": certified,
             }
+            if require_published:
+                declared = set(entry["compatibility"]["declared"])
+                current_certified = {
+                    item.get("platform") for item in certified
+                    if isinstance(item, dict) and item.get("passed") is True
+                    and str(item.get("version", item.get("skill_version", ""))) == str(entry.get("version", ""))
+                }
+                missing = sorted(declared - current_certified)
+                if missing:
+                    errors.append(
+                        f"{identity[1]}: release requires current-version compatibility "
+                        f"certification for: {', '.join(missing)}"
+                    )
         commit = entry.get("provenance", {}).get("commit_sha", "")
         errors.extend(
             f"{identity[1]}: {error}" for error in validate_attestation(

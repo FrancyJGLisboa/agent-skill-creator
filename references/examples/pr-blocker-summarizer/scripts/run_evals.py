@@ -179,10 +179,32 @@ def validate_spec(spec: dict, skill_dir: Path) -> list[str]:
         expected = case.get("expected")
         if expected is not None and not (skill_dir / "evals" / expected).exists():
             errors.append(f"{where}: expected file not found: evals/{expected}")
-        if expected is None and case.get("expected_status") != "pending-first-green":
+        if (
+            expected is None and case.get("expected_artifacts") is None
+            and case.get("expected_status") != "pending-first-green"
+        ):
             errors.append(
                 f"{where}: null 'expected' must be marked expected_status='pending-first-green'"
             )
+        artifacts = case.get("expected_artifacts")
+        if artifacts is not None:
+            if expected is not None:
+                errors.append(f"{where}: use expected or expected_artifacts, not both")
+            if not isinstance(artifacts, dict) or not artifacts:
+                errors.append(f"{where}: expected_artifacts must be a non-empty suffix-to-path object")
+            else:
+                for suffix, path in artifacts.items():
+                    if not isinstance(suffix, str) or not re.fullmatch(r"\.[a-z0-9]+", suffix):
+                        errors.append(f"{where}: expected_artifacts keys must be safe file suffixes")
+                    if path is not None:
+                        candidate = Path(path) if isinstance(path, str) else None
+                        if (
+                            candidate is None or candidate.is_absolute()
+                            or ".." in candidate.parts
+                        ):
+                            errors.append(f"{where}: expected artifact path must stay inside evals")
+                        elif not (skill_dir / "evals" / candidate).exists():
+                            errors.append(f"{where}: expected artifact file not found: evals/{path}")
         if case.get("split") not in (None, "val", "test"):
             errors.append(f"{where}: 'split' must be 'val' or 'test', got {case.get('split')!r}")
         if case.get("compare") not in (None, "exact", "none"):
@@ -203,7 +225,9 @@ def validate_spec(spec: dict, skill_dir: Path) -> list[str]:
                 errors.append(f"judge canary file not found: evals/{canary_rel}")
 
     if golden and all(
-        case.get("expected_status") == "pending-first-green" for case in golden
+        case.get("expected_status") == "pending-first-green"
+        and not any(_expected_artifacts(skill_dir / "evals", case).values())
+        for case in golden
     ):
         print(
             "WARNING: every golden case is pending-first-green; the first rollout "
@@ -324,6 +348,20 @@ def _effective_expected(evals_dir: Path, case: dict) -> Path | None:
         return evals_dir / declared
     conventional = evals_dir / "golden" / case.get("id", "case") / "expected.json"
     return conventional if conventional.exists() else None
+
+
+def _expected_artifacts(evals_dir: Path, case: dict) -> dict[str, Path | None]:
+    declared = case.get("expected_artifacts")
+    if not isinstance(declared, dict):
+        baseline = _effective_expected(evals_dir, case)
+        return {"": baseline}
+    result: dict[str, Path | None] = {}
+    for suffix, path in declared.items():
+        destination = evals_dir / path if path else (
+            evals_dir / "golden" / case.get("id", "case") / f"expected{suffix}"
+        )
+        result[suffix] = destination if destination.exists() else None
+    return result
 
 
 def _quote_path(path: Path) -> str:
@@ -486,7 +524,9 @@ def run_rollout(
         input_path = (evals_dir / inp) if inp else None
 
         with tempfile.TemporaryDirectory() as td:
-            produced = Path(td) / "output"
+            artifact_contract = case.get("expected_artifacts")
+            primary_suffix = ".json" if isinstance(artifact_contract, dict) and ".json" in artifact_contract else ""
+            produced = Path(td) / f"output{primary_suffix}"
             ok = _run_skill(run_cmd, input_path, produced, skill_dir, timeout, model=model)
             if not ok or not produced.exists():
                 errors += 1
@@ -509,15 +549,22 @@ def run_rollout(
 
             # Regression gate: the produced output must still be equivalent to
             # the promoted baseline, not merely pass the shape checks.
-            baseline = _effective_expected(evals_dir, case)
-            if baseline is not None and case.get("compare", "exact") != "none":
-                matches = _baseline_matches(produced, baseline, case.get("compare_ignore"))
-                regressions += not matches
-                checks.append({
-                    "case": case_id,
-                    "criterion": "<baseline>",
-                    "status": "pass" if matches else "regression",
-                })
+            baselines = _expected_artifacts(evals_dir, case)
+            baseline = next((item for item in baselines.values() if item is not None), None)
+            if case.get("compare", "exact") != "none":
+                for suffix, expected in baselines.items():
+                    if expected is None:
+                        continue
+                    artifact = produced if not suffix else produced.with_suffix(suffix)
+                    matches = artifact.exists() and _baseline_matches(
+                        artifact, expected, case.get("compare_ignore")
+                    )
+                    regressions += not matches
+                    checks.append({
+                        "case": case_id,
+                        "criterion": f"<baseline:{suffix}>" if suffix else "<baseline>",
+                        "status": "pass" if matches else "regression",
+                    })
 
             # Judge criteria: the pinned judge sees criterion + output only.
             if judge_criteria:
@@ -542,10 +589,25 @@ def run_rollout(
                 promote and is_pending and case.get("split") != "test"
                 and scored["failed"] == 0 and scored["passed"] > 0
             ):
-                dest = _expected_baseline_path(evals_dir, case)
-                dest.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copyfile(produced, dest)
-                promoted.append(case_id)
+                declared_artifacts = case.get("expected_artifacts")
+                if isinstance(declared_artifacts, dict):
+                    for suffix, declared_path in declared_artifacts.items():
+                        artifact = produced.with_suffix(suffix)
+                        if not artifact.exists():
+                            errors += 1
+                            break
+                        dest = evals_dir / declared_path if declared_path else (
+                            evals_dir / "golden" / case_id / f"expected{suffix}"
+                        )
+                        dest.parent.mkdir(parents=True, exist_ok=True)
+                        shutil.copyfile(artifact, dest)
+                    else:
+                        promoted.append(case_id)
+                else:
+                    dest = _expected_baseline_path(evals_dir, case)
+                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copyfile(produced, dest)
+                    promoted.append(case_id)
 
     return {
         "passed": passed,

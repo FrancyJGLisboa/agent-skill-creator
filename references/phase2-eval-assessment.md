@@ -118,6 +118,20 @@ words) **plus** one fenced ` ```json ` block the runner and autoresearch parse:
 
 Paths in `input`/`expected` are relative to the `evals/` directory.
 
+When one invocation produces multiple governed artifacts, replace `expected` with
+`expected_artifacts`, keyed by each safe output suffix. The runner invokes the
+pipeline with a `.json` primary output when `.json` is declared, then compares all
+declared sidecars independently:
+
+```json
+{"id": "case-1", "input": "golden/case-1/input.csv", "expected_artifacts": {".json": "golden/case-1/expected.json", ".md": "golden/case-1/expected.md"}, "split": "val"}
+```
+
+Use `null` paths plus `expected_status: "pending-first-green"` when the artifacts
+need first-green promotion. Promotion writes conventional `expected.json`,
+`expected.md`, and other declared suffixes. Once those files exist, validation no
+longer reports the case as pending even though the status remains as provenance.
+
 Copy the runner verbatim:
 
 ```bash

@@ -64,6 +64,10 @@ def _make_skill(
             (evals / case["input"]).write_text("col\n1\n", encoding="utf-8")
         if case.get("expected"):
             (evals / case["expected"]).write_text('{"ok": true}\n', encoding="utf-8")
+        for suffix, expected in case.get("expected_artifacts", {}).items():
+            if expected:
+                path = evals / expected
+                path.write_text("report\n" if suffix == ".md" else '{"ok": true}\n', encoding="utf-8")
     if pipeline_body is not None:
         (skill / "scripts" / "run_pipeline.py").write_text(pipeline_body, encoding="utf-8")
     spec: dict = {"skill": "demo-skill", "criteria": criteria, "golden": golden}
@@ -92,6 +96,15 @@ _PIPELINE_WRONG_OUTPUT = (
     "pathlib.Path(a.output).write_text('WRONG\\n')\n"
 )
 _RUN_CMD = "python3 scripts/run_pipeline.py --input {input} --output {output}"
+
+_PIPELINE_WRITES_JSON_AND_MARKDOWN = (
+    "import argparse, pathlib\n"
+    "ap = argparse.ArgumentParser()\n"
+    "ap.add_argument('--input'); ap.add_argument('--output', required=True)\n"
+    "a = ap.parse_args(); out = pathlib.Path(a.output)\n"
+    "out.write_text('{\"ok\": true}\\n')\n"
+    "out.with_suffix('.md').write_text('report\\n')\n"
+)
 
 
 def _three_golden(with_expected: bool = True) -> list[dict]:
@@ -167,6 +180,26 @@ class ValidateSpecTest(unittest.TestCase):
         with contextlib.redirect_stderr(stderr):
             self.assertEqual(validate_spec(spec, skill), [])
         self.assertNotIn("pending-first-green", stderr.getvalue())
+
+    def test_promoted_baseline_suppresses_pending_warning(self) -> None:
+        golden = _three_golden(with_expected=False)
+        skill = _make_skill(self.tmp, WELL_FORMED_CRITERIA, golden)
+        for case in golden:
+            baseline = skill / "evals" / "golden" / case["id"] / "expected.json"
+            baseline.write_text('{"ok": true}\n', encoding="utf-8")
+        spec = parse_spec(find_spec(skill))
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            self.assertEqual(validate_spec(spec, skill), [])
+        self.assertNotIn("pending-first-green", stderr.getvalue())
+
+    def test_multi_artifact_paths_cannot_escape_evals(self) -> None:
+        golden = _three_golden()
+        golden[0].pop("expected")
+        golden[0]["expected_artifacts"] = {".json": "../../outside.json"}
+        skill = _make_skill(self.tmp, WELL_FORMED_CRITERIA, golden)
+        spec = parse_spec(find_spec(skill))
+        self.assertTrue(any("stay inside evals" in error for error in validate_spec(spec, skill)))
 
 
 class RunCommandChecksTest(unittest.TestCase):
@@ -248,6 +281,25 @@ class RunFieldValidationTest(unittest.TestCase):
 
     def tearDown(self) -> None:
         self._tmp.cleanup()
+
+    def test_multi_artifact_rollout_compares_json_and_markdown(self) -> None:
+        golden = _three_golden()
+        for case in golden:
+            case["expected_artifacts"] = {
+                ".json": case.pop("expected"),
+                ".md": f"golden/{case['id']}/expected.md",
+            }
+        skill = _make_skill(
+            self.tmp, WELL_FORMED_CRITERIA, golden, run=_RUN_CMD,
+            pipeline_body=_PIPELINE_WRITES_JSON_AND_MARKDOWN,
+        )
+        result = run_rollout(parse_spec(find_spec(skill)), skill)
+        self.assertEqual(result["errors"], 0)
+        self.assertEqual(result["regressions"], 0)
+        self.assertEqual(
+            sum(check["criterion"].startswith("<baseline:") for check in result["checks"]),
+            6,
+        )
 
     def test_absent_run_field_still_valid(self) -> None:
         skill = _make_skill(self.tmp, WELL_FORMED_CRITERIA, _three_golden())

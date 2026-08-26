@@ -579,6 +579,20 @@ def test_local_install_uses_from_local_for_integration(tmp_path: Path, monkeypat
     market.install_bundle(repo, "base", "project", None, from_local=True)
     assert calls[0][0][:6] == ["gh", "skill", "install", str(repo), "report-skill", "--from-local"]
     assert calls[0][1]["cwd"] == consumer
+    assert calls[0][1]["capture_output"] is True
+
+
+def test_github_install_failure_reports_captured_transport_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    repo = init_marketplace(tmp_path)
+    market.add_skill(repo, make_skill(tmp_path, "report-skill"), "finance", "base")
+    monkeypatch.setattr(
+        market.subprocess, "run",
+        lambda command, **kwargs: subprocess.CompletedProcess(
+            command, 1, "", "selector could not be installed"
+        ),
+    )
+    with pytest.raises(market.MarketplaceError, match="selector could not be installed"):
+        market.install_bundle(repo, "base", "project", None, from_local=True)
 
 
 def test_local_pinned_install_requires_head_at_exact_tag(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -909,6 +923,21 @@ def test_certification_enables_filtered_search_and_distribution_plan(tmp_path: P
         remote=True, home=tmp_path / "home", project_root=tmp_path / "project",
     )
     assert plan["mutates"] is False and plan["targets"][0]["platform"] == "codex"
+
+
+def test_release_check_blocks_uncertified_declared_platform(tmp_path: Path) -> None:
+    repo = init_marketplace(tmp_path)
+    skill = make_skill(tmp_path, "report-skill")
+    discovery = json.loads((skill / "discovery.json").read_text(encoding="utf-8"))
+    discovery["compatibility"] = {"declared": ["codex"]}
+    (skill / "discovery.json").write_text(json.dumps(discovery), encoding="utf-8")
+    recommit_and_attest(skill)
+    market.add_skill(repo, skill, "finance", "base")
+    market.transition_skill(repo, "finance", "report-skill", "published")
+    assert any(
+        "current-version compatibility certification for: codex" in error
+        for error in market.check_marketplace(repo, refresh=False, require_published=True)
+    )
 
 
 def test_add_persists_discovery_compatibility_for_health_governance(tmp_path: Path) -> None:

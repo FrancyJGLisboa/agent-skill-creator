@@ -485,6 +485,8 @@ python3 scripts/team_marketplace.py search "monthly revenue review" \
 
 Search ranks outcome matches first and returns only published skills. Platform
 filters require current-version certification rather than an unverified claim.
+Generic instruction words are ignored, weak one-token overlaps are not returned,
+and substantial matches to a skill's `should_not_trigger` examples exclude it.
 
 ## Consented product measurement
 
@@ -530,3 +532,6 @@ python3 scripts/team_marketplace.py certify report-skill \
 
 The adapters use `scripts/platforms.py` as the canonical platform registry. Native
 and adapted artifact plans therefore stay aligned with the factory installers.
+`check --release` blocks every declared platform that lacks passing certification
+for the exact skill version. Updating a skill clears older certification evidence,
+so certification must be repeated before the next release.

@@ -39,8 +39,8 @@ class TestGitHubTokenDetection(unittest.TestCase):
         self.assertIn("GitHub Personal Access Token", found)
 
     def test_fine_grained_pat_detected(self):
-        token = "github_pat_" + "11AAAAAAA0" * 6  # 60 chars after prefix
-        found = self._patterns_found(f'TOKEN = "{token}"\n')
+        credential = "github_pat_" + "11AAAAAAA0" * 6  # 60 chars after prefix
+        found = self._patterns_found(f'CREDENTIAL = "{credential}"\n')
         self.assertIn("GitHub Fine-Grained Personal Access Token", found)
 
     def test_oauth_token_detected(self):

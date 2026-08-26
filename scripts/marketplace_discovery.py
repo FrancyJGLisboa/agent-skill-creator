@@ -27,6 +27,11 @@ _TOKEN = re.compile(r"[a-z0-9]+")
 _SLUG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 _SEMVER = re.compile(r"^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:[-+][0-9A-Za-z.-]+)?$")
 _DANGEROUS_SCHEME = re.compile(r"(?i)(?:javascript|data|vbscript)\s*:")
+_STOPWORDS = {
+    "a", "an", "and", "are", "as", "at", "be", "by", "for", "from",
+    "in", "is", "it", "of", "on", "or", "that", "the", "this", "to",
+    "user", "with", "write", "create", "prepare", "make", "please",
+}
 
 
 class DiscoveryError(ValueError):
@@ -324,7 +329,19 @@ def _routing_tests_required(value: object) -> dict[str, list[str]]:
 
 
 def _tokens(value: object) -> set[str]:
-    return set(_TOKEN.findall(str(value).lower()))
+    return {token for token in _TOKEN.findall(str(value).lower()) if token not in _STOPWORDS}
+
+
+def _negative_route_match(query: set[str], values: Sequence[str]) -> bool:
+    """Return true when a query substantially matches an explicit exclusion example."""
+    if not query:
+        return False
+    for value in values:
+        negative = _tokens(value)
+        overlap = query & negative
+        if len(overlap) >= 2 and len(overlap) / len(query) >= 0.6:
+            return True
+    return False
 
 
 def _field_score(query: set[str], value: object, weight: int) -> int:
@@ -359,6 +376,10 @@ def search_skills(
         if platform and platform not in metadata["compatibility"]["certified"]:
             continue
         if support_tier and metadata["support_tier"] != support_tier:
+            continue
+        if _negative_route_match(
+            query_tokens, metadata.get("routing_tests", {}).get("should_not_trigger", [])
+        ):
             continue
         score = (
             _field_score(query_tokens, metadata["question"], 16)
