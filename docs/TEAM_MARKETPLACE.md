@@ -24,12 +24,26 @@ from a shallow clone at the exact tag.
 ```text
 ONE-TIME SETUP                         REPEATED FOR EACH CHANGE
 
-Prerequisites → Initialize → Protect   Create skill → Add → Review → Release
-                                                            ↓
+Prerequisites → Initialize → Protect   READY interview → Create → Add → Review → Release
+                                                                      ↓
 Correction ← Use ← Pinned install ← Approved semantic-version tag
 ```
 
 ![ACME governed skill marketplace lifecycle](assets/acme-skill-marketplace-lifecycle.png)
+
+## Governance begins before generation
+
+Marketplace governance starts with a resumable `interview.json`, not when a completed
+skill is submitted. The agent inspects workflow evidence, records its conclusions as
+`proposed`, and preserves supported disagreements as `conflicting`. An identified
+human owner must confirm consequential meaning and risk before the interview becomes
+`READY`; missing evidence or authority leaves it `BLOCKED` and resumable.
+
+Only a `READY` interview permits skill generation. The generated skill preserves that
+file as its evidence-and-authority trail, and marketplace validation rejects a present
+but unresolved interview. The marketplace operator reviews the authorized contract
+and its implementation; the operator does not silently supply missing business
+authority. See the [structured interview protocol](../references/structured-interview.md).
 
 ## What each component does
 

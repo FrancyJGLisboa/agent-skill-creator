@@ -147,6 +147,16 @@ def test_public_onboarding_shows_the_resumable_interview_flow() -> None:
     assert "Missing evidence or authority remains BLOCKED and resumable." in page
 
 
+def test_marketplace_governance_begins_with_a_ready_human_authorized_interview() -> None:
+    marketplace = " ".join(read("docs/TEAM_MARKETPLACE.md").split())
+
+    assert "Governance begins before generation" in marketplace
+    assert "Only a `READY` interview permits skill generation" in marketplace
+    assert "evidence-and-authority trail" in marketplace
+    assert "does not silently supply missing business authority" in marketplace
+    assert "../references/structured-interview.md" in marketplace
+
+
 def test_public_docs_present_the_normalized_graph_release_gate() -> None:
     command = "python3 scripts/skill_graph.py run ./the-skill/ --jobs 4"
     readme = read("README.md")
