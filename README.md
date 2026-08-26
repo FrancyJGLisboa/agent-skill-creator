@@ -43,6 +43,16 @@ The result is more than a collection of prompts. It is a maintained map of which
 questions an organization knows how to answer, which decisions it can support, and
 whether those capabilities still work.
 
+## What is an Agent Skill?
+
+An Agent Skill is a reusable workflow package that guides an agent from a recognized
+situation to a verified outcome. It can use retrieved knowledge, MCP tools, APIs,
+deterministic scripts, and agent judgment, but it is not itself a RAG system, MCP
+server, or agent runtime.
+
+**RAG supplies knowledge. MCP supplies capabilities. The harness supplies execution.
+A skill organizes them into a governed path toward a verified outcome.**
+
 ## Who it is for
 
 | User | What they need | What this provides |

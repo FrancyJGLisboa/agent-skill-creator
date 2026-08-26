@@ -11,6 +11,14 @@ Agent Skill Creator turns a human workflow into a portable, evidence-backed Agen
 Skill and governs that artifact from proposal through retirement across the agent
 platforms an organization already uses.
 
+An Agent Skill is a reusable workflow package that guides an agent from a recognized
+situation to a verified outcome. It can use retrieved knowledge, MCP tools, APIs,
+deterministic scripts, and agent judgment, but it is not itself a RAG system, MCP
+server, or agent runtime.
+
+**RAG supplies knowledge. MCP supplies capabilities. The harness supplies execution.
+A skill organizes them into a governed path toward a verified outcome.**
+
 It is the **control plane for skill supply**, not an agent runtime, model host, MCP
 gateway, identity provider, endpoint manager, or general marketplace for every agent
 extension.

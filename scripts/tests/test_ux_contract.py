@@ -77,6 +77,24 @@ def test_public_onboarding_is_human_centered_and_result_first() -> None:
         assert "dark factory" not in source.lower()
 
 
+def test_public_docs_distinguish_skills_from_rag_mcp_and_runtime() -> None:
+    definition = (
+        "An Agent Skill is a reusable workflow package that guides an agent from a "
+        "recognized situation to a verified outcome. It can use retrieved knowledge, "
+        "MCP tools, APIs, deterministic scripts, and agent judgment, but it is not "
+        "itself a RAG system, MCP server, or agent runtime."
+    )
+    distinction = (
+        "RAG supplies knowledge. MCP supplies capabilities. The harness supplies "
+        "execution. A skill organizes them into a governed path toward a verified "
+        "outcome."
+    )
+    for path in ("README.md", "docs/PRODUCT_SCOPE.md", "docs/index.html"):
+        normalized = " ".join(re.sub(r"<[^>]+>", " ", read(path)).split())
+        assert definition in normalized, f"{path} is missing the canonical definition"
+        assert distinction in normalized, f"{path} is missing the canonical distinction"
+
+
 def test_public_docs_present_the_normalized_graph_release_gate() -> None:
     command = "python3 scripts/skill_graph.py run ./the-skill/ --jobs 4"
     readme = read("README.md")
