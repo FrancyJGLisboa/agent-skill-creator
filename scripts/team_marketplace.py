@@ -525,7 +525,7 @@ def _gate_skill(skill: Path) -> dict[str, Any]:
         gate_result = None
         if validation_result.returncode == 0:
             gate_result = subprocess.run(
-                [sys.executable, str(eval_runner)], cwd=skill,
+                [sys.executable, str(eval_runner), "--rollout", "--include-holdout"], cwd=skill,
                 capture_output=True, text=True, check=False,
             )
         evals = {
@@ -951,6 +951,8 @@ def check_marketplace(
     """Return every release-blocking inconsistency; an empty list is releasable."""
     data = load_manifest(root)
     errors: list[str] = []
+    if require_published and not data.get("skills"):
+        errors.append("release requires at least one published skill")
     try:
         _provider(data)
     except MarketplaceError as exc:
@@ -1074,10 +1076,11 @@ def generate_repository_files(root: Path, data: dict[str, Any]) -> None:
     for item in data["skills"]:
         departments.setdefault(item["department"], []).append(item)
     for department, skills in sorted(departments.items()):
-        lines += [f"## {department.replace('-', ' ').title()}", "", "| Skill | Version | Status | Owners |", "|---|---:|---|---|"]
+        lines += [f"## {department.replace('-', ' ').title()}", "", "| Skill | Version | Approval | Lifecycle | Owners |", "|---|---:|---|---|---|"]
         for item in sorted(skills, key=lambda value: value["name"]):
             owners = ", ".join(f"@{owner.lstrip('@')}" for owner in item.get("owners", []))
-            lines.append(f"| [{item['name']}]({item['path']}) | {item['version']} | {item['approval_status']} | {owners} |")
+            lifecycle = item.get("lifecycle", item.get("approval_status", "draft"))
+            lines.append(f"| [{item['name']}]({item['path']}) | {item['version']} | {item['approval_status']} | {lifecycle} | {owners} |")
         lines.append("")
     (root / "CATALOG.md").write_text("\n".join(lines), encoding="utf-8")
     pages = root / "skill-pages"
@@ -1252,15 +1255,11 @@ needed, and merge changes through a merge request. Do not edit installed copies.
 """
 
 
-def install_bundle(
-    root: Path, bundle: str, scope: str, pin: str | None, *, force: bool = False,
-    from_local: bool = False,
+def _install_paths(
+    root: Path, data: dict[str, Any], paths: list[str], scope: str, pin: str | None,
+    *, force: bool = False, from_local: bool = False,
 ) -> list[list[str]]:
-    """Install every exact skill path through the configured provider."""
-    data = load_manifest(root)
-    paths = data.get("bundles", {}).get(bundle)
-    if paths is None:
-        raise MarketplaceError(f"bundle not found: {bundle}")
+    """Install governed skill paths through the configured provider."""
     if not from_local and not pin:
         raise MarketplaceError("managed remote installs require --pin vX.Y.Z")
     provider_pin = pin
@@ -1294,6 +1293,30 @@ def install_bundle(
     for path in paths:
         record_marketplace_event(root, "install", Path(path).name, True, platform=platform)
     return commands
+
+
+def install_bundle(
+    root: Path, bundle: str, scope: str, pin: str | None, *, force: bool = False,
+    from_local: bool = False,
+) -> list[list[str]]:
+    """Install every exact skill path in a governed bundle."""
+    data = load_manifest(root)
+    paths = data.get("bundles", {}).get(bundle)
+    if paths is None:
+        raise MarketplaceError(f"bundle not found: {bundle}")
+    return _install_paths(root, data, paths, scope, pin, force=force, from_local=from_local)
+
+
+def install_skill(
+    root: Path, department: str, name: str, scope: str, pin: str | None,
+    *, force: bool = False, from_local: bool = False,
+) -> list[list[str]]:
+    """Install one governed skill without installing its whole bundle."""
+    data = load_manifest(root)
+    entry = _find_skill(data, department, name)
+    return _install_paths(
+        root, data, [entry["path"]], scope, pin, force=force, from_local=from_local,
+    )
 
 
 def health_marketplace(
@@ -1612,7 +1635,10 @@ def build_parser() -> argparse.ArgumentParser:
     release.add_argument("--tag", required=True)
     release.add_argument("--marketplace", default=".")
     install = sub.add_parser("install")
-    install.add_argument("--bundle", required=True)
+    selection = install.add_mutually_exclusive_group(required=True)
+    selection.add_argument("--bundle")
+    selection.add_argument("--skill")
+    install.add_argument("--department", help="required with --skill")
     install.add_argument("--scope", choices=("user", "project"), required=True)
     install.add_argument("--pin")
     install.add_argument("--force", action="store_true")
@@ -1717,8 +1743,20 @@ def main(argv: list[str] | None = None) -> int:
             release_marketplace(root, args.tag)
             print(f"Released {args.tag}")
         elif args.command == "install":
-            commands = install_bundle(root, args.bundle, args.scope, args.pin, force=args.force, from_local=args.from_local)
-            print(f"Installed {len(commands)} skill(s) from bundle {args.bundle}")
+            if args.skill:
+                if not args.department:
+                    raise MarketplaceError("--department is required with --skill")
+                commands = install_skill(
+                    root, args.department, args.skill, args.scope, args.pin,
+                    force=args.force, from_local=args.from_local,
+                )
+                print(f"Installed {len(commands)} skill: {args.department}/{args.skill}")
+            else:
+                commands = install_bundle(
+                    root, args.bundle, args.scope, args.pin,
+                    force=args.force, from_local=args.from_local,
+                )
+                print(f"Installed {len(commands)} skill(s) from bundle {args.bundle}")
         elif args.command == "lifecycle":
             state = transition_skill(root, args.department, args.skill_name, args.to)
             print(f"Transitioned {args.department}/{args.skill_name} to {state}")

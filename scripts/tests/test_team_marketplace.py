@@ -362,6 +362,15 @@ def test_add_namespaces_skill_builds_bundle_and_catalog(tmp_path: Path) -> None:
     assert "@acme-report-skill" in (repo / "CODEOWNERS").read_text()
 
 
+def test_catalog_distinguishes_approval_from_published_lifecycle(tmp_path: Path) -> None:
+    repo = init_marketplace(tmp_path)
+    market.add_skill(repo, make_skill(tmp_path, "report-skill"), "finance", "base")
+    market.transition_skill(repo, "finance", "report-skill", "published")
+    catalog = (repo / "CATALOG.md").read_text(encoding="utf-8")
+    assert "| Approval | Lifecycle |" in catalog
+    assert "| approved | published |" in catalog
+
+
 def test_concurrent_admissions_preserve_every_registry_entry(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -558,6 +567,12 @@ def test_check_rejects_draft_duplicate_identity_and_failed_evidence(tmp_path: Pa
     assert any("validation gate failed" in error for error in errors)
 
 
+def test_release_check_rejects_empty_marketplace(tmp_path: Path) -> None:
+    repo = init_marketplace(tmp_path)
+    errors = market.check_marketplace(repo, refresh=False, require_published=True)
+    assert "release requires at least one published skill" in errors
+
+
 def test_install_builds_exact_pinned_commands_for_both_scopes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     repo = init_marketplace(tmp_path)
     market.add_skill(repo, make_skill(tmp_path, "report-skill"), "finance", "base")
@@ -576,6 +591,32 @@ def test_install_builds_exact_pinned_commands_for_both_scopes(tmp_path: Path, mo
     ]
     assert calls[1][-2:] == ["--pin", "v1.1.0"]
     assert "--force" not in calls[1]
+
+
+def test_install_skill_selects_one_governed_skill_from_bundle(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repo = init_marketplace(tmp_path)
+    market.add_skill(repo, make_skill(tmp_path, "report-skill"), "finance", "base")
+    market.add_skill(repo, make_skill(tmp_path, "risk-skill"), "risk", "base")
+    calls: list[list[str]] = []
+    monkeypatch.setattr(
+        market.subprocess, "run",
+        lambda command, **kwargs: calls.append(command) or subprocess.CompletedProcess(command, 0, "", ""),
+    )
+    commands = market.install_skill(repo, "finance", "report-skill", "project", "v1.2.0")
+    assert len(commands) == 1
+    assert "skills/finance/report-skill" in calls[0]
+    assert all("risk-skill" not in part for part in calls[0])
+
+
+def test_install_cli_accepts_single_skill_selector() -> None:
+    args = market.build_parser().parse_args([
+        "install", "--skill", "report-skill", "--department", "finance",
+        "--scope", "project", "--pin", "v1.2.0",
+    ])
+    assert args.skill == "report-skill"
+    assert args.bundle is None
 
 
 def test_local_install_uses_from_local_for_integration(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -838,6 +879,28 @@ def test_attest_cli_runs_without_marketplace_argument(tmp_path: Path) -> None:
     )
     assert result.returncode == 0, result.stderr
     assert "Wrote trust attestation" in result.stdout
+
+
+def test_attestation_executes_multi_artifact_rollout_with_holdouts(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    skill = tmp_path / "skill"
+    (skill / "scripts").mkdir(parents=True)
+    observed = skill / "observed.json"
+    (skill / "scripts/run_evals.py").write_text(
+        "import json, pathlib, sys\n"
+        f"path = pathlib.Path({str(observed)!r})\n"
+        "if '--rollout' in sys.argv: path.write_text(json.dumps(sys.argv[1:]))\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(market, "validate_skill", lambda _: {"valid": True, "errors": [], "warnings": []})
+    monkeypatch.setattr(market, "security_scan", lambda _: {"clean": True, "issues": []})
+    monkeypatch.setattr(market, "check_pipeline", lambda _: {"errors": []})
+
+    result = market._gate_skill(skill)
+
+    assert result["evals"]["passed"] is True
+    assert json.loads(observed.read_text(encoding="utf-8")) == ["--rollout", "--include-holdout"]
 
 
 def test_attest_error_surfaces_gate_details(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

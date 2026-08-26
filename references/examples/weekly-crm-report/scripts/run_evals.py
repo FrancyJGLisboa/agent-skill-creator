@@ -300,7 +300,10 @@ def run_command_checks(
         else:
             # Declared expected, or a promoted baseline at the conventional
             # path; None while pending-first-green with no baseline yet.
-            bound_output = _effective_expected(evals_dir, case)
+            artifacts = _expected_artifacts(evals_dir, case)
+            bound_output = artifacts.get(".json") or next(
+                (path for path in artifacts.values() if path is not None), None
+            )
 
         for crit in command_criteria:
             needs_output = OUTPUT_PLACEHOLDER in crit["cmd"]

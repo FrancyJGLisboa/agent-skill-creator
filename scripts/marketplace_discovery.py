@@ -478,6 +478,9 @@ def render_skill_page(entry: Mapping[str, Any]) -> str:
     compatibility = metadata["compatibility"]
     lines = [
         f"# /{_md(name)}", "", _md(entry.get("description", "Not provided")), "",
+        "## Governance", "",
+        f"Approval: **{_md(entry.get('approval_status', 'draft'))}**", "",
+        f"Lifecycle: **{_md(entry.get('lifecycle', entry.get('lifecycle_state', entry.get('approval_status', 'draft'))))}**", "",
         "## Question", "", _md(metadata["question"]), "",
         "## Trigger", "", *_bullets(metadata["trigger"]), "",
         "## Decisions supported", "", *_bullets(metadata["decision"]), "",

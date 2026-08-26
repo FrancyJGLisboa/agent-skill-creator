@@ -189,12 +189,20 @@ def build_graph(skill_dir: str | Path) -> dict:
                     edges.append(
                         {"from": artifact["id"], "to": pipeline_id, "relation": "consumed_by"}
                     )
+            expected_paths: list[str] = []
+            declared_artifacts = case.get("expected_artifacts")
+            if isinstance(declared_artifacts, dict):
+                expected_paths.extend(
+                    value for value in declared_artifacts.values() if isinstance(value, str)
+                )
             expected_path = case.get("expected")
-            if not expected_path:
+            if isinstance(expected_path, str):
+                expected_paths.append(expected_path)
+            if not expected_paths:
                 conventional = f"golden/{case.get('id', 'case')}/expected.json"
                 if f"evals/{conventional}" in by_path:
-                    expected_path = conventional
-            if isinstance(expected_path, str):
+                    expected_paths.append(conventional)
+            for expected_path in expected_paths:
                 artifact = by_path.get(f"evals/{expected_path}")
                 if artifact and pipeline_id:
                     edges.append(

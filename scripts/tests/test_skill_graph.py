@@ -104,6 +104,29 @@ class GraphEncodingTest(unittest.TestCase):
             graph["edges"],
         )
 
+    def test_every_declared_multi_artifact_baseline_is_reachable(self) -> None:
+        skill = write_skill(self.base)
+        (skill / "evals/golden/case-1/expected.md").write_text("# Report\n", encoding="utf-8")
+        spec = skill / "evals/demo-skill.eval.md"
+        spec.write_text(
+            spec.read_text(encoding="utf-8").replace(
+                '"expected":"golden/case-1/expected.json"',
+                '"expected_artifacts":{".json":"golden/case-1/expected.json",'
+                '".md":"golden/case-1/expected.md"}',
+            ),
+            encoding="utf-8",
+        )
+        graph = build_graph(skill)
+        by_id = {artifact["id"]: artifact["path"] for artifact in graph["artifacts"]}
+        compared = {
+            by_id[edge["to"]] for edge in graph["edges"] if edge["relation"] == "compared_against"
+        }
+        self.assertTrue({
+            "evals/golden/case-1/expected.json",
+            "evals/golden/case-1/expected.md",
+        } <= compared)
+        self.assertTrue(check_graph(graph)["valid"])
+
     def test_deterministic_multistep_workflow_requires_orchestrator(self) -> None:
         skill = write_skill(self.base)
         (skill / "scripts" / "run_pipeline.py").unlink()

@@ -325,6 +325,9 @@ python3 scripts/team_marketplace.py install \
   --marketplace ./acme-skills
 ```
 
+Install only one discovered skill with the same governance and version controls by
+replacing `--bundle analyst-starter` with `--skill report-skill --department finance`.
+
 Use `team_marketplace.py update` to re-gate a strictly newer semantic version. Use
 `--scope project` for a repository-local install. Roll back by reinstalling an exact
 previous tag with `--force`; quarantine immediately removes a skill from installable

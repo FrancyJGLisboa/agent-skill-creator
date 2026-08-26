@@ -263,6 +263,15 @@ def test_markdown_page_is_structured_deterministic_and_safe() -> None:
     assert "```" not in page
 
 
+def test_markdown_page_distinguishes_approval_and_lifecycle() -> None:
+    item = entry()
+    item["approval_status"] = "approved"
+    item["lifecycle"] = "published"
+    page = discovery.render_skill_page(item)
+    assert "Approval: **approved**" in page
+    assert "Lifecycle: **published**" in page
+
+
 def test_markdown_page_exposes_software_representation_review() -> None:
     item = entry()
     item["discovery"]["software_mutation"] = {  # type: ignore[index]

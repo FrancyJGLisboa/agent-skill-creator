@@ -270,6 +270,20 @@ python3 scripts/team_marketplace.py install \
   --marketplace ./acme-skills
 ```
 
+Install one discovered skill without pulling its whole bundle:
+
+```bash
+python3 scripts/team_marketplace.py install \
+  --skill report-skill \
+  --department finance \
+  --scope project \
+  --pin v1.2.0 \
+  --marketplace ./acme-skills
+```
+
+Single-skill installs use the same lifecycle checks, immutable version pinning,
+provider adapter, and privacy-safe install event as bundle installs.
+
 The wrapper issues one exact command per bundled skill:
 
 ```bash
