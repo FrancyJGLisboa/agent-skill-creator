@@ -1,0 +1,8 @@
+{
+  "name": "live-weather-briefing-skill",
+  "version": "1.0.0",
+  "description": "Create a current, source-linked weather briefing for a named city using Open-Meteo.",
+  "author": {
+    "name": "agent-skill-creator"
+  }
+}

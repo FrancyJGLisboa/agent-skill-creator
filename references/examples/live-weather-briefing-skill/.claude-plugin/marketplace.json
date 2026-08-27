@@ -1,0 +1,14 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "live-weather-briefing-skill",
+  "owner": {
+    "name": "agent-skill-creator"
+  },
+  "plugins": [
+    {
+      "name": "live-weather-briefing-skill",
+      "source": "./",
+      "description": "Create a current, source-linked weather briefing for a named city using Open-Meteo."
+    }
+  ]
+}

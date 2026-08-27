@@ -1,0 +1,19 @@
+{
+  "question": "What are the current weather conditions in a named city?",
+  "trigger": ["A traveler asks for a current weather briefing for one city"],
+  "decision": ["Prepare for current weather conditions"],
+  "evidence": ["Open-Meteo geocoding result", "Open-Meteo current forecast response"],
+  "success_measure": "The briefing identifies the resolved city, observation time, live conditions, and both source URLs.",
+  "outcome": "Produce a current, inspectable weather briefing from live public APIs.",
+  "environment": {
+    "documentation_sources": ["https://open-meteo.com/en/docs/geocoding-api", "https://open-meteo.com/en/docs"],
+    "data_sources": ["Open-Meteo Geocoding API", "Open-Meteo Forecast API"],
+    "required_capabilities": ["Outbound HTTPS", "Python 3 standard library"],
+    "readiness_checks": ["A city name is supplied", "Both APIs return valid JSON"]
+  },
+  "risk": {"tier": "low", "permissions": ["Read public weather data"], "mutation_boundary": "read-only", "approval_required": []},
+  "software_mutation": {"applies": false},
+  "data_interfaces": {"applies": true, "interface_types": ["api"], "authoritative_sources": ["Open-Meteo official API documentation"], "entities": ["Geocoded location", "Current weather observation"], "identifiers": ["Location coordinates"], "relationships": ["One resolved location is used for one current forecast request"], "field_semantics": ["temperature_2m and apparent_temperature are degrees Celsius", "wind_speed_10m is kilometres per hour"], "invariants": ["A briefing must name the resolved location and observation time"], "freshness_and_pagination": ["Current conditions are returned by the forecast endpoint; geocoding requests one result"], "nullability": ["Missing location or current fields block output"], "readiness_checks": ["Geocoding returns one result", "Forecast returns required current fields"]},
+  "semantic_contract": {"applies": false},
+  "routing_tests": {"should_trigger": ["Weather in Sao Paulo now", "Current conditions in Tokyo", "Prepare a weather briefing for New York"], "should_not_trigger": ["Book a hotel", "Issue a storm alert", "Analyze weather history"]}
+}

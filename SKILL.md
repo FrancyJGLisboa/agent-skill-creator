@@ -415,6 +415,13 @@ Create all files in this order:
     `ASC_RUN_EVENT=representative_run_passed` and `ASC_RUN_ID=<creation-run-id>` so
     the instrumented pipeline records the first result without double-counting it as
     an ordinary run.
+12.5. **Generate `VERIFICATION.md`** from the completed quality evidence. Run
+    `python3 scripts/generate_verification.py <skill> --run-kind representative --environment <current-platform>`;
+    use `--run-kind live` only after a real external workflow succeeds. The report
+    is an evidence artifact, not marketing prose: it records gate states, eval counts,
+    installed environments, the 17-environment compatibility declaration, and a bound
+    skill version, Git commit, and content fingerprint. Publication must reject a
+    missing, failed, or stale report.
 13. Report the result using the handoff contract below, including one invocation and
     one correction command. Put eval/optimization details behind an advanced label.
 
@@ -562,7 +569,7 @@ Every generated skill ships its own learning loop — the eval harness plus a se
 - `--judge` grades `llm-judge` criteria with a judge pinned in the spec (model + temperature); a known-bad canary must fail every criterion or the judge run is invalid
 - A `"split": "test"` holdout case is scored only at release, never fed to an optimization loop
 - `evolve.py` runs staleness/dependency/drift checks + the rollout in one command; every failure appends its raw evidence to the skill's `EVOLUTION.md`, which feeds a regenerate pass
-- `evolve.py --correct "<what it got wrong>"` captures the one thing no check can derive: a correction from someone using the skill. It writes the sentence verbatim to `EVOLUTION.md` and adds it to `## Gotchas`
+- `evolve.py --correct "<what it got wrong>"` turns a correction into a proposed `SKILL.md` edit, an executable knowledge-retention regression under `evals/corrections/`, and a versioned patch recommendation in `EVOLUTION.md`
 - `success_ledger.py` records only pseudonymous lifecycle metadata and reports verified creation, reuse, durable activity, correction recovery, and sharing locally. Run `python3 scripts/success_ledger.py summary`; read `references/product-success.md` for the privacy boundary and formulas
 
 **Tell the user about `--correct` when you hand over a skill.** The deepest expertise in any workflow is never stated up front — people cannot describe a process they run from muscle memory, which is why this factory reads artifacts instead of interviewing. But the same person recognizes a wrong output instantly. `--correct` is the capture point for that moment, and it is how a skill's `## Gotchas` accumulates real knowledge over its life instead of being frozen at whatever could be extracted on day one.

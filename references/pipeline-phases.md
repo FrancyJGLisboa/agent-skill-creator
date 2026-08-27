@@ -1488,6 +1488,21 @@ eval rollout (with `--judge` to grade llm-judge criteria). Any failure appends
 the raw evidence to the skill's `EVOLUTION.md` — that file is the input for a
 regenerate pass (`/agent-skill-creator <skill> using EVOLUTION.md`).
 
+### Step 6.7: Emit verification evidence
+
+After the graph gates and the representative or live run complete, generate the
+release artifact from their actual results:
+
+```bash
+python3 scripts/generate_verification.py <skill> \
+  --run-kind representative --environment <current-platform>
+```
+
+Use `--run-kind live` only when the skill successfully called its real external
+system. The generated `VERIFICATION.md` records exact eval counts, gate states,
+installed environments, and declared platform coverage. It must also state that one
+run is not certification of every future data source or every platform.
+
 The ledger records only fixed lifecycle metadata with a locally salted skill ID.
 It contains no workflow content and has no network transport. Read
 `product-success.md` for the event schema, instrumentation contract, opt-out, and

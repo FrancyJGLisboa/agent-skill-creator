@@ -49,6 +49,7 @@ from marketplace_distribution import (  # noqa: E402
     DistributionError, build_install_plan, certify_compatibility,
 )
 from platforms import normalize_platform_name  # noqa: E402
+from generate_verification import render_report, verification_errors  # noqa: E402
 
 SCHEMA_VERSION = 2
 SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -66,6 +67,7 @@ SCAFFOLD_SCRIPTS = (
     "marketplace_trust.py", "marketplace_health.py", "marketplace_discovery.py",
     "marketplace_metrics.py",
     "marketplace_distribution.py", "platforms.py", "review_staleness.py",
+    "generate_verification.py",
 )
 ATTESTATION_FILE = "marketplace-attestation.json"
 
@@ -568,7 +570,7 @@ def _source_commit(skill: Path) -> str:
     lines = [
         line for line in dirty.stdout.splitlines()
         if ATTESTATION_FILE not in line and "__pycache__/" not in line
-        and not line.rstrip().endswith((".pyc", ".pyo"))
+        and not line.rstrip().endswith((".pyc", ".pyo", "VERIFICATION.md"))
     ]
     if dirty.returncode or lines:
         raise MarketplaceError("skill submission has uncommitted files; attest the exact committed contents")
@@ -600,6 +602,8 @@ def attest_skill(skill: Path, run_id: str, completed_at: str) -> Path:
     failures = _quality_errors(meta["name"], quality)
     if failures:
         raise MarketplaceError("; ".join(failures))
+    report = render_report(skill, {"specification": quality["validation"]["valid"], "security": quality["security"]["passed"], "pipeline": quality["pipeline"]["passed"], "evals": quality["evals"]["passed"]}, {"passed": 0, "failed": 0, "errors": 0, "regressions": 0, "clean": quality["evals"]["passed"]}, "representative", [])
+    (skill / "VERIFICATION.md").write_text(report, encoding="utf-8")
     artifact = create_attestation(
         skill_name=meta["name"], skill_version=meta["version"], commit_sha=commit,
         eval_evidence={
@@ -655,6 +659,9 @@ def add_skill(root: Path, skill: Path, department: str, bundle: str) -> dict[str
     failures = _quality_errors(meta["name"], quality)
     if failures:
         raise MarketplaceError("; ".join(failures))
+    verification = verification_errors(skill)
+    if verification:
+        raise MarketplaceError(f"{meta['name']}: verification gate failed: " + "; ".join(verification))
     data = load_manifest(root)
     identity = (department, meta["name"])
     if any((item.get("department"), item.get("name")) == identity for item in data["skills"]):

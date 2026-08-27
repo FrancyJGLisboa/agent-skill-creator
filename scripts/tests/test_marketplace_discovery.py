@@ -71,6 +71,12 @@ def test_normalize_preserves_all_required_discovery_metadata() -> None:
     )
 
 
+def test_skill_page_links_to_the_generated_verification_report() -> None:
+    page = discovery.render_skill_page(entry())
+    assert "## Reliability evidence" in page
+    assert "[View VERIFICATION.md](skills/finance/revenue-review/VERIFICATION.md)" in page
+
+
 def test_backward_compatible_defaults_are_explicit_and_low_confidence() -> None:
     legacy = {"name": "old-skill", "version": "1.0.0", "description": "Legacy helper", "approval_status": "approved"}
     normalized = discovery.normalize_discovery(legacy)

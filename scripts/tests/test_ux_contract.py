@@ -77,6 +77,19 @@ def test_public_onboarding_is_human_centered_and_result_first() -> None:
         assert "dark factory" not in source.lower()
 
 
+def test_homepage_markets_reproducible_reliability_evidence() -> None:
+    page = read("docs/index.html")
+    evidence = read("docs/verification/2026-08-27-live-weather-briefing.md")
+
+    assert "6 regression checks passed" in page
+    assert "live API request passed" in page
+    assert "local Codex package install recorded" in page
+    assert "other runtime compatibility requires separate evidence" in page
+    assert "compatible with 17 agent environments" not in page
+    assert "View verification evidence" in page
+    assert "6 passed, 0 failed, 0 errored, 0 regressed" in evidence
+
+
 def test_public_docs_distinguish_skills_from_rag_mcp_and_runtime() -> None:
     definition = (
         "An Agent Skill is a reusable workflow package that guides an agent from a "

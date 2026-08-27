@@ -24,6 +24,7 @@ from run_evals_template import (  # noqa: E402
     make_judge,
     parse_spec,
     run_command_checks,
+    run_correction_regressions,
     run_judge_canary,
     run_rollout,
     validate_spec,
@@ -132,6 +133,24 @@ class ValidateSpecTest(unittest.TestCase):
         skill = _make_skill(self.tmp, WELL_FORMED_CRITERIA, _three_golden())
         spec = parse_spec(find_spec(skill))
         self.assertEqual(validate_spec(spec, skill), [])
+
+    def test_correction_regression_fails_when_the_corrected_behavior_is_removed(self) -> None:
+        skill = _make_skill(self.tmp, WELL_FORMED_CRITERIA, _three_golden())
+        corrections = skill / "evals" / "corrections"
+        corrections.mkdir()
+        record = {
+            "id": "correction-001",
+            "regression_test": {
+                "type": "knowledge-retention",
+                "file": "SKILL.md",
+                "must_contain": "exclude late West-region files",
+            },
+        }
+        (corrections / "correction-001.json").write_text(json.dumps(record), encoding="utf-8")
+        (skill / "SKILL.md").write_text("## Gotchas\n\n- exclude late West-region files\n", encoding="utf-8")
+        self.assertEqual(run_correction_regressions(skill)[0]["status"], "pass")
+        (skill / "SKILL.md").write_text("## Gotchas\n\nNone known.\n", encoding="utf-8")
+        self.assertEqual(run_correction_regressions(skill)[0]["status"], "regression")
 
     def test_non_binary_grader_type_is_rejected(self) -> None:
         criteria = [{"id": "x", "text": "rate it", "type": "scale-1-5"}]

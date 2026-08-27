@@ -1,0 +1,23 @@
+{
+  "question": "What is the latest published release for a public GitHub dependency?",
+  "trigger": ["An engineer needs a current, inspectable release briefing before planning an upgrade"],
+  "decision": ["Decide whether a release needs human review"],
+  "evidence": ["GitHub latest-release REST response"],
+  "success_measure": "The result names the repository, release tag, publication date, and source URL.",
+  "outcome": "Produce current release evidence without modifying GitHub.",
+  "intended_users": ["Engineering managers", "Dependency maintainers"],
+  "input_types": ["Public GitHub repository identifier"],
+  "output_artifacts": ["Markdown release briefing"],
+  "use_cases": ["Dependency review", "Release monitoring"],
+  "examples": [{"invocation": "/github-release-briefing-skill openai/openai-python", "description": "Brief the latest OpenAI Python SDK release"}],
+  "permissions_systems": ["Read-only GitHub public REST API"],
+  "typical_completion_time": "under one minute",
+  "compatibility": {"declared": ["codex", "claude-code"]},
+  "support_tier": "supported",
+  "environment": {"documentation_sources": ["https://docs.github.com/en/rest/releases/releases#get-the-latest-release"], "data_sources": ["GitHub REST API"], "required_capabilities": ["Outbound HTTPS", "Python 3 standard library"], "readiness_checks": ["Repository is public", "Repository identifier is OWNER/REPOSITORY"]},
+  "risk": {"tier": "low", "permissions": ["Read public release metadata"], "mutation_boundary": "read-only", "approval_required": []},
+  "software_mutation": {"applies": false},
+  "data_interfaces": {"applies": true, "interface_types": ["api"], "authoritative_sources": ["GitHub REST API"], "entities": ["Repository", "Release"], "identifiers": ["owner/repository", "release tag"], "relationships": ["One repository has one latest published release"], "field_semantics": ["published_at is release publication time"], "invariants": ["A briefing must include a source URL"], "freshness_and_pagination": ["GitHub resolves latest release server-side"], "nullability": ["No published release blocks a briefing"], "readiness_checks": ["Response contains tag_name, published_at, and html_url"]},
+  "semantic_contract": {"applies": false},
+  "routing_tests": {"should_trigger": ["What is the latest release of openai/openai-python?", "Brief the new release for vercel/ai", "Check anthopics/anthropic-sdk-python release"], "should_not_trigger": ["Publish a GitHub release", "Upgrade this dependency automatically", "Delete an old GitHub release"]}
+}

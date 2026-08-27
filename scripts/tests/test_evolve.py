@@ -153,6 +153,21 @@ class CorrectionCaptureTest(unittest.TestCase):
             event = json.loads((skill / "success-events.jsonl").read_text(encoding="utf-8"))
             self.assertEqual(event["event"], "correction_recorded")
 
+    def test_creates_a_versioned_edit_and_executable_regression(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            skill = self._skill(Path(tmp), "## Gotchas\n\nNone known.")
+            self._run(skill, "--correct", self.CORRECTION)
+            log = (skill / "EVOLUTION.md").read_text(encoding="utf-8")
+            records = list((skill / "evals" / "corrections").glob("*.json"))
+            self.assertEqual(len(records), 1)
+            record = json.loads(records[0].read_text(encoding="utf-8"))
+            self.assertEqual(record["correction"], self.CORRECTION)
+            self.assertEqual(record["proposed_skill_edit"]["section"], "Gotchas")
+            self.assertEqual(record["regression_test"]["must_contain"], self.CORRECTION)
+            self.assertEqual(record["version"]["recommended_bump"], "patch")
+            self.assertIn(f"Change ID: `{record['id']}`", log)
+            self.assertIn("Version recommendation: patch", log)
+
     def test_repeated_corrections_all_survive(self):
         with tempfile.TemporaryDirectory() as tmp:
             skill = self._skill(Path(tmp), "## Gotchas\n\nNone known.\n\n## Keywords\n\nfoo")

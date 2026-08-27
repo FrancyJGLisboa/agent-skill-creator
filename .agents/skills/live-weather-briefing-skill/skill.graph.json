@@ -1,0 +1,198 @@
+{
+  "artifacts": [
+    {
+      "id": "claude_plugin_marketplace_json",
+      "path": ".claude-plugin/marketplace.json",
+      "sha256": "0c78637d48b1726665f17e1333de31485791e590bfee61e2a3a28fe57792f354",
+      "type": "package_file"
+    },
+    {
+      "id": "claude_plugin_plugin_json",
+      "path": ".claude-plugin/plugin.json",
+      "sha256": "daca7cf7d3471b9e4e74fd00af8c0dcab159fb5b32c3fed5952eff8eca22d41e",
+      "type": "package_file"
+    },
+    {
+      "id": "agents_document",
+      "path": "AGENTS.md",
+      "sha256": "f846d0e46600f8b48d1665b091cd86f8ca2fe13ad84a3a664172115084bf3ab4",
+      "type": "companion_instruction"
+    },
+    {
+      "id": "evolution_md",
+      "path": "EVOLUTION.md",
+      "sha256": "618a4ee198a2342bef25ad3c5fe5103a3bef8c44cdaaa72cee47cfad7aa6c809",
+      "type": "package_file"
+    },
+    {
+      "id": "skill_document",
+      "path": "SKILL.md",
+      "sha256": "b8b70752fa6a79d1e75a46bc4b2327aefb8aacadca3f1eb1139bff9ee658ff57",
+      "type": "instruction"
+    },
+    {
+      "id": "discovery_json",
+      "path": "discovery.json",
+      "sha256": "f053e109299926772e2fff8ab223288d2ba27416b5446c8852526f3aaaa6b54a",
+      "type": "package_file"
+    },
+    {
+      "id": "new_york_input",
+      "path": "evals/golden/new-york/input.txt",
+      "sha256": "c703ce276a57c6d55ea2d613499e7e2bf4dcaf64a97f7cf2cfb09afed557fa1e",
+      "type": "golden_input"
+    },
+    {
+      "id": "sao_paulo_input",
+      "path": "evals/golden/sao-paulo/input.txt",
+      "sha256": "6c53f15a11d2751e0c8a39e4a851446a94f2101c4c686e62216cdebdcaddee83",
+      "type": "golden_input"
+    },
+    {
+      "id": "tokyo_input",
+      "path": "evals/golden/tokyo/input.txt",
+      "sha256": "7091a6104b88bb2ab07745870383b5a4ab569acf898f87cc87b5aeb3f8dab4a2",
+      "type": "golden_input"
+    },
+    {
+      "id": "evals_live_weather_briefing_eval_md",
+      "path": "evals/live-weather-briefing.eval.md",
+      "sha256": "cf560678de3da4b31e7448c5a624ca1d92730450132496e609604a87ae74d148",
+      "type": "eval_spec"
+    },
+    {
+      "id": "install_ps1",
+      "path": "install.ps1",
+      "sha256": "8f02c134c8ecb954119b6700b2abc30e31811587d37bc3429ab43590b642283d",
+      "type": "package_file"
+    },
+    {
+      "id": "install_sh",
+      "path": "install.sh",
+      "sha256": "1e71b106c6b612c25768464207e81642defd2d41dc61ed4ddeae35001031d667",
+      "type": "package_file"
+    },
+    {
+      "id": "interview_json",
+      "path": "interview.json",
+      "sha256": "61752a88cc4ef1d4f0e45b2ac856b4d3a347e0d7a96bfdd976a1316371200dde",
+      "type": "package_file"
+    },
+    {
+      "id": "scripts_dependency_health_py",
+      "path": "scripts/dependency_health.py",
+      "sha256": "7c8beebbc46ff1a7e3ef800626e0c7a377b0c27a6c00b98a9eb2688ed8a4285e",
+      "type": "script"
+    },
+    {
+      "id": "scripts_evolve_py",
+      "path": "scripts/evolve.py",
+      "sha256": "dea1ea861b10f43c1e912ca213913842cf7a77abcff74a5990ac8c6b5a0b1c70",
+      "type": "script"
+    },
+    {
+      "id": "scripts_review_staleness_py",
+      "path": "scripts/review_staleness.py",
+      "sha256": "706b04f17a6936305017fa94da3840eeb2012fcca661ee6dca11c0089035dab1",
+      "type": "script"
+    },
+    {
+      "id": "scripts_run_evals_py",
+      "path": "scripts/run_evals.py",
+      "sha256": "7a2776a33d1c90e76bb1571413ce4996fc1938775509c4215aaa1fe7409c9202",
+      "type": "script"
+    },
+    {
+      "id": "pipeline",
+      "path": "scripts/run_pipeline.py",
+      "sha256": "90dc78590673ae64a9842232d31b368914ae9630a8255962a609043e2943657c",
+      "type": "script"
+    },
+    {
+      "id": "scripts_schema_drift_py",
+      "path": "scripts/schema_drift.py",
+      "sha256": "4d15b1fd14324c7305e4017b91b2b35ee90e589e007c7eb1bad7f1ddd4d96687",
+      "type": "script"
+    },
+    {
+      "id": "scripts_skill_document_py",
+      "path": "scripts/skill_document.py",
+      "sha256": "ed2869952feeccfe09af15529bb8df5b846725670fd16600a0c2eeb7488fe79d",
+      "type": "script"
+    },
+    {
+      "id": "scripts_staleness_check_py",
+      "path": "scripts/staleness_check.py",
+      "sha256": "b3be7f9e4832d42d301a82395dba08383cf417535e8e42c2e2f73b6ea98a192b",
+      "type": "script"
+    },
+    {
+      "id": "scripts_success_ledger_py",
+      "path": "scripts/success_ledger.py",
+      "sha256": "f5193f9c5c67da3a980346e56f4ba12245a9c3f69c15a46171e9360d94eaafea",
+      "type": "script"
+    }
+  ],
+  "constraints": [
+    {
+      "id": "every_expected_is_reachable",
+      "severity": "error"
+    },
+    {
+      "id": "deterministic_multistep_has_orchestrator",
+      "severity": "error"
+    }
+  ],
+  "edges": [
+    {
+      "from": "new_york_input",
+      "relation": "consumed_by",
+      "to": "pipeline"
+    },
+    {
+      "from": "sao_paulo_input",
+      "relation": "consumed_by",
+      "to": "pipeline"
+    },
+    {
+      "from": "tokyo_input",
+      "relation": "consumed_by",
+      "to": "pipeline"
+    }
+  ],
+  "gates": [
+    {
+      "id": "spec",
+      "inputs": [
+        "skill_document",
+        "package_index"
+      ]
+    },
+    {
+      "id": "security",
+      "inputs": [
+        "package"
+      ]
+    },
+    {
+      "id": "pipeline",
+      "inputs": [
+        "scripts",
+        "dependency_manifests"
+      ]
+    },
+    {
+      "id": "eval_schema",
+      "inputs": [
+        "eval_specs",
+        "golden_cases",
+        "eval_runner"
+      ]
+    }
+  ],
+  "schema_version": 1,
+  "skill": "live-weather-briefing-skill",
+  "workflow": {
+    "kind": "independent"
+  }
+}

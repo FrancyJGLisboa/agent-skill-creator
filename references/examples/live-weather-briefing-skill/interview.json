@@ -1,0 +1,199 @@
+{
+  "authority_owner": {
+    "confirmed_by": "demo-weather-briefing-owner",
+    "evidence": [
+      "demo workflow brief; Open-Meteo official documentation"
+    ],
+    "proposed_by": null,
+    "status": "confirmed",
+    "updated_at": "2026-08-27T12:43:26Z",
+    "value": "demo-weather-briefing-owner"
+  },
+  "created_at": "2026-08-27T12:43:01Z",
+  "created_by": "demo-weather-briefing-owner",
+  "decision_consequence": {
+    "confirmed_by": "demo-weather-briefing-owner",
+    "evidence": [
+      "demo workflow brief; Open-Meteo official documentation"
+    ],
+    "proposed_by": null,
+    "status": "confirmed",
+    "updated_at": "2026-08-27T12:43:25Z",
+    "value": "Incorrect conditions can lead to unsuitable travel preparation, so the skill must identify its live source and observation time"
+  },
+  "decision_consumer": {
+    "confirmed_by": "demo-weather-briefing-owner",
+    "evidence": [
+      "demo workflow brief; Open-Meteo official documentation"
+    ],
+    "proposed_by": null,
+    "status": "confirmed",
+    "updated_at": "2026-08-27T12:43:25Z",
+    "value": "Traveler deciding what weather conditions to prepare for today"
+  },
+  "environment_requirements": {
+    "confirmed_by": "demo-weather-briefing-owner",
+    "evidence": [
+      "demo workflow brief; Open-Meteo official documentation"
+    ],
+    "proposed_by": null,
+    "status": "confirmed",
+    "updated_at": "2026-08-27T12:43:26Z",
+    "value": [
+      "Network access to Open-Meteo geocoding and forecast APIs",
+      "Python 3 standard library"
+    ]
+  },
+  "failure_impact": {
+    "confirmed_by": "demo-weather-briefing-owner",
+    "evidence": [
+      "demo workflow brief; Open-Meteo official documentation"
+    ],
+    "proposed_by": null,
+    "status": "confirmed",
+    "updated_at": "2026-08-27T12:43:25Z",
+    "value": "Low; the skill is advisory and must not make bookings, alerts, or other external changes"
+  },
+  "history": [
+    {
+      "action": "confirm",
+      "actor": "demo-weather-briefing-owner",
+      "at": "2026-08-27T12:43:25Z",
+      "field": "objective"
+    },
+    {
+      "action": "confirm",
+      "actor": "demo-weather-briefing-owner",
+      "at": "2026-08-27T12:43:25Z",
+      "field": "decision_consumer"
+    },
+    {
+      "action": "confirm",
+      "actor": "demo-weather-briefing-owner",
+      "at": "2026-08-27T12:43:25Z",
+      "field": "decision_consequence"
+    },
+    {
+      "action": "confirm",
+      "actor": "demo-weather-briefing-owner",
+      "at": "2026-08-27T12:43:25Z",
+      "field": "success_measure"
+    },
+    {
+      "action": "confirm",
+      "actor": "demo-weather-briefing-owner",
+      "at": "2026-08-27T12:43:25Z",
+      "field": "failure_impact"
+    },
+    {
+      "action": "confirm",
+      "actor": "demo-weather-briefing-owner",
+      "at": "2026-08-27T12:43:26Z",
+      "field": "environment_requirements"
+    },
+    {
+      "action": "confirm",
+      "actor": "demo-weather-briefing-owner",
+      "at": "2026-08-27T12:43:26Z",
+      "field": "authority_owner"
+    },
+    {
+      "action": "confirm",
+      "actor": "demo-weather-briefing-owner",
+      "at": "2026-08-27T12:43:26Z",
+      "field": "semantic_contract_applies"
+    }
+  ],
+  "objective": {
+    "confirmed_by": "demo-weather-briefing-owner",
+    "evidence": [
+      "demo workflow brief; Open-Meteo official documentation"
+    ],
+    "proposed_by": null,
+    "status": "confirmed",
+    "updated_at": "2026-08-27T12:43:25Z",
+    "value": "Give a traveler a current, source-linked weather briefing for a named city"
+  },
+  "problem": {
+    "confirmed_by": "demo-weather-briefing-owner",
+    "evidence": [
+      "user_statement"
+    ],
+    "proposed_by": null,
+    "status": "confirmed",
+    "updated_at": "2026-08-27T12:43:01Z",
+    "value": "Create a current weather briefing for a named city using Open-Meteo"
+  },
+  "schema_version": 1,
+  "semantic": {
+    "ambiguity_behavior": {
+      "confirmed_by": null,
+      "evidence": [],
+      "proposed_by": null,
+      "status": "unknown",
+      "updated_at": null,
+      "value": null
+    },
+    "definitions": {
+      "confirmed_by": null,
+      "evidence": [],
+      "proposed_by": null,
+      "status": "unknown",
+      "updated_at": null,
+      "value": null
+    },
+    "freshness_policy": {
+      "confirmed_by": null,
+      "evidence": [],
+      "proposed_by": null,
+      "status": "unknown",
+      "updated_at": null,
+      "value": null
+    },
+    "grain_unit": {
+      "confirmed_by": null,
+      "evidence": [],
+      "proposed_by": null,
+      "status": "unknown",
+      "updated_at": null,
+      "value": null
+    },
+    "source_precedence": {
+      "confirmed_by": null,
+      "evidence": [],
+      "proposed_by": null,
+      "status": "unknown",
+      "updated_at": null,
+      "value": null
+    },
+    "time_semantics": {
+      "confirmed_by": null,
+      "evidence": [],
+      "proposed_by": null,
+      "status": "unknown",
+      "updated_at": null,
+      "value": null
+    }
+  },
+  "semantic_contract_applies": {
+    "confirmed_by": "demo-weather-briefing-owner",
+    "evidence": [
+      "demo workflow brief; Open-Meteo official documentation"
+    ],
+    "proposed_by": null,
+    "status": "confirmed",
+    "updated_at": "2026-08-27T12:43:26Z",
+    "value": false
+  },
+  "success_measure": {
+    "confirmed_by": "demo-weather-briefing-owner",
+    "evidence": [
+      "demo workflow brief; Open-Meteo official documentation"
+    ],
+    "proposed_by": null,
+    "status": "confirmed",
+    "updated_at": "2026-08-27T12:43:25Z",
+    "value": "A named city resolves to one location and the briefing contains current temperature, apparent temperature, wind, weather condition, source URL, and observation time"
+  },
+  "updated_at": "2026-08-27T12:43:26Z"
+}

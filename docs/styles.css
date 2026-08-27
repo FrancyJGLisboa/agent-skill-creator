@@ -100,6 +100,11 @@ code { overflow-wrap: anywhere; }
 }
 .hero h1 { margin-top: var(--space-sm); max-width: 15ch; font-size: var(--text-display); }
 .hero__lede { margin-top: var(--space-lg); max-width: 58ch; color: var(--color-ink-muted); font-size: var(--text-md); }
+.product-loop { margin-top: var(--space-xl); max-width: 58ch; }
+.product-loop__label { color: var(--color-ink); font-family: var(--font-mono); font-size: var(--text-xs); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+.product-loop ol { margin: var(--space-sm) 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-xs) var(--space-sm); list-style: none; }
+.product-loop li { display: flex; align-items: center; color: var(--color-ink-muted); font-size: var(--text-sm); }
+.product-loop li:not(:last-child)::after { content: "→"; margin-left: var(--space-sm); color: var(--color-accent); }
 .hero__actions { margin-top: var(--space-xl); display: flex; align-items: center; gap: var(--space-lg); flex-wrap: wrap; }
 
 .result-card {
@@ -118,6 +123,7 @@ code { overflow-wrap: anywhere; }
 .result-card dd { margin: 0; font-weight: 500; }
 .result-card code { padding: .15em .4em; background: var(--color-paper-3); border-radius: var(--radius-sm); }
 .result-card__checks { margin-top: var(--space-lg); padding-top: var(--space-md); border-top: 1px solid var(--color-rule); color: var(--color-ink-faint); font-size: var(--text-xs); }
+.result-card__evidence { display: inline-block; margin-top: var(--space-sm); color: var(--color-accent); font-size: var(--text-sm); font-weight: 600; }
 
 .proof-strip {
   width: min(100%, var(--page-max));
@@ -255,6 +261,8 @@ footer nav { display: flex; gap: var(--space-lg); }
   .nav__center { display: none; }
   .hero { grid-template-columns: 1fr; padding-top: var(--space-2xl); }
   .hero h1 { max-width: none; }
+  .product-loop ol { display: grid; grid-template-columns: 1fr; gap: var(--space-xs); }
+  .product-loop li:not(:last-child)::after { content: "↓"; margin-left: var(--space-xs); }
   .proof-strip, .journey, .trust__grid, .capabilities { grid-template-columns: repeat(2, 1fr); }
   .proof-strip { gap: var(--space-lg) 0; }
   .proof-strip div:nth-child(odd) { padding-left: 0; border-left: 0; }

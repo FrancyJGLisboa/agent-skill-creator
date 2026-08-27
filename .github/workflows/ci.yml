@@ -24,6 +24,8 @@ jobs:
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -35,6 +37,15 @@ jobs:
 
       - name: Run test suite
         run: uv run --with pytest pytest scripts/tests/ -q
+
+      - name: Require current verification evidence for changed skills
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [ -z "$BASE_SHA" ] || [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
+            BASE_SHA="HEAD~1"
+          fi
+          python3 scripts/check_verification.py --base "$BASE_SHA"
 
       - name: Validate bundled example skills
         run: |

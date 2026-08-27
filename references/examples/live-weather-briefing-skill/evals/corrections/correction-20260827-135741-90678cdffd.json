@@ -1,0 +1,19 @@
+{
+  "id": "correction-20260827-135741-90678cdffd",
+  "reported_at": "2026-08-27T13:57:41Z",
+  "correction": "Treat a trailing two-letter country code as a geographic qualifier, not part of the city name.",
+  "proposed_skill_edit": {
+    "file": "SKILL.md",
+    "section": "Gotchas",
+    "change": "Add the reported behavior: Treat a trailing two-letter country code as a geographic qualifier, not part of the city name."
+  },
+  "regression_test": {
+    "type": "knowledge-retention",
+    "file": "SKILL.md",
+    "must_contain": "Treat a trailing two-letter country code as a geographic qualifier, not part of the city name."
+  },
+  "version": {
+    "recommended_bump": "patch",
+    "reason": "Correction from real use; preserve the corrected behavior and prevent its removal without review."
+  }
+}

@@ -614,7 +614,7 @@ def _bullets(values: list[str]) -> list[str]:
 
 def render_skill_page(entry: Mapping[str, Any]) -> str:
     """Render one deterministic, injection-resistant structured Markdown page."""
-    _safe_path(entry.get("path"))
+    skill_path = _safe_path(entry.get("path"))
     metadata = normalize_discovery(entry)
     name = str(entry["name"])
     compatibility = metadata["compatibility"]
@@ -623,6 +623,8 @@ def render_skill_page(entry: Mapping[str, Any]) -> str:
         "## Governance", "",
         f"Approval: **{_md(entry.get('approval_status', 'draft'))}**", "",
         f"Lifecycle: **{_md(entry.get('lifecycle', entry.get('lifecycle_state', entry.get('approval_status', 'draft'))))}**", "",
+        "## Reliability evidence", "",
+        f"[View VERIFICATION.md]({_md(skill_path + '/VERIFICATION.md')})", "",
         "## Question", "", _md(metadata["question"]), "",
         "## Trigger", "", *_bullets(metadata["trigger"]), "",
         "## Decisions supported", "", *_bullets(metadata["decision"]), "",

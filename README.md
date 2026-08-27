@@ -217,7 +217,7 @@ If the result is wrong, describe the correction once:
 python3 ./weekly-crm-report-skill/scripts/evolve.py --correct "UK sales arrive one day late"
 ```
 
-The correction becomes part of the skill's maintained knowledge.
+The correction becomes a proposed skill edit, an executable regression check, and a versioned patch reason in the skill's maintenance record.
 
 ## What happens behind the four stages
 
