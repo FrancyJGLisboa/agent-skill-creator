@@ -12,6 +12,7 @@
 
 [Website](https://francyjglisboa.github.io/agent-skill-creator/) ·
 [Installation](docs/INSTALL.md) ·
+[Worker runbook](docs/WORKER_RUNBOOK.md) ·
 [Governed team marketplace](docs/TEAM_MARKETPLACE.md) ·
 [Product scope](docs/PRODUCT_SCOPE.md) ·
 [Organizational acceptance](docs/ORGANIZATIONAL_ACCEPTANCE.md) ·
@@ -122,6 +123,9 @@ workflow expert, marketplace operator, and cross-department consumer. Follow the
 assistance counts as failure, not success.
 
 ## Create your first skill
+
+For the complete employee-facing path—install, first prompt, expected result,
+correction, escalation, and marketplace handoff—use the [worker runbook](docs/WORKER_RUNBOOK.md).
 
 ### 1. Choose your AI tool
 

@@ -90,6 +90,14 @@ def test_homepage_markets_reproducible_reliability_evidence() -> None:
     assert "6 passed, 0 failed, 0 errored, 0 regressed" in evidence
 
 
+def test_worker_runbook_is_linked_from_readme_and_homepage() -> None:
+    runbook = read("docs/WORKER_RUNBOOK.md")
+    assert "/agent-skill-creator Every Friday" in runbook
+    assert "verification-blocked" in runbook
+    assert "docs/WORKER_RUNBOOK.md" in read("README.md")
+    assert 'href="WORKER_RUNBOOK.html"' in read("docs/index.html")
+
+
 def test_public_docs_distinguish_skills_from_rag_mcp_and_runtime() -> None:
     definition = (
         "An Agent Skill is a reusable workflow package that guides an agent from a "
