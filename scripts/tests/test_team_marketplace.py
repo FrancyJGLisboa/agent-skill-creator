@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import json
+import hashlib
+import hmac
 import re
 import shutil
 import subprocess
 import sys
 import threading
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -117,6 +120,22 @@ def init_marketplace(base: Path) -> Path:
     repo = base / "marketplace"
     market.init_marketplace(repo, "ACME Skills", "ACME/skills")
     return repo
+
+
+def signed_attestation(
+    path: Path, secret: str, *, claims: dict[str, object], managed: bool = True,
+) -> Path:
+    now = datetime.now(timezone.utc)
+    payload: dict[str, object] = {
+        "issuer": "local-development", "audience": "ACME/skills",
+        "issued_at": now.isoformat(), "expires_at": (now + timedelta(minutes=2)).isoformat(),
+        "nonce": "test-attestation-nonce", "claims": claims,
+        "device": {"id": "device:test-managed-macos", "managed": managed},
+    }
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    payload["signature"] = hmac.new(secret.encode("utf-8"), encoded, hashlib.sha256).hexdigest()
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    return path
 
 
 def test_init_generates_governance_scaffold(tmp_path: Path) -> None:
@@ -1002,6 +1021,93 @@ def test_certification_enables_filtered_search_and_distribution_plan(tmp_path: P
         remote=True, home=tmp_path / "home", project_root=tmp_path / "project",
     )
     assert plan["mutates"] is False and plan["targets"][0]["platform"] == "codex"
+
+
+def test_skills_resolve_is_read_only_and_requires_current_platform_certification(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repo = init_marketplace(tmp_path)
+    skill = make_skill(tmp_path, "report-skill")
+    discovery = json.loads((skill / "discovery.json").read_text(encoding="utf-8"))
+    discovery["compatibility"] = {"declared": ["codex"]}
+    (skill / "discovery.json").write_text(json.dumps(discovery), encoding="utf-8")
+    recommit_and_attest(skill)
+    market.add_skill(repo, skill, "finance", "base")
+    evidence = {
+        "platform": "codex", "skill_version": "1.2.3",
+        "adapter": "native-skill", "adapter_version": "1.0.0",
+        "checks": [{"name": "representative-load", "passed": True}],
+    }
+    market.certify_skill(repo, "finance", "report-skill", "codex", evidence)
+    market.transition_skill(repo, "finance", "report-skill", "published")
+    market.apply_resolver_policies(repo, [{
+        "id": "finance-codex-managed", "effect": "allow",
+        "subjects": ["group:finance-analysts"], "agents": ["codex-cli"],
+        "projects": ["github:acme/quarterly-close"], "environments": ["managed-macos"],
+        "platforms": ["codex"], "skills": ["finance/report-skill"],
+    }])
+    before = (repo / "registry.json").read_bytes()
+    secret = "test-resolver-attestation-secret"
+    monkeypatch.setenv("SKILL_RESOLVER_ATTESTATION_SECRET", secret)
+    attestation = signed_attestation(tmp_path / "attestation.json", secret, claims={
+        "agent": "codex-cli", "user": "user:alice@example.com",
+        "groups": ["finance-analysts"], "project": "github:acme/quarterly-close",
+        "environment": "managed-macos", "platform": "codex",
+    })
+
+    result = market.main([
+        "skills.resolve", "--attestation", str(attestation),
+        "--skill", "finance/report-skill", "--skill", "missing/nope",
+        "--marketplace", str(repo),
+    ])
+
+    assert result == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["policy"]["mode"] == "deny-by-default"
+    assert payload["policy"]["enforced"] is True
+    assert payload["attestation"]["device_id"] == "device:test-managed-macos"
+    assert payload["skills"][0]["id"] == "finance/report-skill"
+    assert payload["skills"][0]["version"] == "1.2.3"
+    assert len(payload["skills"][0]["artifact"]["sha256"]) == 64
+    assert payload["denied"] == [{
+        "id": "missing/nope", "code": "NOT_FOUND", "message": "Skill is not in this marketplace.",
+    }]
+    assert (repo / "registry.json").read_bytes() == before
+
+    incompatible = market.resolve_skills(
+        repo, agent="codex-cli", user="user:alice@example.com",
+        project="github:acme/quarterly-close", environment="managed-macos",
+        platform="cursor", skill_ids=["finance/report-skill"],
+    )
+    assert incompatible["skills"] == []
+    assert incompatible["denied"][0]["code"] == "INCOMPATIBLE_PLATFORM"
+
+    market.apply_resolver_policies(repo, [{
+        "id": "broad-allow", "effect": "allow", "subjects": ["*"], "agents": ["*"],
+        "projects": ["*"], "environments": ["*"], "platforms": ["*"], "skills": ["*"],
+    }, {
+        "id": "alice-deny", "effect": "deny", "subjects": ["user:alice@example.com"],
+        "agents": ["*"], "projects": ["*"], "environments": ["*"], "platforms": ["*"],
+        "skills": ["finance/report-skill"],
+    }])
+    denied = market.resolve_skills(
+        repo, agent="codex-cli", user="user:alice@example.com",
+        project="github:acme/quarterly-close", environment="managed-macos",
+        platform="codex", skill_ids=["finance/report-skill"],
+    )
+    assert denied["skills"] == []
+    assert denied["denied"][0]["code"] == "POLICY_DENIED"
+    assert denied["denied"][0]["matched_rules"] == ["alice-deny", "broad-allow"]
+
+    unmanaged = signed_attestation(tmp_path / "unmanaged-attestation.json", secret, claims={
+        "agent": "codex-cli", "user": "user:alice@example.com",
+        "groups": ["finance-analysts"], "project": "github:acme/quarterly-close",
+        "environment": "managed-macos", "platform": "codex",
+    }, managed=False)
+    assert market.main([
+        "skills.resolve", "--attestation", str(unmanaged), "--marketplace", str(repo),
+    ]) == 1
+    assert "managed device" in capsys.readouterr().err
 
 
 def test_release_check_blocks_uncertified_declared_platform(tmp_path: Path) -> None:

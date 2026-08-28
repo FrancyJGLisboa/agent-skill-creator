@@ -10,7 +10,10 @@ machine-readable quality evidence in ``registry.json``.
 from __future__ import annotations
 
 import argparse
+import hashlib
+import hmac
 import json
+import os
 import re
 import secrets
 import shutil
@@ -441,11 +444,20 @@ def init_marketplace(
                 "departments": normalized_departments,
                 "approvers": normalized_approvers,
                 "supported_platforms": normalized_platforms,
+                "resolver_policies": [],
+                "resolver_attestation": {
+                    "issuer": "local-development", "audience": repository,
+                    "max_ttl_seconds": 300,
+                },
             },
             "skills": [],
             "bundles": {bundle: [] for bundle in normalized_bundles},
         }
     marketplace = data["marketplace"]
+    marketplace.setdefault("resolver_policies", [])
+    marketplace.setdefault("resolver_attestation", {
+        "issuer": "local-development", "audience": repository, "max_ttl_seconds": 300,
+    })
     if normalized_departments:
         marketplace["departments"] = normalized_departments
         marketplace["active_owners"] = sorted(set(normalized_departments.values()))
@@ -1076,6 +1088,249 @@ def check_marketplace(
                     f"failed for {failure['query']!r}; observed {failure['observed_owner']}"
                 )
     return errors
+
+
+def _skill_artifact_sha256(skill: Path) -> str:
+    """Hash a skill directory deterministically without including local Git state."""
+    digest = hashlib.sha256()
+    files = sorted(
+        path for path in skill.rglob("*")
+        if path.is_file() and ".git" not in path.relative_to(skill).parts
+        and "__pycache__" not in path.relative_to(skill).parts
+    )
+    for path in files:
+        relative = path.relative_to(skill).as_posix().encode("utf-8")
+        digest.update(len(relative).to_bytes(8, "big"))
+        digest.update(relative)
+        content = path.read_bytes()
+        digest.update(len(content).to_bytes(8, "big"))
+        digest.update(content)
+    return digest.hexdigest()
+
+
+def _current_certification(entry: dict[str, Any], platform: str) -> dict[str, Any] | None:
+    """Return passing certification for the entry's exact current version."""
+    certified = entry.get("compatibility", {}).get("certified", [])
+    if not isinstance(certified, list):
+        return None
+    for record in certified:
+        if not isinstance(record, dict) or record.get("passed") is not True:
+            continue
+        if normalize_platform_name(str(record.get("platform", ""))) != platform:
+            continue
+        if str(record.get("version", record.get("skill_version", ""))) == str(entry.get("version", "")):
+            return record
+    return None
+
+
+def _marketplace_commit(root: Path) -> str | None:
+    result = subprocess.run(
+        ["git", "-C", str(root), "rev-parse", "HEAD"],
+        capture_output=True, text=True, check=False,
+    )
+    return result.stdout.strip() if result.returncode == 0 else None
+
+
+POLICY_SELECTOR_FIELDS = ("subjects", "agents", "projects", "environments", "platforms", "skills")
+
+
+def _policy_revision(rules: list[dict[str, Any]]) -> str:
+    payload = json.dumps(rules, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return f"sha256:{hashlib.sha256(payload).hexdigest()}"
+
+
+def _validate_resolver_policies(value: Any) -> list[dict[str, Any]]:
+    if not isinstance(value, list):
+        raise MarketplaceError("resolver policies must be a JSON array")
+    ids: set[str] = set()
+    rules: list[dict[str, Any]] = []
+    for raw in value:
+        if not isinstance(raw, dict):
+            raise MarketplaceError("each resolver policy must be an object")
+        rule_id = raw.get("id")
+        if not isinstance(rule_id, str) or not SLUG_RE.fullmatch(rule_id) or rule_id in ids:
+            raise MarketplaceError("each resolver policy needs a unique slug id")
+        effect = raw.get("effect")
+        if effect not in {"allow", "deny"}:
+            raise MarketplaceError(f"resolver policy {rule_id} effect must be allow or deny")
+        rule = {"id": rule_id, "effect": effect}
+        for field in POLICY_SELECTOR_FIELDS:
+            selector = raw.get(field, ["*"])
+            if not isinstance(selector, list) or not selector or any(not isinstance(item, str) or not item for item in selector):
+                raise MarketplaceError(f"resolver policy {rule_id} {field} must be a non-empty string array")
+            if field == "platforms":
+                selector = ["*" if item == "*" else normalize_platform_name(item) for item in selector]
+            rule[field] = sorted(set(selector))
+        ids.add(rule_id)
+        rules.append(rule)
+    return sorted(rules, key=lambda rule: rule["id"])
+
+
+def apply_resolver_policies(root: Path, policies: Any) -> dict[str, Any]:
+    """Validate and atomically persist resolver rules in the marketplace manifest."""
+    rules = _validate_resolver_policies(policies)
+    data = load_manifest(root)
+    data["marketplace"]["resolver_policies"] = rules
+    data["marketplace"]["resolver_policy_revision"] = _policy_revision(rules)
+    save_manifest(root, data)
+    return {"rules": rules, "revision": data["marketplace"]["resolver_policy_revision"]}
+
+
+def _selector_matches(values: set[str], selector: list[str]) -> bool:
+    return "*" in selector or bool(values.intersection(selector))
+
+
+def _policy_decision(
+    rules: list[dict[str, Any]], *, user: str, groups: list[str], agent: str,
+    project: str, environment: str, platform: str, skill_id: str,
+) -> tuple[bool, list[str]]:
+    subjects = {user, *(f"group:{group}" for group in groups)}
+    matched = [
+        rule for rule in rules
+        if _selector_matches(subjects, rule["subjects"])
+        and _selector_matches({agent}, rule["agents"])
+        and _selector_matches({project}, rule["projects"])
+        and _selector_matches({environment}, rule["environments"])
+        and _selector_matches({platform}, rule["platforms"])
+        and _selector_matches({skill_id}, rule["skills"])
+    ]
+    ids = [rule["id"] for rule in matched]
+    return bool(matched) and not any(rule["effect"] == "deny" for rule in matched) and any(
+        rule["effect"] == "allow" for rule in matched
+    ), ids
+
+
+def _parse_attestation_time(value: Any, label: str) -> datetime:
+    if not isinstance(value, str):
+        raise MarketplaceError(f"attestation {label} must be an RFC3339 timestamp")
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise MarketplaceError(f"attestation {label} must be an RFC3339 timestamp") from exc
+    if parsed.tzinfo is None:
+        raise MarketplaceError(f"attestation {label} must include a timezone")
+    return parsed.astimezone(timezone.utc)
+
+
+def verify_execution_attestation(root: Path, attestation: Any, secret: str | None = None) -> dict[str, Any]:
+    """Verify a signed, short-lived identity and managed-device assertion."""
+    if not isinstance(attestation, dict):
+        raise MarketplaceError("attestation must be a JSON object")
+    signature = attestation.get("signature")
+    if not isinstance(signature, str) or not re.fullmatch(r"[0-9a-f]{64}", signature):
+        raise MarketplaceError("attestation signature must be a lowercase SHA-256 HMAC")
+    key = secret if secret is not None else os.environ.get("SKILL_RESOLVER_ATTESTATION_SECRET")
+    if not key:
+        raise MarketplaceError("SKILL_RESOLVER_ATTESTATION_SECRET is required to verify attestations")
+    unsigned = {field: value for field, value in attestation.items() if field != "signature"}
+    canonical = json.dumps(unsigned, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    expected = hmac.new(key.encode("utf-8"), canonical, hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(signature, expected):
+        raise MarketplaceError("attestation signature is invalid")
+    data = load_manifest(root)
+    config = data["marketplace"].get("resolver_attestation", {})
+    if attestation.get("issuer") != config.get("issuer"):
+        raise MarketplaceError("attestation issuer is not trusted by this marketplace")
+    if attestation.get("audience") != config.get("audience", data["marketplace"]["repository"]):
+        raise MarketplaceError("attestation audience does not match this marketplace")
+    issued_at = _parse_attestation_time(attestation.get("issued_at"), "issued_at")
+    expires_at = _parse_attestation_time(attestation.get("expires_at"), "expires_at")
+    now = datetime.now(timezone.utc)
+    ttl = (expires_at - issued_at).total_seconds()
+    if issued_at > now or expires_at <= now or ttl <= 0 or ttl > int(config.get("max_ttl_seconds", 300)):
+        raise MarketplaceError("attestation is expired, not yet valid, or exceeds the configured TTL")
+    if not isinstance(attestation.get("nonce"), str) or len(attestation["nonce"]) < 16:
+        raise MarketplaceError("attestation nonce must contain at least 16 characters")
+    claims = attestation.get("claims")
+    device = attestation.get("device")
+    if not isinstance(claims, dict) or not isinstance(device, dict):
+        raise MarketplaceError("attestation must include claims and device objects")
+    required = ("agent", "user", "project", "environment", "platform")
+    if any(not isinstance(claims.get(field), str) or not claims[field] for field in required):
+        raise MarketplaceError("attestation claims require non-empty agent, user, project, environment, and platform")
+    groups = claims.get("groups", [])
+    if not isinstance(groups, list) or any(not isinstance(group, str) or not group for group in groups):
+        raise MarketplaceError("attestation claims.groups must be a string array")
+    if not isinstance(device.get("id"), str) or not device["id"] or device.get("managed") is not True:
+        raise MarketplaceError("attestation device must identify a managed device")
+    return {"claims": claims, "device": device, "issuer": attestation["issuer"], "expires_at": attestation["expires_at"]}
+
+
+def resolve_skills(
+    root: Path, *, agent: str, user: str, project: str, environment: str,
+    platform: str, skill_ids: list[str] | None = None, groups: list[str] | None = None,
+) -> dict[str, Any]:
+    """Read-only resolver for published, certified, policy-authorized artifacts."""
+    data = load_manifest(root)
+    canonical_platform = normalize_platform_name(platform)
+    rules = _validate_resolver_policies(data["marketplace"].get("resolver_policies", []))
+    group_values = sorted(set(groups or []))
+    requested = set(skill_ids or [])
+    known_ids = {
+        f"{entry.get('department', '')}/{entry.get('name', '')}" for entry in data.get("skills", [])
+    }
+    denied = [
+        {"id": skill_id, "code": "NOT_FOUND", "message": "Skill is not in this marketplace."}
+        for skill_id in sorted(requested - known_ids)
+    ]
+    skills: list[dict[str, Any]] = []
+    for entry in sorted(data.get("skills", []), key=lambda item: (item.get("department", ""), item.get("name", ""))):
+        skill_id = f"{entry.get('department', '')}/{entry.get('name', '')}"
+        if requested and skill_id not in requested:
+            continue
+        if entry.get("lifecycle", entry.get("approval_status")) != "published":
+            denied.append({"id": skill_id, "code": "NOT_PUBLISHED", "message": "Skill is not published."})
+            continue
+        certification = _current_certification(entry, canonical_platform)
+        if certification is None:
+            denied.append({
+                "id": skill_id, "code": "INCOMPATIBLE_PLATFORM",
+                "message": f"Skill is not certified for {canonical_platform} at its current version.",
+            })
+            continue
+        permitted, matched_rules = _policy_decision(
+            rules, user=user, groups=group_values, agent=agent, project=project,
+            environment=environment, platform=canonical_platform, skill_id=skill_id,
+        )
+        if not permitted:
+            denied.append({
+                "id": skill_id, "code": "POLICY_DENIED",
+                "message": "Skill is not authorized for the current execution context.",
+                "matched_rules": matched_rules,
+            })
+            continue
+        location = _contained(root, str(entry["path"]))
+        if not location.is_dir():
+            denied.append({"id": skill_id, "code": "NOT_FOUND", "message": "Skill artifact is missing."})
+            continue
+        skills.append({
+            "id": skill_id,
+            "version": entry["version"],
+            "artifact": {
+                "path": str(entry["path"]),
+                "sha256": _skill_artifact_sha256(location),
+                "media_type": "application/vnd.agent-skill+directory",
+            },
+            "compatibility": {"platform": canonical_platform, "certification": certification},
+            "lifecycle": entry["lifecycle"],
+        })
+    return {
+        "resolver": "local-registry-v1",
+        "resolved_at": _now(),
+        "context": {
+            "agent": agent, "user": user, "groups": group_values, "project": project,
+            "environment": environment, "platform": canonical_platform,
+        },
+        "policy": {
+            "mode": "deny-by-default", "enforced": True,
+            "revision": data["marketplace"].get("resolver_policy_revision", _policy_revision(rules)),
+        },
+        "marketplace_release": {
+            "repository": data["marketplace"]["repository"], "commit_sha": _marketplace_commit(root),
+        },
+        "skills": skills,
+        "denied": denied,
+    }
 
 
 def generate_repository_files(root: Path, data: dict[str, Any]) -> None:
@@ -1715,6 +1970,13 @@ def build_parser() -> argparse.ArgumentParser:
     certify.add_argument("--platform", required=True)
     certify.add_argument("--evidence", required=True)
     certify.add_argument("--marketplace", default=".")
+    policy_apply = sub.add_parser("policy.apply", help="validate and save resolver policies")
+    policy_apply.add_argument("--file", required=True, help="JSON array of policy rules")
+    policy_apply.add_argument("--marketplace", default=".")
+    resolve = sub.add_parser("skills.resolve", help="resolve read-only skill artifacts from registry.json")
+    resolve.add_argument("--attestation", required=True, help="path to a signed execution-attestation JSON document")
+    resolve.add_argument("--skill", action="append", dest="skills", help="repeatable department/name skill ID")
+    resolve.add_argument("--marketplace", default=".")
     return parser
 
 
@@ -1865,6 +2127,29 @@ def main(argv: list[str] | None = None) -> int:
                 raise MarketplaceError(f"cannot read certification evidence: {exc}") from exc
             record = certify_skill(root, args.department, args.skill_name, args.platform, evidence)
             print(json.dumps(record, indent=2, sort_keys=True))
+        elif args.command == "policy.apply":
+            try:
+                policies = json.loads(Path(args.file).read_text(encoding="utf-8"))
+            except (FileNotFoundError, json.JSONDecodeError, OSError) as exc:
+                raise MarketplaceError(f"cannot read resolver policy file: {exc}") from exc
+            print(json.dumps(apply_resolver_policies(root, policies), indent=2, sort_keys=True))
+        elif args.command == "skills.resolve":
+            try:
+                attestation = json.loads(Path(args.attestation).read_text(encoding="utf-8"))
+            except (FileNotFoundError, json.JSONDecodeError, OSError) as exc:
+                raise MarketplaceError(f"cannot read execution attestation: {exc}") from exc
+            verified = verify_execution_attestation(root, attestation)
+            claims = verified["claims"]
+            result = resolve_skills(
+                root, agent=claims["agent"], user=claims["user"], project=claims["project"],
+                environment=claims["environment"], platform=claims["platform"], skill_ids=args.skills,
+                groups=claims.get("groups", []),
+            )
+            result["attestation"] = {
+                "issuer": verified["issuer"], "device_id": verified["device"]["id"],
+                "expires_at": verified["expires_at"],
+            }
+            print(json.dumps(result, indent=2, sort_keys=True))
     except MarketplaceError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1

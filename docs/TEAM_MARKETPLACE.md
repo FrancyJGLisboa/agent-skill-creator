@@ -45,6 +45,29 @@ but unresolved interview. The marketplace operator reviews the authorized contra
 and its implementation; the operator does not silently supply missing business
 authority. See the [structured interview protocol](../references/structured-interview.md).
 
+## Roles and handoffs
+
+This marketplace has two distinct users. Do not send the command-line sections below
+to a subject-matter expert unless they are also the marketplace operator.
+
+| Role | Does | Does not do | Handoff |
+|---|---|---|---|
+| **Workflow expert / SME** | Describes the work in plain language; supplies real artifacts; confirms business meaning, risk, and a representative result | Use Git, edit the registry, run marketplace CLI commands, select release tags, or manage endpoint policy | “This skill is correct; publish it to `<department>`.” |
+| **Marketplace operator / platform team** | Runs admission, governance, release, deployment, update, quarantine, and rollback | Invent missing business authority or approve unresolved meanings for the SME | Publishes a governed, exact version for users to install |
+| **Skill consumer** | Installs or receives the approved skill and uses it in their agent | Edit an installed copy or bypass its pinned release | Reports corrections to the SME/owner |
+
+The SME's starting prompt can be as small as:
+
+```text
+Turn my monthly revenue-variance review into a reusable internal skill.
+I attached the past reports and source spreadsheets. The decision is whether to
+escalate a material variance. It must not modify source data.
+```
+
+The skill factory turns that evidence into a tested artifact. Only after the SME
+approves the representative result does the operator begin the command-line workflow
+in Phase A and beyond.
+
 ## What each component does
 
 | Component | Responsibility |
@@ -559,6 +582,56 @@ python3 scripts/team_marketplace.py metrics-summary --marketplace ./acme-skills
 ```
 
 ## Distribution plans and compatibility certification
+
+### Runtime capability resolution (design contract)
+
+Managed installation remains the supported distribution path. For organizations that
+need a policy-resolved runtime catalog, use the proposed
+[Capability Resolver Contract](../references/capability-resolver-contract.md).
+It preserves immutable release pins, compatibility certification, quarantine, and
+auditability; it does not make an unreviewed "latest" skill silently executable.
+
+Resolve the exact published and platform-certified artifacts visible in a local
+schema-v2 marketplace without writing to it. Resolution is deny-by-default, so first
+apply at least one allow policy:
+
+```json
+[
+  {
+    "id": "finance-codex-managed",
+    "effect": "allow",
+    "subjects": ["group:finance-analysts"],
+    "agents": ["codex-cli"],
+    "projects": ["github:acme/quarterly-close"],
+    "environments": ["managed-macos"],
+    "platforms": ["codex"],
+    "skills": ["finance/report-skill"]
+  }
+]
+```
+
+```bash
+python3 scripts/team_marketplace.py policy.apply \
+  --file ./resolver-policies.json --marketplace ./acme-skills
+```
+
+Then resolve:
+
+```bash
+export SKILL_RESOLVER_ATTESTATION_SECRET='set-only-in-the-resolver-service'
+python3 scripts/team_marketplace.py skills.resolve \
+  --attestation ./signed-execution-attestation.json \
+  --skill finance/report-skill \
+  --marketplace ./acme-skills
+```
+
+The signed attestation must include an issuer, marketplace audience, a maximum
+five-minute validity window, nonce, identity claims, and a managed device ID. Its
+HMAC-SHA-256 signature is verified using `SKILL_RESOLVER_ATTESTATION_SECRET`, which
+belongs only in the resolver service or secret manager—not on user machines. The JSON
+response includes the verified context, device ID, policy revision, marketplace commit,
+exact skill version, relative artifact path, and deterministic SHA-256 directory hash.
+Matching deny policies override allows.
 
 Platform IDs are canonicalized across governance, planning, installation, search,
 health, and certification. Use `github-copilot`; the legacy `copilot` input remains
