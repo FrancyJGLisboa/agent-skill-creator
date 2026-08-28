@@ -1,6 +1,6 @@
 # Agent Skill Creator
 
-**Build trusted agent skills. Govern their marketplace. Improve what your organization knows.**
+**Turn lived expertise into trusted, reusable agent skills.**
 
 ![Agent Skill Creator: question to tested skill to governed marketplace](docs/assets/agent-skill-creator-social-preview.png)
 
@@ -13,25 +13,13 @@
 [Website](https://francyjglisboa.github.io/agent-skill-creator/) ·
 [Installation](docs/INSTALL.md) ·
 [Worker runbook](docs/WORKER_RUNBOOK.md) ·
-[Governed team marketplace](docs/TEAM_MARKETPLACE.md) ·
-[Product scope](docs/PRODUCT_SCOPE.md) ·
-[Organizational acceptance](docs/ORGANIZATIONAL_ACCEPTANCE.md) ·
-[GitLab team registry](docs/GITLAB_TEAM_REGISTRY.md) ·
-[Changelog](CHANGELOG.md)
+[Team marketplace](docs/TEAM_MARKETPLACE.md) ·
+[Product scope](docs/PRODUCT_SCOPE.md)
 
-Copyright © 2026 Francy J G Lisboa, also known as Charuto. See
-[ownership](COPYRIGHT.md), [licence](LICENSE), and the required
-[contributor assignment](CONTRIBUTOR_ASSIGNMENT.md).
-
-Agent Skill Creator turns human expertise into tested, installable agent skills and
-provides the operating system for managing those skills through a user-defined
-marketplace.
-
-Give it a sentence, spreadsheet, PDF, link, screenshot, transcript, or half-working
-script. It reconstructs the judgment behind the work: the important question, when to
-ask it, which decision the answer supports, what evidence makes the answer credible,
-and how success will be measured. It then builds the skill, evaluates it, installs it,
-and safely tries it on representative input.
+Agent Skill Creator turns the way people already work into tested, installable agent
+skills. Give it a prompt plus the evidence behind the work—spreadsheets, reports,
+emails, screenshots, transcripts, links, or scripts—and it builds a reusable workflow
+that an organization can review, publish, and improve.
 
 ## Start here
 
@@ -47,434 +35,65 @@ I attached past reports and the source spreadsheets. The decision is whether to
 escalate a material variance. It must not modify source data.
 ```
 
-That is enough to start. The creator asks only the business questions that need your
-authority, builds and tests the skill, then shows you a representative result. When it
-is correct, say: **“Publish this to the Finance marketplace.”**
+The creator asks for the business decisions only you can authorize, builds and tests
+the skill, and shows a representative result. When it is correct, say: **“Publish
+this to the Finance marketplace.”**
 
-If your organization has not installed the creator in your AI agent yet, send this
-section to your marketplace operator or platform team. Do not install tools, use Git,
-or run terminal commands yourself.
+Do not use Git, edit registry files, or run marketplace commands. If the creator is
+not installed in your agent, send this section to your marketplace operator.
 
 ### I run the marketplace
 
 Use the [governed team marketplace guide](docs/TEAM_MARKETPLACE.md) to admit,
-approve, release, and distribute tested skills.
+approve, release, distribute, update, quarantine, and roll back tested skills.
 
 ### I am evaluating the platform
 
-Read the [product scope](docs/PRODUCT_SCOPE.md) and the
-[organizational acceptance protocol](docs/ORGANIZATIONAL_ACCEPTANCE.md).
+Read the [product scope](docs/PRODUCT_SCOPE.md),
+[organizational acceptance protocol](docs/ORGANIZATIONAL_ACCEPTANCE.md), and
+[technical implementation guide](docs/TECHNICAL_OVERVIEW.md).
 
-For teams, the same system governs the complete lifecycle:
+## Why teams use it
 
-```text
-create → attest → admit → approve → publish → discover → install
-       → use → update → rollback → quarantine → retire
-```
+- **Preserve expert judgment.** A skill captures the question, evidence, decision,
+  and success measure behind recurring work.
+- **Trust what is shared.** Skills carry validation, security checks, evals, and a
+  representative run before they are published.
+- **Govern team use.** The marketplace provides ownership, approvals, versioned
+  releases, discovery, rollback, quarantine, and compatibility evidence.
 
-The result is more than a collection of prompts. It is a maintained map of which
-questions an organization knows how to answer, which decisions it can support, and
-whether those capabilities still work.
-
-## What is an Agent Skill?
-
-An Agent Skill is a reusable workflow package that guides an agent from a recognized
-situation to a verified outcome. It can use retrieved knowledge, MCP tools, APIs,
-deterministic scripts, and agent judgment, but it is not itself a RAG system, MCP
-server, or agent runtime.
-
-**RAG supplies knowledge. MCP supplies capabilities. The harness supplies execution.
-A skill organizes them into a governed path toward a verified outcome.**
-
-> **Reason where interpretation is necessary. Execute and verify with deterministic
-> controls where reproducibility matters.**
->
-> Agent Skill Creator combines LLM reasoning with human-authorized meaning,
-> executable scripts, pinned dependencies, validation, and evals. External models,
-> APIs, and changing data may still vary; the product governs those conditions rather
-> than promising identical outputs.
-
-## Who it is for
-
-| User | What they need | What this provides |
-|---|---|---|
-| **Workflow experts** | Preserve the judgment hidden inside recurring work | A skill built from existing artifacts, not a blank specification form |
-| **AI platform teams** | Move from isolated prompts to supported capabilities | Evals, attestations, ownership, lifecycle controls, and health reporting |
-| **Marketplace operators** | Publish and maintain skills without losing control | Admission gates, discovery, version-safe updates, rollback, and quarantine |
-| **Regulated teams** | Show why a capability was trusted and which version ran | Commit-bound evidence, approvals, compatibility certification, and immutable releases |
-
-## Two roles, two simple paths
-
-### 1. Workflow expert / SME — no code or terminal required
-
-The SME supplies the expertise. In their agent, they describe the recurring work and
-attach the evidence that already represents it: spreadsheets, reports, checklists,
-emails, screenshots, transcripts, or a working script. They confirm the business
-meaning when asked, review one representative result, and approve publication.
+## How work moves through the organization
 
 ```text
-"Turn my monthly revenue-variance review into a skill.
-Here are three past reports and the source spreadsheets.
-The decision is whether to escalate a material variance."
+SME supplies examples and approves the result
+        ↓
+Creator builds and verifies a skill
+        ↓
+Marketplace operator governs and publishes it
+        ↓
+Colleagues install an approved version and use it
 ```
 
-The SME does **not** edit `registry.json`, use Git, run marketplace commands, choose
-versions, or configure policies. Their handoff is simply: **“This skill is correct;
-publish it to the Finance marketplace.”**
-
-### 2. Marketplace operator / platform team — governs distribution
-
-The operator receives the tested skill, then runs the governance workflow: admit,
-approve, release, install, update, quarantine, or roll back it. This role owns the
-repository, platform credentials, and organizational policy; it never invents missing
-business meaning on the SME's behalf.
-
-```text
-SME evidence and approval → tested skill → operator governance → approved team use
-```
-
-See the [operator handoff](docs/TEAM_MARKETPLACE.md#roles-and-handoffs) for the
-exact boundary and commands.
-
-## What makes a skill valuable
-
-Answers are becoming inexpensive. The scarce asset is knowing which question matters
-and what action should follow. Every generated skill therefore carries a required
-decision contract:
-
-```json
-{
-  "question": "Why did monthly revenue deviate from plan?",
-  "trigger": ["Monthly close data is available"],
-  "decision": ["Escalate a material variance", "Accept the reported result"],
-  "evidence": ["Revenue ledger", "Approved operating plan"],
-  "success_measure": "Every material variance has an evidence-backed owner and action"
-}
-```
-
-Creation and marketplace admission fail when any of these fields is missing.
-
-## The product in one view
-
-| Layer | Job | Proof |
-|---|---|---|
-| **Skill factory** | Turn expertise and artifacts into executable skills | Validation, security scan, eval suite, representative run |
-| **Marketplace operating system** | Govern publishing, discovery, installation, updates, and removal | Ownership, lifecycle state, immutable versions, rollback, quarantine |
-| **Organizational learning system** | Improve capabilities from real corrections and outcomes | Evolution log, regression evidence, health reports, privacy-safe success metrics |
-
-Every admitted skill also carries an operating contract: environment documentation,
-data sources, readiness checks, least-privilege permissions, risk tier, mutation
-boundary, and positive/negative routing tests. When business meaning affects
-correctness, a conditional semantic contract adds authoritative definitions, ordered
-source precedence, exact dependencies, ambiguity behavior, and owner-review freshness.
-Installation plans expose this preflight instead of treating installation as proof of
-readiness. Use the bounded [semantic-contract experiment](references/semantic-contract-experiment.md)
-before expanding that capability.
-
-Existing skills without `semantic_contract` remain valid and are interpreted as
-`{"applies": false}` with a migration warning. Add that explicit value—or a complete
-human-approved contract—before the skill's next release. Humans establish meaning;
-the agent may structure, document, test, and apply it, but cannot make it authoritative.
-
-The decisive product test is automated: create three skills, publish a remote tag,
-discover from a clean consumer, install, invoke twice, update, roll back, quarantine,
-and confirm installation is blocked. The repository's tests exercise the underlying
-contracts for that lifecycle; the remaining standard is whether an unfamiliar team
-can complete it without assistance.
-
-The stronger organizational gate uses four blind, isolated roles: an administrator,
-workflow expert, marketplace operator, and cross-department consumer. Follow the
-[organizational acceptance protocol](docs/ORGANIZATIONAL_ACCEPTANCE.md); undocumented
-assistance counts as failure, not success.
-
-## Create your first skill
-
-For the complete employee-facing path—install, first prompt, expected result,
-correction, escalation, and marketplace handoff—use the [worker runbook](docs/WORKER_RUNBOOK.md).
-
-### 1. Choose your AI tool
-
-| You use | Paste this in | Installation |
-|---|---|---|
-| **Claude Code** | Claude Code | `/plugin marketplace add FrancyJGLisboa/agent-skill-creator` then `/plugin install agent-skill-creator@agent-skill-creator` |
-| **Codex, Cursor, Copilot, Gemini, or another supported tool on macOS/Linux** | Terminal | `curl -fsSL https://raw.githubusercontent.com/FrancyJGLisboa/agent-skill-creator/main/scripts/bootstrap.sh \| sh` |
-| **Any supported tool on Windows** | PowerShell | `irm https://raw.githubusercontent.com/FrancyJGLisboa/agent-skill-creator/main/scripts/bootstrap.ps1 \| iex` |
-
-The installer detects the AI tools already on your computer and installs the creator
-in their native locations. For a single-tool install or the complete 17-platform list,
-use the [installation guide](docs/INSTALL.md).
-
-**Success check:** reopen your AI tool and ask `What can agent-skill-creator do?` It
-should describe turning a workflow into a reusable skill.
-
-### 2. Give it work you already have
-
-Paste this in your AI tool—not in Terminal:
-
-```text
-/agent-skill-creator Every Friday I clean the CRM export, calculate regional
-totals, and email a PDF sales report.
-```
-
-You can attach the CRM export, an old report, or the script you currently use. The
-creator does not expect you to know the correct prompt or semantic contract. It first
-inspects what you supplied, keeps a resumable evidence/decision record, and asks one
-bounded question at a time. For example:
-
-```text
-I found two meanings for “active customer”:
-
-1. CRM: any open account
-2. Billing: at least one billable event in the previous 30 days
-
-The report is used for revenue planning. Which definition does the Commercial
-Analytics owner authorize for that decision?
-```
-
-Agent findings remain `proposed`; competing meanings remain `conflicting`. Generation
-starts only after an identified human confirms the consequential objective, authority,
-success measure, failure impact, and—when required—semantic meaning. The agent carries
-document/schema inspection, comparison, state tracking, contract drafting, and eval
-generation. Read the [structured interview](references/structured-interview.md).
-
-```text
-Messy problem
-    ↓
-Agent inspects evidence
-    ↓
-Proposed / conflicting meanings
-    ↓
-Human authority decision
-    ↓
-Interview READY
-    ↓
-Build, prove, publish
-```
-
-`BLOCKED` is a valid outcome when evidence or authority is missing. The creator saves
-the interview so the owner can resolve the decision and resume without starting over.
-
-### 3. Judge the first result
-
-The creator owns the technical work and reports four visible stages:
-
-```text
-Understand  ✓ workflow and success criteria confirmed
-Build       ✓ reusable skill created
-Check       ✓ structure, code, security patterns, and examples checked
-Try         ✓ installed and run once on representative input
-```
-
-A successful handoff leads with the result:
-
-```text
-The weekly sales report now works from a CRM export.
-
-Result: ./output/weekly-sales-report.pdf
-Use it: /weekly-crm-report-skill data/crm-export.csv
-
-Checks: structural requirements passed · 4 parallel checks passed · representative run passed
-```
-
-If a safe test needs credentials, data, or permission, the creator says
-`verification-blocked` and gives one exact setup action. It does not send a real email,
-publish, purchase, or write production data merely to prove the skill works.
-
-If the result is wrong, tell the creator in plain language: **“Correction: UK sales
-arrive one day late.”** The correction becomes a proposed skill edit, an executable
-regression check, and a versioned patch reason in the skill's maintenance record.
-
-## What happens behind the four stages
-
-You do not need this section to create a skill. It explains what the creator is doing
-when you want to inspect the process.
-
-Every skill is checked as one connected system. The skill graph links its
-instructions, scripts, evaluations, and expected outputs. Two structural
-requirements confirm that every expected result is tested and every predictable
-multi-step workflow has one reliable entry point. Four checks—specification,
-pipeline, security, and evaluation schema—run in parallel. Finally, a representative
-run proves that the skill produces a useful result.
-
-| What you see | What the factory does | Evidence left behind |
-|---|---|---|
-| **Understand** | Reads all material, reconstructs the workflow, identifies inputs, outputs, and success criteria | A plain-language hypothesis you approve or correct |
-| **Build** | Researches sources, designs use cases, chooses the structure, writes instructions and functional scripts | A complete installable skill package |
-| **Check** | Connects the package in a skill graph, applies two structural requirements, and runs four checks in parallel | A connected artifact map, requirement results, and reusable check evidence |
-| **Try** | Installs to the detected tool and runs a safe representative example | An output you can inspect and correct |
-
-Internally, Build covers the five engineering phases: discovery, design, architecture,
-detection, and implementation. Details live in [the pipeline reference](references/pipeline-phases.md).
-
-The graph is the release gate behind **Check**:
-
-```bash
-python3 scripts/skill_graph.py run ./the-skill/ --jobs 4
-```
-
-The two requirements have technical identifiers for automation.
-`every_expected_is_reachable` prevents an expected output from sitting in the package
-without participating in an evaluation. `deterministic_multistep_has_orchestrator`
-requires a predictable multi-step skill to expose one reliable
-`scripts/run_pipeline.py` entry point. Unchanged check results are reused by content
-hash.
-
-## What you receive
-
-Every generated skill includes:
-
-- A required question, trigger, supported decision, evidence contract, and measurable
-  success condition in `discovery.json`.
-- A focused `SKILL.md` and companion `AGENTS.md`.
-- Functional scripts with one pipeline entry point when the workflow is sequential.
-- Golden examples and regression checks, unless explicitly disabled with `--no-eval`.
-- Validation, dependency, staleness, and correction tooling.
-- A private local success ledger that measures verified creation, reuse, recovery,
-  and durable activity without storing skill names or workflow content.
-- Native installation support across 17 agent tools.
-
-Generated skills use the Agent Skills Open Standard and invoke as `/skill-name` on
-tools that support slash commands.
-
-Inspect product success locally:
-
-```bash
-python3 scripts/success_ledger.py summary
-```
-
-The ledger has no network transport. Read the [event schema, privacy boundary, and
-metric formulas](references/product-success.md), or set `ASC_SUCCESS_LEDGER=off` to
-disable recording.
-
-## Why the checks matter
-
-The creator blocks delivery when required structure, pipeline compilation, declared
-dependencies, or security checks fail. It scans for hardcoded secrets, dangerous code
-patterns, prompt-injection indicators, hidden Unicode, encoded blobs, and undeclared
-network endpoints.
-
-**A clean scan is not proof of safety.** It means no known scanner pattern matched.
-Skills execute with your filesystem access and available credentials, so imported
-skills still require ordinary software-dependency judgment.
-
-Audit a skill you did not create:
-
-```text
-/agent-skill-creator --audit ./downloaded-skill/
-```
-
-The audit reports what the skill reads, writes, and reaches; instruction-body risks;
-and whether the code matches its description. A high-severity finding blocks install.
-See [the skill-audit reference](references/skill-audit.md).
-
-## Runnable examples
-
-| Skill | Example request | Verified output |
-|---|---|---|
-| [weekly-crm-report](references/examples/weekly-crm-report/) | “Clean this CRM export and total sales by region” | Deduplicated regional totals |
-| [pr-blocker-summarizer](references/examples/pr-blocker-summarizer/) | “Summarize my open PRs, blockers first” | Standup-ready blocker digest |
-| [stock-analyzer](references/examples/stock-analyzer/) | “Analyze AAPL with RSI and MACD” | Indicators and a reasoned signal |
-
-Try the smallest example without installing the creator:
-
-```bash
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator
-cd agent-skill-creator/references/examples/weekly-crm-report
-python3 scripts/run_pipeline.py --input evals/golden/case-1/input.csv --output /tmp/summary.json
-python3 scripts/run_evals.py --rollout
-```
-
-## The marketplace operating system
-
-Users define the marketplace: its departments, owners, approval rules, supported
-platforms, decision contracts, and success measures. Agent Skill Creator supplies the
-control plane that makes those definitions executable.
-
-Follow the [complete marketplace timeline](docs/TEAM_MARKETPLACE.md) for every command
-in operational order: prerequisites, initialization, GitHub protection, skill intake,
-review, release, discovery, installation, update, rollback, quarantine, and correction.
-
-Create a central GitHub or GitLab repository for department-owned skills, reviewed
-bundles, and version-pinned installs in VS Code Copilot Agent Mode:
-
-```bash
-python3 scripts/team_marketplace.py init \
-  --name "ACME Skills" \
-  --repository ACME/acme-skills \
-  --department finance=finance-owner \
-  --approver acme-platform \
-  --supported-platform github-copilot \
-  --starter-bundle analyst-starter \
-  --marketplace ./acme-skills
-
-python3 scripts/team_marketplace.py add ./report-skill \
-  --department finance \
-  --bundle analyst-starter \
-  --marketplace ./acme-skills
-```
-
-The generated repository includes `registry.json` schema v2, question-first search,
-structured skill pages, departmental paths, bundle manifests, `CATALOG.md`,
-`CODEOWNERS`, governance instructions, scheduled health checks, and provider-native
-CI. Add `--provider gitlab` and, for self-managed instances, `--host
-gitlab.acme.test` during `init`. Admission blocks incomplete decision contracts and
-failed validation, security, pipeline, eval, or attestation gates. It also rejects
-path traversal, duplicate identities, undeclared network endpoints, embedded secrets,
-instruction injection, and pre-approved `shell` or `bash` access.
-
-Install an approved bundle at an immutable release:
-
-```bash
-python3 scripts/team_marketplace.py install \
-  --bundle analyst-starter \
-  --scope user \
-  --pin v1.2.0 \
-  --marketplace ./acme-skills
-```
-
-Install only one discovered skill with the same governance and version controls by
-replacing `--bundle analyst-starter` with `--skill report-skill --department finance`.
-
-Use `team_marketplace.py update` to re-gate a strictly newer semantic version. Use
-`--scope project` for a repository-local install. Roll back by reinstalling an exact
-previous tag with `--force`; quarantine immediately removes a skill from installable
-states. GitHub installs into the consumer project. GitLab clones the exact protected
-tag and copies the bundle into Copilot's user or project skill directory.
-
-The [complete marketplace timeline](docs/TEAM_MARKETPLACE.md) is the canonical
-operator page. The [distribution reference](references/distribution-guide.md#governed-github-copilot-marketplace)
-contains the factory's internal routing and fallback behavior.
-
-Use the [blind organizational acceptance protocol](docs/ORGANIZATIONAL_ACCEPTANCE.md)
-to test the complete cross-team handoff in isolated sessions. It includes exact-tag
-local testing, immutable release rules, an empty starter-bundle shape, and the
-retire-and-recreate generation contract.
-
-GitLab teams use the first-class [GitLab marketplace backend](docs/GITLAB_TEAM_REGISTRY.md),
-including generated GitLab CI, `glab` releases, schema-v2 bundles, nested groups,
-self-managed hosts, and pinned copy-based Copilot installation.
-
-## Advanced capabilities
-
-- [MCP capability audit](references/mcp-audit.md): map a vendor MCP server into buildable and missing skill opportunities.
-- [Cross-platform export](references/export-guide.md): adapt an existing skill for supported tools.
-- [Multi-agent suites](references/multi-agent-guide.md): create coordinated skills for genuinely distinct workflows.
-- [Team distribution](references/distribution-guide.md): choose the governed Copilot marketplace or lightweight cross-Git registry.
-- [Eval and evolution](references/phase2-eval-assessment.md): inspect golden cases, rollouts, holdouts, judges, and model comparisons.
+The SME owns business meaning. The marketplace operator owns distribution and policy.
+See [roles and handoffs](docs/TEAM_MARKETPLACE.md#roles-and-handoffs).
+
+## Read more when needed
+
+| Need | Read |
+|---|---|
+| Install on a supported AI tool | [Installation](docs/INSTALL.md) |
+| Create, correct, and hand off a first skill | [Worker runbook](docs/WORKER_RUNBOOK.md) |
+| Run a governed internal marketplace | [Team marketplace](docs/TEAM_MARKETPLACE.md) |
+| Understand scope and product boundaries | [Product scope](docs/PRODUCT_SCOPE.md) |
+| Review architecture, validation, and technical controls | [Technical overview](docs/TECHNICAL_OVERVIEW.md) |
+| Contribute | [Contributing](CONTRIBUTING.md) |
 
 ## Contributing
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md), then run:
-
-```bash
-uv run pytest scripts/tests/ -q
-uv run ruff check --target-version py310
-```
-
-Changes to installation scripts must preserve Bash/PowerShell parity. Changes to the
-factory contract must keep `SKILL.md`, the pipeline, interactive guidance, distribution
-guidance, README, and website aligned.
+See [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+Contributions require the [contributor assignment](CONTRIBUTOR_ASSIGNMENT.md).
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE). Copyright © 2026 Francy J G Lisboa, also known as
+Charuto. See [ownership](COPYRIGHT.md).
