@@ -71,6 +71,39 @@ A skill organizes them into a governed path toward a verified outcome.**
 | **Marketplace operators** | Publish and maintain skills without losing control | Admission gates, discovery, version-safe updates, rollback, and quarantine |
 | **Regulated teams** | Show why a capability was trusted and which version ran | Commit-bound evidence, approvals, compatibility certification, and immutable releases |
 
+## Two roles, two simple paths
+
+### 1. Workflow expert / SME — no code or terminal required
+
+The SME supplies the expertise. In their agent, they describe the recurring work and
+attach the evidence that already represents it: spreadsheets, reports, checklists,
+emails, screenshots, transcripts, or a working script. They confirm the business
+meaning when asked, review one representative result, and approve publication.
+
+```text
+"Turn my monthly revenue-variance review into a skill.
+Here are three past reports and the source spreadsheets.
+The decision is whether to escalate a material variance."
+```
+
+The SME does **not** edit `registry.json`, use Git, run marketplace commands, choose
+versions, or configure policies. Their handoff is simply: **“This skill is correct;
+publish it to the Finance marketplace.”**
+
+### 2. Marketplace operator / platform team — governs distribution
+
+The operator receives the tested skill, then runs the governance workflow: admit,
+approve, release, install, update, quarantine, or roll back it. This role owns the
+repository, platform credentials, and organizational policy; it never invents missing
+business meaning on the SME's behalf.
+
+```text
+SME evidence and approval → tested skill → operator governance → approved team use
+```
+
+See the [operator handoff](docs/TEAM_MARKETPLACE.md#roles-and-handoffs) for the
+exact boundary and commands.
+
 ## What makes a skill valuable
 
 Answers are becoming inexpensive. The scarce asset is knowing which question matters
