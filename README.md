@@ -33,6 +33,38 @@ ask it, which decision the answer supports, what evidence makes the answer credi
 and how success will be measured. It then builds the skill, evaluates it, installs it,
 and safely tries it on representative input.
 
+## Start here
+
+### I have expertise to turn into a skill — no code required
+
+Open the AI agent you already use, attach examples of the work, and paste this:
+
+```text
+/agent-skill-creator
+
+Turn my monthly revenue-variance review into a reusable internal skill.
+I attached past reports and the source spreadsheets. The decision is whether to
+escalate a material variance. It must not modify source data.
+```
+
+That is enough to start. The creator asks only the business questions that need your
+authority, builds and tests the skill, then shows you a representative result. When it
+is correct, say: **“Publish this to the Finance marketplace.”**
+
+If your organization has not installed the creator in your AI agent yet, send this
+section to your marketplace operator or platform team. Do not install tools, use Git,
+or run terminal commands yourself.
+
+### I run the marketplace
+
+Use the [governed team marketplace guide](docs/TEAM_MARKETPLACE.md) to admit,
+approve, release, and distribute tested skills.
+
+### I am evaluating the platform
+
+Read the [product scope](docs/PRODUCT_SCOPE.md) and the
+[organizational acceptance protocol](docs/ORGANIZATIONAL_ACCEPTANCE.md).
+
 For teams, the same system governs the complete lifecycle:
 
 ```text
@@ -248,13 +280,9 @@ If a safe test needs credentials, data, or permission, the creator says
 `verification-blocked` and gives one exact setup action. It does not send a real email,
 publish, purchase, or write production data merely to prove the skill works.
 
-If the result is wrong, describe the correction once:
-
-```bash
-python3 ./weekly-crm-report-skill/scripts/evolve.py --correct "UK sales arrive one day late"
-```
-
-The correction becomes a proposed skill edit, an executable regression check, and a versioned patch reason in the skill's maintenance record.
+If the result is wrong, tell the creator in plain language: **“Correction: UK sales
+arrive one day late.”** The correction becomes a proposed skill edit, an executable
+regression check, and a versioned patch reason in the skill's maintenance record.
 
 ## What happens behind the four stages
 
