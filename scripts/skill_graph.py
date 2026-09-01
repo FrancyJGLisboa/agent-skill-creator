@@ -35,6 +35,7 @@ TOOLING_SCRIPTS = {
     "skill_document.py",
     "staleness_check.py",
     "success_ledger.py",
+    "wiki_maintenance.py",
 }
 
 GateExecutor = Callable[[dict, Path], dict]

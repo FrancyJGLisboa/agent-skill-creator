@@ -197,6 +197,9 @@ code { overflow-wrap: anywhere; }
 .skill-flow li > small { display: block; margin-top: var(--space-xs); color: var(--color-ink-muted); line-height: 1.4; }
 .skill-flow__chips { margin-top: var(--space-sm); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-2xs); }
 .skill-flow__chips small { padding: var(--space-2xs); border-radius: var(--radius-sm); background: var(--color-accent-soft); color: var(--color-accent); font: 500 .65rem/1.35 var(--font-mono); text-align: center; }
+.callout { margin-top: var(--space-xl); max-width: 60rem; padding: var(--space-lg); border-left: 3px solid var(--color-accent); background: var(--color-accent-soft); }
+.callout strong { display: block; font-family: var(--font-display); }
+.callout strong + * { margin-top: var(--space-xs); }
 
 .start { border-radius: var(--radius-md); background: var(--color-accent-soft); }
 .chooser { margin-top: var(--space-2xl); max-width: 56rem; }

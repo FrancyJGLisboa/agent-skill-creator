@@ -64,6 +64,13 @@ class GraphEncodingTest(unittest.TestCase):
     def tearDown(self) -> None:
         self._tmp.cleanup()
 
+    def test_wiki_maintenance_is_tooling_not_a_workflow_step(self) -> None:
+        skill = write_skill(self.base)
+        (skill / "scripts" / "wiki_maintenance.py").write_text(STEP, encoding="utf-8")
+        graph = build_graph(skill)
+        runnable = {item["path"] for item in graph["artifacts"] if item.get("runnable")}
+        self.assertNotIn("scripts/wiki_maintenance.py", runnable)
+
     def test_graph_contains_typed_artifacts_edges_constraints_and_gates(self) -> None:
         graph = build_graph(write_skill(self.base))
 

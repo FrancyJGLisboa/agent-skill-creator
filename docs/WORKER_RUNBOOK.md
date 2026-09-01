@@ -108,6 +108,22 @@ Expected: the correction becomes a proposed skill edit, an executable regression
 record, and a versioned reason in `EVOLUTION.md`. Re-run verification before
 requesting an updated marketplace release.
 
+For a recurring issue, preserve the evidence before proposing another change:
+
+```bash
+python3 ./weekly-sales-report-skill/scripts/wiki_maintenance.py capture \
+  --source ./failed-run.json --classification internal
+python3 ./weekly-sales-report-skill/scripts/wiki_maintenance.py add-pattern \
+  --id uk-late-sales --title "UK sales arrive late" \
+  --finding "Friday exports omit the latest UK sales." \
+  --evidence raw/<captured-file>.json
+```
+
+This creates a draft pattern only. A maintainer proposes one atomic patch, runs the
+existing holdout, security, and pipeline gates, then records the accepted or rejected
+outcome with `record-impact`. Do not load `wiki/` into the runtime agent or apply a
+draft pattern directly to `SKILL.md`.
+
 ## When to involve the marketplace operator
 
 Ask for marketplace intake only when the skill has an owner, a reviewed version,

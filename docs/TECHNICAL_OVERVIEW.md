@@ -20,6 +20,21 @@ question, trigger, supported decision, required evidence, and success measure. I
 validates structure, scans for security patterns, runs evals, and performs a safe
 representative run before handoff.
 
+## Persistent maintenance knowledge
+
+Each newly generated skill also carries a maintenance-only learning layer:
+
+```text
+raw evidence → draft wiki pattern → atomic candidate change → existing gates → accepted or rejected decision
+```
+
+`raw/` holds classified, read-only copies of observed evidence. `wiki/` links that
+evidence to draft patterns and a candidate-impact ledger. `scripts/wiki_maintenance.py`
+creates and validates these records but cannot edit `SKILL.md`; a separate maintainer
+or proposer must prepare an atomic patch. The runtime agent receives approved skills
+only, never wiki content. This preserves auditability and avoids prompt bloat while
+leaving semantic pattern analysis and skill changes subject to evaluation and review.
+
 ## Governance model
 
 The marketplace lifecycle is:

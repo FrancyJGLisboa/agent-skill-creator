@@ -21,6 +21,12 @@ skills. Give it a prompt plus the evidence behind the work—spreadsheets, repor
 emails, screenshots, transcripts, links, or scripts—and it builds a reusable workflow
 that an organization can review, publish, and improve.
 
+After release, a skill can retain maintenance evidence without turning every log
+into runtime prompt context: classified run evidence is captured in `raw/`, recurring
+findings become evidence-linked draft patterns in `wiki/`, and only a separately
+validated change may update the executable skill. This is a governed maintenance
+record, not autonomous self-modification.
+
 ## Start here
 
 ### I have expertise to turn into a skill — no code required
@@ -59,6 +65,8 @@ Read the [product scope](docs/PRODUCT_SCOPE.md),
   and success measure behind recurring work.
 - **Trust what is shared.** Skills carry validation, security checks, evals, and a
   representative run before they are published.
+- **Learn without runtime bloat.** Maintenance keeps evidence, draft patterns, and
+  rejected changes separate from the concise instructions an agent executes.
 - **Govern team use.** The marketplace provides ownership, approvals, versioned
   releases, discovery, rollback, quarantine, and compatibility evidence.
 

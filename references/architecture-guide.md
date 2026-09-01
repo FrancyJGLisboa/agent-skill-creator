@@ -72,6 +72,8 @@ skill-name/
 ├── references/       # Detailed documentation (loaded on demand)
 ├── assets/           # Templates, schemas, data files
 ├── evals/            # Bundled eval spec + golden cases
+├── raw/               # Immutable, classified copies of maintenance evidence
+├── wiki/              # Non-runtime patterns and candidate-impact ledger
 ├── install.sh        # Cross-platform auto-detect installer
 └── README.md         # Multi-platform installation instructions
 ```
@@ -105,6 +107,8 @@ compatibility: >-           # optional, use when platform-specific features exis
 | `.claude-plugin/` | Plugin manifests for `/plugin marketplace add` install | Yes |
 | `evals/` | Eval spec (binary checks + golden cases + judge canary) | Yes (unless `--no-eval`) |
 | `scripts/evolve.py` | Shipped self-maintenance loop (staleness + rollout → `EVOLUTION.md`) | Yes |
+| `scripts/wiki_maintenance.py` | Persistent evidence → draft-pattern → validation-decision tooling; never changes `SKILL.md` | Yes |
+| `raw/` + `wiki/` | Optional maintenance-only knowledge layer; never loaded by the runtime agent | Yes |
 | `scripts/success_ledger.py` | Private local lifecycle events and Durable Active Skills metrics | Yes |
 | `install.sh` | Cross-platform installer script | Yes |
 | `README.md` | Installation instructions for 5+ platforms | Yes |

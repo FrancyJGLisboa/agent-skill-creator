@@ -36,7 +36,7 @@
 - Set `metadata.review_interval_days` (default: 90 days)
 - Declare external dependencies in `metadata.dependencies` so health can be checked
 - Declare expected API response shapes in `metadata.schema_expectations` for drift detection
-- Generated skills carry the loop themselves: `python3 scripts/evolve.py` (staleness + deps + drift + eval rollout from the skill's own root); failures append raw evidence to the skill's `EVOLUTION.md`
+- Generated skills carry the loop themselves: `python3 scripts/evolve.py` (staleness + deps + drift + eval rollout from the skill's own root); failures append raw evidence to the skill's `EVOLUTION.md`. For recurring or evidence-backed maintenance findings, use `scripts/wiki_maintenance.py`: capture classified evidence into `raw/`, create a draft `wiki/patterns/` page, and record the evaluated candidate decision in `wiki/skill-impact.md`. The wiki is never runtime context and cannot edit an active skill.
 - Generated skills carry `scripts/success_ledger.py`; it stores only fixed,
   pseudonymous lifecycle metadata locally, never workflow content, and ledger
   failures never fail the business workflow
