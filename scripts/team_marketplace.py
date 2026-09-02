@@ -468,6 +468,31 @@ def init_marketplace(
     for bundle in normalized_bundles:
         data.setdefault("bundles", {}).setdefault(bundle, [])
     save_manifest(root, data)
+
+
+def create_marketplace_interactive(args: argparse.Namespace) -> Path:
+    """Collect the small set of human decisions and create a marketplace."""
+    def ask(label: str, default: str = "") -> str:
+        value = getattr(args, label, None) or input(f"{label} [{default}]: ").strip()
+        return value or default
+    name = ask("name", "My Skills Marketplace")
+    repository = ask("repository")
+    if not repository:
+        raise MarketplaceError("repository is required (for example owner/skills)")
+    provider = ask("provider", "github")
+    marketplace = Path(ask("marketplace", "./skills-marketplace")).resolve()
+    department = ask("department", "general")
+    owner = ask("owner", "marketplace-owner")
+    bundle = ask("bundle", "starter")
+    init_marketplace(marketplace, name, repository, provider=provider,
+                     departments={department: owner},
+                     approvers=[owner],
+                     supported_platforms=["github-copilot"],
+                     starter_bundles=[bundle])
+    generate_repository_files(marketplace, load_manifest(marketplace))
+    print(f"Marketplace initialized at {marketplace}")
+    print(f"Next: add a skill with `python3 scripts/team_marketplace.py add ./skill --department {department} --bundle {bundle} --marketplace {marketplace}`")
+    return marketplace
     (root / ".gitignore").write_text(
         ".marketplace-state/\n.marketplace-mutation.lock/\n__pycache__/\n*.py[cod]\n",
         encoding="utf-8",
@@ -1862,6 +1887,14 @@ def release_marketplace(root: Path, tag: str) -> None:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Governed Git-backed Copilot team skill marketplace")
     sub = parser.add_subparsers(dest="command", required=True)
+    create = sub.add_parser("create", help="guided marketplace creation")
+    create.add_argument("--name")
+    create.add_argument("--repository")
+    create.add_argument("--provider", choices=tuple(PROVIDERS), default="github")
+    create.add_argument("--marketplace")
+    create.add_argument("--department")
+    create.add_argument("--owner")
+    create.add_argument("--bundle")
     init = sub.add_parser("init")
     init.add_argument("--name", required=True)
     init.add_argument("--repository", required=True)
@@ -1984,7 +2017,9 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     root = Path(args.marketplace).resolve()
     try:
-        if args.command == "init":
+        if args.command == "create":
+            create_marketplace_interactive(args)
+        elif args.command == "init":
             init_marketplace(
                 root, args.name, args.repository,
                 Path(args.from_registry).resolve() if args.from_registry else None,

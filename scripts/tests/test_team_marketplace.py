@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import argparse
 import hashlib
 import hmac
 import re
@@ -120,6 +121,17 @@ def init_marketplace(base: Path) -> Path:
     repo = base / "marketplace"
     market.init_marketplace(repo, "ACME Skills", "ACME/skills")
     return repo
+
+
+def test_guided_create_generates_checked_scaffold(tmp_path: Path) -> None:
+    repo = tmp_path / "marketplace"
+    market.create_marketplace_interactive(argparse.Namespace(
+        name="Test Skills", repository="ACME/skills", provider="github",
+        marketplace=str(repo), department="ops", owner="alice", bundle="starter",
+    ))
+    assert (repo / "registry.json").is_file()
+    assert (repo / "bundles" / "starter.json").is_file()
+    assert market.check_marketplace(repo) == []
 
 
 def signed_attestation(
