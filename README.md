@@ -27,7 +27,7 @@ findings become evidence-linked draft patterns in `wiki/`, and only a separately
 validated change may update the executable skill. This is a governed maintenance
 record, not autonomous self-modification.
 
-## Start here
+## Create your first skill
 
 ### I have expertise to turn into a skill — no code required
 
@@ -102,6 +102,39 @@ See [roles and handoffs](docs/TEAM_MARKETPLACE.md#roles-and-handoffs).
 | Contribute | [Contributing](CONTRIBUTING.md) |
 
 ## Contributing
+
+## What happens behind the scenes
+
+An Agent Skill is a reusable workflow package that guides an agent from a
+recognized situation to a verified outcome. It can use retrieved knowledge, MCP
+tools, APIs, deterministic scripts, and agent judgment, but it is not itself a
+RAG system, MCP server, or agent runtime.
+
+RAG supplies knowledge. MCP supplies capabilities. The harness supplies
+execution. A skill organizes them into a governed path toward a verified
+outcome.
+
+Reason where interpretation is necessary. Execute and verify with deterministic
+controls where reproducibility matters. External models, APIs, and changing data
+may vary rather than promising identical outputs.
+
+Humans establish meaning. The factory does not expect you to know the correct
+prompt or semantic contract; it asks one bounded question at a time. The flow is:
+
+- Messy problem
+- Agent inspects evidence
+- Proposed / conflicting meanings
+- Human authority decision
+- Interview READY
+- Build, prove, publish
+
+Every skill is checked as one connected system. The skill graph links its
+instructions, scripts, evaluations, and expected outputs. Two structural
+requirements confirm that every expected result is tested and every predictable
+multi-step workflow has one reliable entry point. Four checks—specification,
+pipeline, security, and evaluation schema—run in parallel. Finally, a
+representative run proves that the skill produces a useful result. The graph also
+enforces `every_expected_is_reachable` and `deterministic_multistep_has_orchestrator`.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 Contributions require the [contributor assignment](CONTRIBUTOR_ASSIGNMENT.md).
