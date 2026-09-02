@@ -61,6 +61,14 @@ Use `scripts/structured_interview.py` and read `references/structured-interview.
     "nullability": ["amount and account_id are required"],
     "readiness_checks": ["One safe sample matches the approved schema"]
   },
+  "semantic_recon": {
+    "applies": true,
+    "contract_id": "finance_reporting_api",
+    "contract_path": "~/contracts/data_contract_finance_reporting_api",
+    "target_type": "DATA_API",
+    "required_operations": ["monthly revenue query", "variance drill-down"],
+    "freshness_check": "code/contract_health.report() before every source query"
+  },
   "semantic_contract": {
     "applies": true,
     "definitions": [{
@@ -144,6 +152,20 @@ Rules:
   semantic readiness. Unresolved field meaning, identity, or relationship ambiguity
   blocks useful execution. For unstructured inputs with no structured interface, use
   only `{"applies": false}`.
+- `semantic_recon` records the stronger Phase 1 dependency when the source is reused
+  and a silently wrong result has meaningful blast radius. It is not a replacement for
+  a human-governed `semantic_contract`. When it applies, record a Semantic Recon-derived
+  `contract_id` (never hand-pick one), its resolved contract path, target type,
+  operations the generated skill is allowed to perform, and the exact health check.
+  Generated code must call the contract rather than the source directly, route through
+  `validate_query()`, preserve contract provenance, and refuse on contract drift or a
+  validator refusal. For workflows that did not qualify, use only
+  `{"applies": false}`. This field is additive while older generated skills migrate.
+  For deterministic gating, also record `sources`: each source has `id`, `type`,
+  `reuse` (`one-off` or `recurring`), and `impact` (`low`, `moderate`, `high`, or
+  `critical`). A recurring structured source with moderate-or-higher impact requires
+  `contract_id` and `contract_path`; the graph blocks generation until its
+  `.contract_id` and `code/contract_health.py` exist.
 - `semantic_contract.applies` is required. Set it to `true` when correctness depends
   on organizational meaning, source precedence, business scope, grain, units, or time
   interpretation. Each definition has a safe ID, exact semantic version, human owner,

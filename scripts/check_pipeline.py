@@ -32,6 +32,7 @@ from __future__ import annotations
 import argparse
 import ast
 import json
+import json
 import sys
 from pathlib import Path
 
@@ -139,6 +140,14 @@ def check(skill_dir: Path) -> dict:
     errors += [f"does not compile -> {fail}" for fail in compile_failures(files)]
 
     third = third_party_imports(skill_dir, files)
+    discovery = skill_dir / "discovery.json"
+    if discovery.is_file():
+        try:
+            sources = json.loads(discovery.read_text()).get("semantic_recon", {}).get("sources", [])
+            allowed = {f"data_contract_{item.get('contract_id')}" for item in sources if item.get("contract_id")}
+            third = [module for module in third if module not in allowed]
+        except (OSError, ValueError, TypeError, json.JSONDecodeError):
+            pass
     if third and not requirements_declared(skill_dir):
         errors.append(
             "third-party imports are not declared: add a requirements.txt listing "

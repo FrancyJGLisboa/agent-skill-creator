@@ -141,6 +141,19 @@ def test_public_onboarding_does_not_require_a_perfect_prompt_or_schema() -> None
     assert "structured_interview.py gate" in factory
 
 
+def test_factory_has_a_conditional_semantic_recon_path_for_consequential_reused_sources() -> None:
+    factory = " ".join(read("SKILL.md").lower().split())
+    phases = read("references/pipeline-phases.md").lower()
+    metadata = read("references/discovery-metadata.md").lower()
+
+    assert "semantic recon path (`--semantic-recon`)" in factory
+    assert "will repeatedly query a live or structured source" in factory
+    assert "meaningful blast radius" in factory
+    assert "step 0.5: semantic recon eligibility" in phases
+    assert "validate_query()" in phases
+    assert "semantic_recon" in metadata
+
+
 def test_public_surfaces_state_reasoning_and_reproducibility_boundary() -> None:
     readme = " ".join(read("README.md").lower().replace(">", " ").split())
     page = " ".join(re.sub(r"<[^>]+>", " ", read("docs/index.html")).lower().split())

@@ -286,6 +286,42 @@ must confirm choices that establish organizational meaning or accept consequenti
 risk. Update `interview.json` throughout discovery and ask no question whose answer
 can be obtained from the supplied environment.
 
+After recording the structured data interface and risk tier, run
+`python3 scripts/run_phase1_semantic_recon.py <skill-dir>`. This deterministically
+emits `semantic_recon.sources` from the discovered interface types, authoritative
+sources, recurrence trigger, and declared risk; then it invokes the gate and
+orchestrator. Do not hand-write this list. When a required source has a configured
+Semantic Recon runner, it creates/contracts the source, records its resolved identity,
+and resumes only after the contract gate passes.
+
+#### Semantic Recon path (default for declared sources)
+
+Before designing a skill that uses any declared live or structured source, run
+Semantic Recon by default. This applies to:
+
+1. A source is a `DATA_API`, `DATABASE`, `MCP_SERVER`, `CODEBASE`, or remotely
+   served `DATA_FILE`.
+2. The source is required by the workflow, regardless of whether reuse or blast
+   radius has already been proven.
+
+`--semantic-recon` is retained as a compatibility flag; it no longer opts into the
+gate because the gate is automatic. Only a workflow with no external or structured
+source may omit Semantic Recon.
+Never silently skip the path because probing is inconvenient: if the target qualifies
+but access, the blast-radius decision, or the out-of-scope boundary is unavailable,
+record `verification-blocked` and do not generate a direct source client.
+
+When this path applies, invoke `/semantic-recon` before Phase 2. Its target profile
+must name the blast radius and out-of-scope boundary; freeze holdout questions before
+discovery; then use the completed contract rather than re-deriving source behavior.
+The generated skill must load exactly one registered `data_contract_<id>`, run its
+health check, route requests through `validate_query()`, preserve its provenance
+formatter, and treat a refusal or drift report as a safe stop. Add both success and
+refusal cases to the generated evals. Record the contract id, resolved path, target
+type, required operations, and freshness check in `discovery.json` as a
+`semantic_recon` dependency block. Semantic Recon establishes what the source does;
+the authorized domain owner still establishes organizational meaning.
+
 See `references/pipeline-phases.md` for detailed Phase 1 instructions.
 
 ### Phase 2: Design
@@ -343,6 +379,11 @@ authority or unresolved ambiguity blocks useful execution. Non-structured workfl
 declare that this conditional contract does not apply. Read
 `references/discovery-metadata.md` for the schema.
 
+For a source that qualified for the Phase 1 Semantic Recon path, the completed
+Semantic Recon contract is the data contract. Do not replace it with a one-sample
+inventory or duplicate its rules in prose; reference its identity and enforce its
+validator at runtime.
+
 **Phase 2 also classifies organizational semantics.** When a correct answer depends
 on business definitions, scope, grain, units, time interpretation, or which source
 wins, require the human domain owner to approve a versioned semantic contract. Record
@@ -388,6 +429,7 @@ Create all files in this order:
    compatibility, environment discovery/readiness, risk and mutation boundaries,
    the conditional software-mutation representation review, the conditional structured
    data-interface contract, the conditional governed semantic contract,
+   and the conditional Semantic Recon dependency block when that path ran,
    positive/negative routing tests, and support tier. Read
    `references/discovery-metadata.md`. Never
    generate a skill without the five decision-contract fields; do not invent

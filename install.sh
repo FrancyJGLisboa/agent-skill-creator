@@ -6,6 +6,7 @@
 #
 # Usage:
 #   ./install.sh              # Symlink to all detected platforms
+#   ./install.sh --without-semantic-recon  # Skip the pinned dependency (explicit opt-out)
 #   ./install.sh --dry-run    # Preview without making changes
 #   ./install.sh --uninstall  # Remove all symlinks pointing to this repo
 #
@@ -18,6 +19,11 @@ set -eu
 # ---------------------------------------------------------------------------
 SKILL_NAME="agent-skill-creator"
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
+SEMANTIC_RECON_NAME="semantic-recon"
+SEMANTIC_RECON_URL="https://github.com/FrancyJGLisboa/semantic-recon.git"
+# Update deliberately after verifying the new revision with Semantic Recon's gates.
+SEMANTIC_RECON_COMMIT="78234a37ebfff4b046e299d703b9b1cf39133600"
+SEMANTIC_RECON_DIR="$HOME/.agents/skills/$SEMANTIC_RECON_NAME"
 
 # ---------------------------------------------------------------------------
 # Colors (disabled when stdout is not a terminal)
@@ -43,16 +49,21 @@ error()   { printf "${RED}[ERROR]${NC} %s\n" "$1" >&2; }
 # ---------------------------------------------------------------------------
 DRY_RUN=false
 UNINSTALL=false
+WITH_SEMANTIC_RECON=true
 
 while [ $# -gt 0 ]; do
     case "$1" in
         --dry-run)   DRY_RUN=true ;;
         --uninstall) UNINSTALL=true ;;
+        --with-semantic-recon) WITH_SEMANTIC_RECON=true ;;
+        --without-semantic-recon) WITH_SEMANTIC_RECON=false ;;
         -h|--help)
-            printf "Usage: %s [--dry-run] [--uninstall]\n\n" "$0"
+            printf "Usage: %s [--dry-run] [--uninstall] [--with-semantic-recon|--without-semantic-recon]\n\n" "$0"
             printf "Options:\n"
             printf "  --dry-run     Preview without making changes\n"
             printf "  --uninstall   Remove all symlinks pointing to this repo\n"
+            printf "  --with-semantic-recon     Install Semantic Recon at its pinned revision (default)\n"
+            printf "  --without-semantic-recon  Explicitly skip Semantic Recon installation\n"
             printf "  -h, --help    Show this help message\n"
             exit 0
             ;;
@@ -112,6 +123,53 @@ create_symlink() {
         warn "Symlink failed for $link_path — falling back to copy"
         cp -R "$target" "$link_path"
     fi
+}
+
+# ---------------------------------------------------------------------------
+# Optional Semantic Recon installation
+# ---------------------------------------------------------------------------
+install_semantic_recon() {
+    if [ "$DRY_RUN" = true ]; then
+        info "[dry-run] Would install $SEMANTIC_RECON_NAME at $SEMANTIC_RECON_DIR"
+        info "[dry-run] Would pin to: $SEMANTIC_RECON_COMMIT"
+        return 0
+    fi
+
+    if ! command -v git >/dev/null 2>&1; then
+        error "--with-semantic-recon requires git. Install git and run this command again."
+        return 1
+    fi
+
+    if [ -e "$SEMANTIC_RECON_DIR" ] && [ ! -d "$SEMANTIC_RECON_DIR/.git" ]; then
+        error "Refusing to replace $SEMANTIC_RECON_DIR: it is not a Git checkout."
+        return 1
+    fi
+
+    if [ -d "$SEMANTIC_RECON_DIR/.git" ]; then
+        origin="$(git -C "$SEMANTIC_RECON_DIR" config --get remote.origin.url 2>/dev/null || true)"
+        if [ "$origin" != "$SEMANTIC_RECON_URL" ] && [ "$origin" != "${SEMANTIC_RECON_URL%.git}" ]; then
+            error "Refusing to modify $SEMANTIC_RECON_DIR: origin is not $SEMANTIC_RECON_URL."
+            return 1
+        fi
+        info "Updating existing $SEMANTIC_RECON_NAME checkout"
+    else
+        info "Cloning $SEMANTIC_RECON_NAME to $SEMANTIC_RECON_DIR"
+        mkdir -p "$(dirname "$SEMANTIC_RECON_DIR")"
+        git init --quiet "$SEMANTIC_RECON_DIR"
+        git -C "$SEMANTIC_RECON_DIR" remote add origin "$SEMANTIC_RECON_URL"
+    fi
+
+    git -C "$SEMANTIC_RECON_DIR" fetch --depth 1 origin "$SEMANTIC_RECON_COMMIT" >/dev/null
+    git -C "$SEMANTIC_RECON_DIR" checkout --detach "$SEMANTIC_RECON_COMMIT" >/dev/null
+
+    installed_commit="$(git -C "$SEMANTIC_RECON_DIR" rev-parse HEAD)"
+    if [ "$installed_commit" != "$SEMANTIC_RECON_COMMIT" ]; then
+        error "Semantic Recon pin verification failed: expected $SEMANTIC_RECON_COMMIT, got $installed_commit."
+        return 1
+    fi
+
+    "$SEMANTIC_RECON_DIR/scripts/install.sh"
+    success "Semantic Recon installed and pinned: $installed_commit"
 }
 
 # ---------------------------------------------------------------------------
@@ -203,6 +261,10 @@ do_install() {
     else
         printf "  Symlinks point to: ${BOLD}%s${NC}\n" "$REPO_DIR"
         printf "  Run ${BOLD}git pull${NC} from that directory to update all tools.\n\n"
+    fi
+
+    if [ "$WITH_SEMANTIC_RECON" = true ]; then
+        install_semantic_recon
     fi
 
     printf "${BOLD}How to use:${NC}\n"

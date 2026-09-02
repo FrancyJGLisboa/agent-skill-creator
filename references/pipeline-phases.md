@@ -85,6 +85,35 @@ Before designing a new skill, verify:
 
 The best outcome is sometimes: "You don't need a new skill — this data already exists in [database]. Let me show you how to query it."
 
+### Step 0.5: Semantic Recon eligibility
+
+After identifying the source, choose the Semantic Recon path before researching its
+implementation details. It is required for every live or structured
+`DATA_API`, `DATABASE`, `MCP_SERVER`, `CODEBASE`, or remotely served `DATA_FILE`
+that the workflow needs. The `--semantic-recon` flag remains for compatibility.
+
+The only exemption is a workflow with no external or structured source. Do not
+downgrade a qualifying target merely to avoid the work. If the
+operator cannot state the blast radius of misuse and out-of-scope boundary, or safe
+access is unavailable, record `verification-blocked`; do not design a direct client.
+
+For an eligible target:
+
+1. Invoke `/semantic-recon` and complete its target profile, including blast radius
+   and out-of-scope boundary.
+2. Freeze its holdout questions before probing the target.
+3. Complete the Semantic Recon gates through its clean-room audit.
+4. In Phase 2, build on the registered `data_contract_<id>` rather than the raw
+   source. Generated code calls the contract, runs `contract_health.report()`, routes
+   requests through `validate_query()`, and preserves contract provenance.
+5. Record the contract id, resolved path, target type, required operations, and
+   freshness check in `discovery.json`; add a successful query and a refused unsafe
+   query to the skill's evals.
+
+Semantic Recon observes and tests system behavior. It never authorizes a business
+definition, source-precedence policy, or risk acceptance; keep those decisions in the
+structured interview and governed semantic contract.
+
 ### Step 1: Identify Domain
 
 From user input, extract the main domain:

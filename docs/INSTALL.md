@@ -121,6 +121,7 @@ macOS / Linux:
 ```bash
 cd agent-skill-creator
 ./install.sh              # Link to all detected platforms
+./install.sh --with-semantic-recon  # Also install pinned Semantic Recon
 ./install.sh --dry-run    # Preview without changes
 ./install.sh --uninstall  # Remove all links
 ```

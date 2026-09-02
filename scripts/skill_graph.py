@@ -20,6 +20,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Callable
+from semantic_recon_gate import check_contracts, evaluate
 
 
 SCHEMA_VERSION = 1
@@ -228,9 +229,16 @@ def build_graph(skill_dir: str | Path) -> dict:
     else:
         workflow_kind = "independent"
 
+    discovery_path = root / "discovery.json"
+    try:
+        discovery = json.loads(discovery_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        discovery = {}
+    recon_decision = evaluate(discovery) if isinstance(discovery, dict) else {"status": "BLOCKED_NEEDS_SCOPE", "sources": [], "reasons": ["discovery.json must be an object"]}
     constraints = [
         {"id": "every_expected_is_reachable", "severity": "error"},
         {"id": "deterministic_multistep_has_orchestrator", "severity": "error"},
+        {"id": "semantic_recon_contracts_ready", "severity": "error"},
     ]
     gates = [
         {"id": "spec", "inputs": ["skill_document", "package_index"]},
@@ -246,6 +254,7 @@ def build_graph(skill_dir: str | Path) -> dict:
         "edges": sorted(edges, key=lambda edge: (edge["from"], edge["to"], edge["relation"])),
         "constraints": constraints,
         "gates": gates,
+        "semantic_recon": recon_decision,
     }
 
 
@@ -280,6 +289,12 @@ def check_graph(graph: dict) -> dict:
                 "repair": "add scripts/run_pipeline.py or declare workflow.kind as interactive/independent",
             }
         )
+    recon = graph.get("semantic_recon", {})
+    if recon.get("status") == "BLOCKED_NEEDS_SCOPE":
+        errors.append({"constraint":"semantic_recon_contracts_ready", "artifact":"discovery_json", "path":"discovery.json", "message":"; ".join(recon.get("reasons", [])), "repair":"declare source type, reuse, and impact in semantic_recon.sources"})
+    elif recon.get("status") == "REQUIRED":
+        for message in check_contracts(recon):
+            errors.append({"constraint":"semantic_recon_contracts_ready", "artifact":"semantic_recon", "path":"discovery.json", "message":message, "repair":"create or refresh the declared Semantic Recon contract before building"})
     return {"valid": not errors, "errors": errors}
 
 

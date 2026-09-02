@@ -87,7 +87,7 @@ class GraphEncodingTest(unittest.TestCase):
         )
         self.assertEqual(
             {item["id"] for item in graph["constraints"]},
-            {"every_expected_is_reachable", "deterministic_multistep_has_orchestrator"},
+            {"every_expected_is_reachable", "deterministic_multistep_has_orchestrator", "semantic_recon_contracts_ready"},
         )
         self.assertEqual({gate["id"] for gate in graph["gates"]}, {"spec", "security", "pipeline", "eval_schema"})
 
@@ -146,6 +146,12 @@ class GraphEncodingTest(unittest.TestCase):
         self.assertTrue(
             any(item["constraint"] == "deterministic_multistep_has_orchestrator" for item in result["errors"])
         )
+
+    def test_recurring_high_impact_source_without_contract_blocks_graph(self) -> None:
+        skill = write_skill(self.base)
+        (skill / "discovery.json").write_text(json.dumps({"data_interfaces":{"applies":True}, "semantic_recon":{"sources":[{"id":"billing","type":"api","reuse":"recurring","impact":"high"}]}}), encoding="utf-8")
+        result = check_graph(build_graph(skill))
+        self.assertTrue(any(item["constraint"] == "semantic_recon_contracts_ready" for item in result["errors"]))
 
 
 class GateRunnerTest(unittest.TestCase):
