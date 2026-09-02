@@ -14,13 +14,22 @@ import shlex
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import Any
+from typing import Any, Sequence
 from semantic_recon_gate import check_contracts, evaluate
 
 PASS = {"PASS", "PASS_WITH_UNRESOLVED_ITEMS"}
 
 
-def orchestrate(skill_dir: str | Path, runner: str | None = None) -> dict[str, Any]:
+def _runner_command(runner: str | Sequence[str]) -> list[str]:
+    """Return an argv list without corrupting Windows paths containing spaces."""
+    if isinstance(runner, str):
+        return shlex.split(runner, posix=os.name != "nt")
+    return [str(part) for part in runner]
+
+
+def orchestrate(
+    skill_dir: str | Path, runner: str | Sequence[str] | None = None
+) -> dict[str, Any]:
     root = Path(skill_dir)
     path = root / "discovery.json"
     discovery = json.loads(path.read_text())
@@ -30,10 +39,10 @@ def orchestrate(skill_dir: str | Path, runner: str | None = None) -> dict[str, A
     if decision["status"] != "REQUIRED":
         return {"status": "BLOCKED", "reasons": decision["reasons"]}
     if runner is None:
-        runner = (
-            os.environ.get("SEMANTIC_RECON_RUNNER")
-            or f"{os.sys.executable} {Path(__file__).with_name('semantic_recon_runner.py')}"
-        )
+        runner = os.environ.get("SEMANTIC_RECON_RUNNER") or [
+            os.sys.executable,
+            str(Path(__file__).with_name("semantic_recon_runner.py")),
+        ]
     pending = check_contracts(decision)
     if pending and not runner:
         return {"status": "BLOCKED_NO_RUNNER", "reasons": pending}
@@ -44,7 +53,7 @@ def orchestrate(skill_dir: str | Path, runner: str | None = None) -> dict[str, A
             source_path = Path(temp) / "source.json"
             result_path = Path(temp) / "result.json"
             source_path.write_text(json.dumps(source))
-            command = shlex.split(runner) + [
+            command = _runner_command(runner) + [
                 "--source-json",
                 str(source_path),
                 "--result-json",

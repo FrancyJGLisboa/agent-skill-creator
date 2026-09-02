@@ -61,7 +61,7 @@ def test_runner_contract_resumes_build(tmp_path):
             }
         )
     )
-    result = orchestrate(skill, f"{sys.executable} {runner} {contract}")
+    result = orchestrate(skill, [sys.executable, str(runner), str(contract)])
     assert result["status"] == "RESUMED"
     assert json.loads((skill / "discovery.json").read_text())["semantic_recon"][
         "sources"

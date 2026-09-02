@@ -65,7 +65,11 @@ def test_copilot_alias_is_canonicalized_in_plan_and_adapter(tmp_path: Path) -> N
         home=tmp_path / "home", project_root=tmp_path / "project",
     )
     assert [target["platform"] for target in plan["targets"]] == ["github-copilot"]
-    assert plan["targets"][0]["destination"].endswith("/.github/skills/report-skill")
+    assert Path(plan["targets"][0]["destination"]).parts[-3:] == (
+        ".github",
+        "skills",
+        "report-skill",
+    )
 
 
 def test_copilot_alias_is_canonicalized_in_certification() -> None:
