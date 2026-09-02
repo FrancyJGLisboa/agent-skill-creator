@@ -41,6 +41,32 @@ def _commit(skill_dir: Path) -> str:
     return result.stdout.strip() if result.returncode == 0 else "uncommitted"
 
 
+def _is_report_only_followup(skill_dir: Path, recorded_commit: object) -> bool:
+    """Return whether the only change since evidence was recorded is its report.
+
+    A report necessarily records the commit that existed immediately before the
+    report itself was committed.  Accept that one-file follow-up while refusing
+    a commit mismatch whenever any behavior-defining file also changed.
+    """
+    if not isinstance(recorded_commit, str) or not recorded_commit:
+        return False
+    current_commit = _commit(skill_dir)
+    if current_commit == "uncommitted":
+        return recorded_commit == "uncommitted"
+    if recorded_commit == "uncommitted":
+        return False
+    if recorded_commit == current_commit:
+        return True
+    result = subprocess.run(
+        ["git", "-C", str(skill_dir), "diff", "--name-only", "--relative", f"{recorded_commit}..{current_commit}", "--", "."],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    changed = {line.replace("\\", "/") for line in result.stdout.splitlines() if line.strip()}
+    return result.returncode == 0 and changed == {"VERIFICATION.md"}
+
+
 def verification_errors(skill_dir: Path) -> list[str]:
     """Return missing, stale, or failed-evidence reasons for marketplace gates."""
     path = skill_dir / "VERIFICATION.md"
@@ -59,7 +85,7 @@ def verification_errors(skill_dir: Path) -> list[str]:
         errors.append("verification version does not match SKILL.md")
     if state.get("fingerprint") != content_fingerprint(skill_dir):
         errors.append("verification is stale: SKILL.md, scripts, or evals changed")
-    if state.get("commit") != _commit(skill_dir):
+    if not _is_report_only_followup(skill_dir, state.get("commit")):
         errors.append("verification commit does not match current Git commit")
     if not state.get("clean"):
         errors.append("verification records failed gates or evals")

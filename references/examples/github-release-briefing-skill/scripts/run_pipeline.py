@@ -51,12 +51,16 @@ This is read-only release evidence. A human still approves any dependency change
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--repository", required=True)
+    parser.add_argument("--repository")
+    parser.add_argument("--input", type=Path)
     parser.add_argument("--output", required=True)
     args = parser.parse_args(argv)
     try:
-        release, source = latest_release(args.repository)
-        Path(args.output).write_text(render(args.repository, release, source), encoding="utf-8")
+        if bool(args.repository) == bool(args.input):
+            raise ValueError("provide exactly one of --repository or --input")
+        repository = args.repository or args.input.read_text(encoding="utf-8").strip()
+        release, source = latest_release(repository)
+        Path(args.output).write_text(render(repository, release, source), encoding="utf-8")
     except (ValueError, RuntimeError) as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1

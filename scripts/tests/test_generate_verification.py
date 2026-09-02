@@ -1,6 +1,7 @@
 import sys
 import tempfile
 import unittest
+import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).parent.parent.parent
@@ -50,3 +51,20 @@ class VerificationReportTest(unittest.TestCase):
             self.assertEqual(verification_errors(skill), [])
             script.write_text("print('two')\n", encoding="utf-8")
             self.assertIn("verification is stale: SKILL.md, scripts, or evals changed", verification_errors(skill))
+
+    def test_verification_allows_its_own_report_only_commit(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            skill = root / "demo-skill"
+            skill.mkdir()
+            (skill / "SKILL.md").write_text("---\nname: demo-skill\nmetadata:\n  version: 1.0.0\n---\n", encoding="utf-8")
+            subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.email", "tests@example.com"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.name", "Tests"], cwd=root, check=True)
+            subprocess.run(["git", "add", "."], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "Add skill"], cwd=root, check=True)
+            report = render_report(skill, {"specification": True}, {"passed": 1, "failed": 0, "errors": 0, "regressions": 0, "clean": True}, "representative", [])
+            (skill / "VERIFICATION.md").write_text(report, encoding="utf-8")
+            subprocess.run(["git", "add", "."], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "Record verification"], cwd=root, check=True)
+            self.assertEqual(verification_errors(skill), [])
