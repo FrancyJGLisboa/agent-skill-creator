@@ -468,6 +468,8 @@ def init_marketplace(
     for bundle in normalized_bundles:
         data.setdefault("bundles", {}).setdefault(bundle, [])
     save_manifest(root, data)
+    generate_repository_files(root, data)
+    return data
 
 
 def create_marketplace_interactive(args: argparse.Namespace) -> Path:
@@ -489,7 +491,6 @@ def create_marketplace_interactive(args: argparse.Namespace) -> Path:
                      approvers=[owner],
                      supported_platforms=["github-copilot"],
                      starter_bundles=[bundle])
-    generate_repository_files(marketplace, load_manifest(marketplace))
     print(f"Marketplace initialized at {marketplace}")
     print(f"Next: add a skill with `python3 scripts/team_marketplace.py add ./skill --department {department} --bundle {bundle} --marketplace {marketplace}`")
     return marketplace
@@ -1360,6 +1361,20 @@ def resolve_skills(
 
 def generate_repository_files(root: Path, data: dict[str, Any]) -> None:
     """Regenerate catalog, bundles, CODEOWNERS, and provider CI files."""
+    support_scripts = root / "scripts"
+    support_scripts.mkdir(exist_ok=True)
+    factory_scripts = Path(__file__).resolve().parent
+    for filename in ("team_marketplace.py", "structured_interview.py",
+                     "check_pipeline.py", "security_scan.py", "skill_document.py",
+                     "validate.py", "marketplace_trust.py", "marketplace_health.py",
+                     "marketplace_discovery.py", "marketplace_metrics.py",
+                     "marketplace_distribution.py", "platforms.py",
+                     "generate_verification.py", "review_staleness.py",
+                     "schema_drift.py", "dependency_health.py"):
+        source = factory_scripts / filename
+        if source.is_file():
+            shutil.copy2(source, support_scripts / filename)
+    (root / ".gitignore").write_text("__pycache__/\n*.py[cod]\n*.pyc\n.marketplace-mutation.lock\n", encoding="utf-8")
     (root / "bundles").mkdir(exist_ok=True)
     for name, paths in sorted(data.get("bundles", {}).items()):
         payload = {"name": name, "skills": sorted(paths)}
