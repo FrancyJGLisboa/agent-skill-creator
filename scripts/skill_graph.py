@@ -235,6 +235,10 @@ def build_graph(skill_dir: str | Path) -> dict:
     except (OSError, json.JSONDecodeError):
         discovery = {}
     recon_decision = evaluate(discovery) if isinstance(discovery, dict) else {"status": "BLOCKED_NEEDS_SCOPE", "sources": [], "reasons": ["discovery.json must be an object"]}
+    for source in recon_decision.get("sources", []):
+        contract_path = source.get("contract_path")
+        if isinstance(contract_path, str) and contract_path and not Path(contract_path).is_absolute():
+            source["contract_path"] = str((root / contract_path).resolve())
     constraints = [
         {"id": "every_expected_is_reachable", "severity": "error"},
         {"id": "deterministic_multistep_has_orchestrator", "severity": "error"},

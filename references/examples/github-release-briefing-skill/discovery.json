@@ -19,5 +19,15 @@
   "software_mutation": {"applies": false},
   "data_interfaces": {"applies": true, "interface_types": ["api"], "authoritative_sources": ["GitHub REST API"], "entities": ["Repository", "Release"], "identifiers": ["owner/repository", "release tag"], "relationships": ["One repository has one latest published release"], "field_semantics": ["published_at is release publication time"], "invariants": ["A briefing must include a source URL"], "freshness_and_pagination": ["GitHub resolves latest release server-side"], "nullability": ["No published release blocks a briefing"], "readiness_checks": ["Response contains tag_name, published_at, and html_url"]},
   "semantic_contract": {"applies": false},
+  "semantic_recon": {
+    "sources": [{
+      "id": "github-releases-api",
+      "type": "api",
+      "reuse": "recurring",
+      "impact": "low",
+      "contract_id": "github_releases",
+      "contract_path": "contracts/data_contract_github_releases"
+    }]
+  },
   "routing_tests": {"should_trigger": ["What is the latest release of openai/openai-python?", "Brief the new release for vercel/ai", "Check anthopics/anthropic-sdk-python release"], "should_not_trigger": ["Publish a GitHub release", "Upgrade this dependency automatically", "Delete an old GitHub release"]}
 }
