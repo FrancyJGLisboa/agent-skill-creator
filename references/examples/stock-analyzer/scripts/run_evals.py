@@ -113,6 +113,57 @@ def find_spec(skill_dir: Path) -> Path | None:
     return specs[0] if specs else None
 
 
+def run_correction_regressions(skill_dir: Path) -> list[dict]:
+    """Run durable assertions emitted by ``evolve.py --correct``.
+
+    Each correction is an executable check that its explicitly recorded behavior
+    remains in the skill instructions. This protects real-use knowledge from
+    silently disappearing between releases.
+    """
+    rows: list[dict] = []
+    root = skill_dir.resolve()
+    correction_dir = root / "evals" / "corrections"
+    for path in sorted(correction_dir.glob("*.json")) if correction_dir.is_dir() else []:
+        try:
+            record = json.loads(path.read_text(encoding="utf-8"))
+            test = record["regression_test"]
+            relative_target = Path(test["file"])
+            target = root / relative_target
+            expected = test["must_contain"]
+            if not isinstance(expected, str) or not expected.strip():
+                raise ValueError("regression_test.must_contain must be a non-empty string")
+            if relative_target.is_absolute() or root not in target.resolve().parents and target.resolve() != root:
+                raise ValueError("regression test file must stay inside the skill directory")
+            actual = target.read_text(encoding="utf-8")
+            status = "pass" if expected in actual else "regression"
+            reason = "corrected behavior is retained" if status == "pass" else "corrected behavior is missing"
+            case = record.get("id", path.stem)
+        except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
+            status, reason, case = "error", str(exc), path.stem
+        rows.append({"case": case, "criterion": "correction-retention", "status": status, "reason": reason})
+    return rows
+
+
+def add_correction_regressions(result: dict, skill_dir: Path) -> dict:
+    """Add correction-regression rows to a normal command or rollout result."""
+    rows = run_correction_regressions(skill_dir)
+    if not rows:
+        return result
+    result["checks"].extend(rows)
+    passed = sum(row["status"] == "pass" for row in rows)
+    failed = sum(row["status"] == "regression" for row in rows)
+    errors = sum(row["status"] == "error" for row in rows)
+    result["passed"] += passed
+    result["failed"] += failed
+    if "errors" in result:
+        result["errors"] += errors
+    else:
+        result["failed"] += errors
+    if "regressions" in result:
+        result["regressions"] += failed
+    return result
+
+
 def parse_spec(spec_path: Path) -> dict:
     """Extract and parse the first fenced ```json block from an eval spec.
 
@@ -1011,10 +1062,10 @@ def main(argv: list[str] | None = None) -> int:
             # entry (a candidate model failing is data, not a skill regression).
             # Exit 0 iff at least one model passed everything.
             results = [
-                run_rollout(
+                add_correction_regressions(run_rollout(
                     spec, skill_dir, only_case=args.case, timeout=args.timeout,
                     include_holdout=args.include_holdout, judge=judge, model=m,
-                )
+                ), skill_dir)
                 for m in args.models
             ]
             clean = [
@@ -1048,6 +1099,7 @@ def main(argv: list[str] | None = None) -> int:
             timeout=args.timeout, include_holdout=args.include_holdout,
             judge=judge,
         )
+        result = add_correction_regressions(result, skill_dir)
         if args.json:
             print(json.dumps({**result, "llm_judge": [c["id"] for c in judges]}, indent=2))
         else:
@@ -1089,6 +1141,7 @@ def main(argv: list[str] | None = None) -> int:
         spec, skill_dir, output=output, only_case=args.case,
         include_holdout=args.include_holdout,
     )
+    result = add_correction_regressions(result, skill_dir)
 
     if args.json:
         print(json.dumps({**result, "llm_judge": [c["id"] for c in judges]}, indent=2))

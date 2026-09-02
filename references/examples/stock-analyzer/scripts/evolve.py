@@ -39,6 +39,8 @@ Exit codes:
 from __future__ import annotations
 
 import re
+import hashlib
+import json
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -55,6 +57,46 @@ FALLBACK_ANCHORS = ("## Keywords", "## Usage Examples", "## References", "## Ant
 
 def _utc_stamp() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _correction_id(stamp: str, text: str) -> str:
+    """Return a stable, filesystem-safe ID for one correction record."""
+    compact_stamp = stamp.replace("-", "").replace(":", "").replace("T", "-").replace("Z", "")
+    digest = hashlib.sha256(text.encode("utf-8")).hexdigest()[:10]
+    return f"correction-{compact_stamp}-{digest}"
+
+
+def _write_correction_regression(skill_dir: Path, correction_id: str, stamp: str, text: str) -> Path:
+    """Create an executable knowledge-retention regression for a correction.
+
+    The correction itself is authoritative evidence. The generated assertion makes
+    removing that knowledge from the skill an eval failure until an explicit,
+    reviewed replacement is made.
+    """
+    corrections = skill_dir / "evals" / "corrections"
+    corrections.mkdir(parents=True, exist_ok=True)
+    path = corrections / f"{correction_id}.json"
+    record = {
+        "id": correction_id,
+        "reported_at": stamp,
+        "correction": text,
+        "proposed_skill_edit": {
+            "file": "SKILL.md",
+            "section": "Gotchas",
+            "change": f"Add the reported behavior: {text}",
+        },
+        "regression_test": {
+            "type": "knowledge-retention",
+            "file": "SKILL.md",
+            "must_contain": text,
+        },
+        "version": {
+            "recommended_bump": "patch",
+            "reason": "Correction from real use; preserve the corrected behavior and prevent its removal without review.",
+        },
+    }
+    path.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
+    return path
 
 
 def _record_lifecycle(event: str, skill_dir: Path) -> None:
@@ -92,6 +134,7 @@ def record_correction(skill_dir: Path, text: str) -> list[str]:
         raise ValueError(f"SKILL.md not found in {skill_dir}")
 
     stamp = _utc_stamp()
+    correction_id = _correction_id(stamp, text)
     done: list[str] = []
 
     # 1. EVOLUTION.md -- the audit trail. Append-only, never rewritten.
@@ -106,9 +149,12 @@ def record_correction(skill_dir: Path, text: str) -> list[str]:
     with evolution.open("a", encoding="utf-8") as fh:
         fh.write(
             f"## {stamp} — correction from use\n\n"
+            f"Change ID: `{correction_id}`\n\n"
             f"Reported while using the skill, not caught by any automated check.\n\n"
             f"> {text}\n\n"
-            f"Added to the SKILL.md `## Gotchas` section.\n\n"
+            f"Proposed skill edit: add the corrected behavior to `SKILL.md` → `## Gotchas`.\n\n"
+            f"Regression test: `evals/corrections/{correction_id}.json` must keep this behavior in the skill.\n\n"
+            f"Version recommendation: patch — correction from real use.\n\n"
         )
     done.append(f"EVOLUTION.md  <- correction recorded ({stamp})")
 
@@ -144,6 +190,8 @@ def record_correction(skill_dir: Path, text: str) -> list[str]:
 
     skill_md.write_text(content, encoding="utf-8")
     done.append(f"SKILL.md      <- ## Gotchas ({note})")
+    regression = _write_correction_regression(skill_dir, correction_id, stamp, text)
+    done.append(f"{regression.relative_to(skill_dir)} <- executable correction regression")
     return done
 
 
@@ -167,8 +215,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"error: {exc}", file=sys.stderr)
             return 2
         _record_lifecycle("correction_recorded", root)
-        print("\nnext: run scripts/evolve.py to re-verify, and reword the entry in the")
-        print("house style (wrong assumption -> real behavior) next time you edit the skill")
+        print("\nnext: run scripts/evolve.py to verify the proposed edit and correction regression")
         return 0
 
     judge = ["--judge"] if "--judge" in args else []
