@@ -9,7 +9,7 @@ description: >-
 license: MIT
 activation: /live-weather-briefing-skill
 metadata:
-  author: agent-skill-creator
+  author: agent-skills-platform
   version: 1.0.0
   created: 2026-08-27
   last_reviewed: 2026-08-27
@@ -22,7 +22,7 @@ metadata:
       url: https://api.open-meteo.com/v1/forecast
       type: service
 provenance:
-  maintainer: agent-skill-creator
+  maintainer: agent-skills-platform
   version: 1.0.0
   created: 2026-08-27
   source_references:

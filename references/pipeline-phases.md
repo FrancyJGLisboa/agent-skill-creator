@@ -1515,7 +1515,7 @@ chmod +x <skill>/scripts/evolve.py
 `python3 scripts/evolve.py` runs staleness/dependency/drift checks plus the
 eval rollout (with `--judge` to grade llm-judge criteria). Any failure appends
 the raw evidence to the skill's `EVOLUTION.md` — that file is the input for a
-regenerate pass (`/agent-skill-creator <skill> using EVOLUTION.md`).
+regenerate pass (`/agent-skills-platform <skill> using EVOLUTION.md`).
 
 ### Step 6.7: Emit verification evidence
 

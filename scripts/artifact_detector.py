@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Artifact opportunity detector for agent-skill-creator v6.
+"""Artifact opportunity detector for agent-skills-platform v6.
 
 Public API: detect_artifact(description, domain=None)
 

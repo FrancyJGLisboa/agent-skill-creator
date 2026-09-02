@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Skill-document parsing for agent-skill-creator.
+Skill-document parsing for agent-skills-platform.
 
 `SkillDoc` is the single source of SKILL.md parsing. It owns frontmatter
 extraction and the deliberately-simple YAML reads (scalar fields, parent.child

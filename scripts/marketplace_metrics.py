@@ -13,7 +13,7 @@ from typing import Any, Iterable, Mapping
 
 from platforms import normalize_platform_name
 
-CONSENT_SCHEMA = "agent-skill-creator.marketplace-metrics-consent"
+CONSENT_SCHEMA = "agent-skills-platform.marketplace-metrics-consent"
 EVENT_TYPES = {"install", "activation", "successful_run", "correction", "regression", "retention"}
 PLATFORM_ALLOWLIST = {
     "codex", "claude-code", "github-copilot", "cursor", "windsurf", "cline",

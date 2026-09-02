@@ -72,7 +72,7 @@ in Phase A and beyond.
 
 | Component | Responsibility |
 |---|---|
-| `agent-skill-creator` | Creates and verifies one individual skill from workflow evidence. |
+| `agent-skills-platform` | Creates and verifies one individual skill from workflow evidence. |
 | Governed Git repository | Catalogs skills by department, runs gates, records approval, and builds bundles. |
 | Provider backend | Uses `gh skill` on GitHub or tagged Git clone and copy on GitLab. |
 | ACME device management | Runs the managed install command on approved endpoints. |
@@ -102,7 +102,7 @@ Required state:
 
 ### A2. Initialize the marketplace
 
-Run from the `agent-skill-creator` repository:
+Run from the `agent-skills-platform` repository:
 
 ```bash
 python3 scripts/team_marketplace.py init \
@@ -194,7 +194,7 @@ local command that can prove the organization applied its rulesets correctly.
 In an installed agent environment, provide the real workflow evidence:
 
 ```text
-/agent-skill-creator Create a skill from the attached ACME monthly reporting workflow.
+/agent-skills-platform Create a skill from the attached ACME monthly reporting workflow.
 ```
 
 Every skill is checked as one connected system. The skill graph links its
@@ -222,7 +222,7 @@ runtime permission when a reviewed script actually needs execution.
 
 ### B2. Add the skill to a department and bundle
 
-Run from the `agent-skill-creator` repository, pointing at the marketplace clone:
+Run from the `agent-skills-platform` repository, pointing at the marketplace clone:
 
 ```bash
 python3 scripts/team_marketplace.py add ./report-skill \

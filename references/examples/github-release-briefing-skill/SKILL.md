@@ -7,7 +7,7 @@ description: >-
 license: MIT
 activation: /github-release-briefing-skill
 metadata:
-  author: agent-skill-creator
+  author: agent-skills-platform
   version: 1.0.0
   created: 2026-08-27
   last_reviewed: 2026-08-27

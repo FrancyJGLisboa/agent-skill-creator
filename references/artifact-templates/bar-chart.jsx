@@ -2,7 +2,7 @@ import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 /*
- * Bar chart template used by agent-skill-creator v6.
+ * Bar chart template used by agent-skills-platform v6.
  * Phase 2 replaces AGENT_SKILL_DATA with skill-specific data shape
  * instructions describing the category and value columns.
  */

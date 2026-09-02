@@ -2,7 +2,7 @@ import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 /*
- * Line chart template used by agent-skill-creator v6.
+ * Line chart template used by agent-skills-platform v6.
  *
  * Phase 2 inlines this file into a generated SKILL.md and replaces the
  * AGENT_SKILL_DATA marker with skill-specific instructions describing

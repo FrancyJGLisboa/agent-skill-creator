@@ -1,14 +1,14 @@
-# agent-skill-creator v6.0 Artifacts-First Implementation Plan
+# agent-skills-platform v6.0 Artifacts-First Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add an "Artifact Opportunity Assessment" step to Phase 2 of agent-skill-creator that detects when a generated skill's output is visualizable, then inlines one of four React templates (line chart, bar chart, KPI cards, data table) plus Claude's artifact emission protocol directly into the generated SKILL.md. Skills render dashboards in Claude Code and degrade to fenced markdown elsewhere.
+**Goal:** Add an "Artifact Opportunity Assessment" step to Phase 2 of agent-skills-platform that detects when a generated skill's output is visualizable, then inlines one of four React templates (line chart, bar chart, KPI cards, data table) plus Claude's artifact emission protocol directly into the generated SKILL.md. Skills render dashboards in Claude Code and degrade to fenced markdown elsewhere.
 
 **Architecture:** No new abstractions. One detector script + four JSX templates living under `references/artifact-templates/` + a documentation file describing the Phase 2 step. The detector classifies a parsed Phase 1 Discovery payload using keyword heuristics; the chosen template is inlined verbatim into the SKILL.md the creator emits. Pure-stdlib Python for the detector. JSX templates are static files with marked substitution points.
 
 **Tech Stack:** Python 3.10+ stdlib (no new dependencies); `unittest` for tests; existing `uv` toolchain per project conventions; static `.jsx` files using recharts and shadcn as already used by Claude artifact runtime.
 
-**Spec reference:** `docs/superpowers/specs/2026-05-27-agent-skill-creator-v5-artifacts-first-design.md`
+**Spec reference:** `docs/superpowers/specs/2026-05-27-agent-skills-platform-v5-artifacts-first-design.md`
 
 ---
 
@@ -39,7 +39,7 @@ scripts/
 docs/
   superpowers/
     plans/
-      2026-05-27-agent-skill-creator-v5-artifacts-first.md  # This file
+      2026-05-27-agent-skills-platform-v5-artifacts-first.md  # This file
 ```
 
 ### Files modified
@@ -98,7 +98,7 @@ This is a manual research task that unblocks all template work. The spec's Open 
 
 - [ ] **Step 1: Open Claude Code in this project**
 
-Start a fresh Claude Code session in `/Users/francylisboacharuto/agent-skill-creator/`. This task is conducted manually by a human + Claude pair, not by an agent.
+Start a fresh Claude Code session in `/Users/francylisboacharuto/agent-skills-platform/`. This task is conducted manually by a human + Claude pair, not by an agent.
 
 - [ ] **Step 2: Ask Claude to emit a minimal artifact**
 
@@ -205,7 +205,7 @@ Create `scripts/tests/__init__.py` as an empty file.
 - [ ] **Step 2: Run test to verify it fails**
 
 ```bash
-cd /Users/francylisboacharuto/agent-skill-creator
+cd /Users/francylisboacharuto/agent-skills-platform
 uv run python -m unittest scripts.tests.test_template_structure.LineChartTemplateTest -v
 ```
 
@@ -220,7 +220,7 @@ import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 /*
- * Line chart template used by agent-skill-creator v6.
+ * Line chart template used by agent-skills-platform v6.
  *
  * Phase 2 inlines this file into a generated SKILL.md and replaces the
  * AGENT_SKILL_DATA marker with skill-specific instructions describing
@@ -319,7 +319,7 @@ import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 /*
- * Bar chart template used by agent-skill-creator v6.
+ * Bar chart template used by agent-skills-platform v6.
  * Phase 2 replaces AGENT_SKILL_DATA with skill-specific data shape
  * instructions describing the category and value columns.
  */
@@ -405,7 +405,7 @@ Create `references/artifact-templates/kpi-cards.jsx`:
 import React from 'react';
 
 /*
- * KPI cards template used by agent-skill-creator v6.
+ * KPI cards template used by agent-skills-platform v6.
  * Phase 2 replaces AGENT_SKILL_DATA with skill-specific data shape
  * instructions for the cards array.
  */
@@ -488,7 +488,7 @@ Create `references/artifact-templates/data-table.jsx`:
 import React from 'react';
 
 /*
- * Data table template used by agent-skill-creator v6 as the baseline
+ * Data table template used by agent-skills-platform v6 as the baseline
  * artifact when data is structured but no chart fits.
  * Phase 2 replaces AGENT_SKILL_DATA with skill-specific column and
  * row instructions.
@@ -729,7 +729,7 @@ Create `scripts/artifact_detector.py`:
 
 ```python
 #!/usr/bin/env python3
-"""Artifact opportunity detector for agent-skill-creator v6.
+"""Artifact opportunity detector for agent-skills-platform v6.
 
 Public API: detect_artifact(description, domain=None)
 
@@ -1192,7 +1192,7 @@ Detector achieves the threshold required by the v6 design spec
 
 ## Task 13: Write phase2-artifact-assessment.md reference doc
 
-This is the doc the agent-skill-creator skill body references when running Phase 2.
+This is the doc the agent-skills-platform skill body references when running Phase 2.
 
 **Files:**
 - Create: `references/phase2-artifact-assessment.md`
@@ -1299,8 +1299,8 @@ artifact renders only in Claude environments. The exact wording:
 
 The user can force or suppress artifact inlining:
 
-- `/agent-skill-creator --no-artifact <description>` — never inline
-- `/agent-skill-creator --artifact <template-name> <description>` — force
+- `/agent-skills-platform --no-artifact <description>` — never inline
+- `/agent-skills-platform --artifact <template-name> <description>` — force
   the named template
 
 When forced, the detector is not called and the named template is used
@@ -1339,9 +1339,9 @@ degradation note, bypass flags, and failure handling."
 - [ ] **Step 1: Read current Phase 2 sections to find insertion points**
 
 ```bash
-grep -n "Phase 2" /Users/francylisboacharuto/agent-skill-creator/SKILL.md | head -20
-grep -n "Phase 2" /Users/francylisboacharuto/agent-skill-creator/references/pipeline-phases.md | head -20
-head -50 /Users/francylisboacharuto/agent-skill-creator/references/phase2-design.md
+grep -n "Phase 2" /Users/francylisboacharuto/agent-skills-platform/SKILL.md | head -20
+grep -n "Phase 2" /Users/francylisboacharuto/agent-skills-platform/references/pipeline-phases.md | head -20
+head -50 /Users/francylisboacharuto/agent-skills-platform/references/phase2-design.md
 ```
 
 Identify the natural insertion points in each file. The plan does not pre-specify line numbers because they depend on the current file state at execution time.
@@ -1522,9 +1522,9 @@ The spec leaves the v4 skill selection to the implementation plan. Pick 10 repre
 - [ ] **Step 1: Inventory candidate v4 skills in this repo**
 
 ```bash
-find /Users/francylisboacharuto/agent-skill-creator/references/examples -name "SKILL.md" -type f
-find /Users/francylisboacharuto/agent-skill-creator -name "*.md" -path "*/examples/*" | head -20
-ls /Users/francylisboacharuto/agent-skill-creator/registry/skills/ 2>/dev/null
+find /Users/francylisboacharuto/agent-skills-platform/references/examples -name "SKILL.md" -type f
+find /Users/francylisboacharuto/agent-skills-platform -name "*.md" -path "*/examples/*" | head -20
+ls /Users/francylisboacharuto/agent-skills-platform/registry/skills/ 2>/dev/null
 ```
 
 Examine what exists. The README at the project root also lists named example skills — extract any that have concrete SKILL.md output documented.
@@ -1533,7 +1533,7 @@ Examine what exists. The README at the project root also lists named example ski
 
 Create `scripts/tests/fixtures/v4_skills_regression.json` with a list of skill specifications. Each entry has:
 - `id` — a short slug
-- `description` — the input that would be passed to `/agent-skill-creator`
+- `description` — the input that would be passed to `/agent-skills-platform`
 - `path` — path to an existing SKILL.md if one is in the repo, or `null` if the regression test should generate fresh
 - `expected_no_artifact` — boolean; true for skills whose v4 baseline should NOT have an artifact (most v4 skills, since v4 had no artifacts)
 
@@ -1665,7 +1665,7 @@ handles v4-era descriptions without crashing."
 - [ ] **Step 1: Run the full test suite**
 
 ```bash
-cd /Users/francylisboacharuto/agent-skill-creator
+cd /Users/francylisboacharuto/agent-skills-platform
 uv run python -m unittest discover scripts/tests -v
 ```
 
@@ -1700,7 +1700,7 @@ This is a manual verification task. The agent records the outcome; a human runs 
 
 Open Claude Code in a fresh session. Invoke:
 ```
-/agent-skill-creator weekly sales report by region
+/agent-skills-platform weekly sales report by region
 ```
 
 Wait for the creator to finish and install the skill.
@@ -1783,7 +1783,7 @@ Manual verification of Success Criterion #4 from the v6 spec."
 - [ ] **Step 1: Read current templates-guide.md to find insertion point**
 
 ```bash
-cat /Users/francylisboacharuto/agent-skill-creator/references/templates-guide.md
+cat /Users/francylisboacharuto/agent-skills-platform/references/templates-guide.md
 ```
 
 The existing guide covers the README activation template. Add a new section for artifact templates.
@@ -1843,7 +1843,7 @@ git commit -m "docs: document the four bundled artifact templates"
 - [ ] **Step 1: Read current README to find insertion point**
 
 ```bash
-head -80 /Users/francylisboacharuto/agent-skill-creator/README.md
+head -80 /Users/francylisboacharuto/agent-skills-platform/README.md
 ```
 
 The README starts with a project description. Add a "v6.0 — Artifacts" section near the top, after the headline but before usage instructions.
@@ -1855,7 +1855,7 @@ Insert into README.md right after the project tagline:
 ```markdown
 ## v6.0 — Artifacts (new)
 
-Skills generated by agent-skill-creator v6 can produce **interactive
+Skills generated by agent-skills-platform v6 can produce **interactive
 React artifacts** when invoked in Claude Code (and Claude.ai). When a
 skill's output is visualizable — time series, categorical comparisons,
 KPIs, structured rows — Phase 2 automatically inlines one of four
@@ -1867,16 +1867,16 @@ In hosts that do not render artifacts (Cursor, Cline, Codex CLI,
 Gemini CLI), the component source appears as fenced code and the
 markdown analysis is unchanged — honest degradation.
 
-The UX is unchanged from v4. Run `/agent-skill-creator <description>`
+The UX is unchanged from v4. Run `/agent-skills-platform <description>`
 and receive an installed skill. If your skill produces structured data,
 it now also produces a chart.
 
-To suppress the artifact: `/agent-skill-creator --no-artifact <description>`.
-To force a specific template: `/agent-skill-creator --artifact <name> <description>`
+To suppress the artifact: `/agent-skills-platform --no-artifact <description>`.
+To force a specific template: `/agent-skills-platform --artifact <name> <description>`
 where `<name>` is one of `line-chart`, `bar-chart`, `kpi-cards`,
 `data-table`.
 
-See [`docs/superpowers/specs/2026-05-27-agent-skill-creator-v5-artifacts-first-design.md`](docs/superpowers/specs/2026-05-27-agent-skill-creator-v5-artifacts-first-design.md) for the design rationale.
+See [`docs/superpowers/specs/2026-05-27-agent-skills-platform-v5-artifacts-first-design.md`](docs/superpowers/specs/2026-05-27-agent-skills-platform-v5-artifacts-first-design.md) for the design rationale.
 ```
 
 - [ ] **Step 3: Commit**
@@ -1896,7 +1896,7 @@ Walk the spec section by section and confirm each is covered by tasks in this pl
 
 - [ ] **Step 1: Confirm coverage by spec section**
 
-For each spec section in `docs/superpowers/specs/2026-05-27-agent-skill-creator-v5-artifacts-first-design.md`, identify the plan task that covers it. Record in a temporary scratch note or just check off:
+For each spec section in `docs/superpowers/specs/2026-05-27-agent-skills-platform-v5-artifacts-first-design.md`, identify the plan task that covers it. Record in a temporary scratch note or just check off:
 
 | Spec section | Covered by plan task |
 |---|---|
@@ -1947,7 +1947,7 @@ git commit -m "verify: spec coverage audit complete — all v6 spec sections cov
 - [ ] **Step 1: Run the full test suite one final time**
 
 ```bash
-cd /Users/francylisboacharuto/agent-skill-creator
+cd /Users/francylisboacharuto/agent-skills-platform
 uv run python -m unittest discover scripts/tests -v
 ```
 
@@ -1966,11 +1966,11 @@ Expected: working tree clean OR only files that the user staged independently (p
 ```bash
 git tag -a v6.0.0 -m "v6.0 — artifacts-first release
 
-Skills generated by agent-skill-creator v6 produce interactive React
+Skills generated by agent-skills-platform v6 produce interactive React
 artifacts in Claude environments and degrade honestly elsewhere.
 
-See docs/superpowers/specs/2026-05-27-agent-skill-creator-v5-artifacts-first-design.md
-for design and docs/superpowers/plans/2026-05-27-agent-skill-creator-v5-artifacts-first.md
+See docs/superpowers/specs/2026-05-27-agent-skills-platform-v5-artifacts-first-design.md
+for design and docs/superpowers/plans/2026-05-27-agent-skills-platform-v5-artifacts-first.md
 for the implementation record."
 ```
 
@@ -1991,7 +1991,7 @@ Report to the user:
 ## Self-Review notes
 
 This plan was self-reviewed on 2026-05-27 against the spec at
-`docs/superpowers/specs/2026-05-27-agent-skill-creator-v5-artifacts-first-design.md`.
+`docs/superpowers/specs/2026-05-27-agent-skills-platform-v5-artifacts-first-design.md`.
 
 - All spec sections traceable to a task (see Task 23 audit table).
 - No placeholders (TBD/TODO) in any task — every code block contains

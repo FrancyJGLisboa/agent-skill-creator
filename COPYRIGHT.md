@@ -2,7 +2,7 @@
 
 Copyright © 2026 **Francy J G Lisboa**, also known by the nickname **Charuto**.
 
-Agent Skill Creator is distributed under the [MIT License](LICENSE). That licence
+Agent Skills Platform is distributed under the [MIT License](LICENSE). That licence
 grants broad permissions to recipients; it does not transfer the project owner's
 copyright.
 

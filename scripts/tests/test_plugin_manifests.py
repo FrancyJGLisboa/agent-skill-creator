@@ -72,7 +72,7 @@ CROSS_RUNTIME_MANIFESTS = [
 @pytest.mark.parametrize("rel", CROSS_RUNTIME_MANIFESTS)
 def test_cross_runtime_manifest_parses_and_names_match(rel):
     data = json.loads((REPO_ROOT / rel).read_text(encoding="utf-8"))
-    assert data["name"] == "agent-skill-creator", rel
+    assert data["name"] == "agent-skills-platform", rel
     if "version" in data:
         doc = SkillDoc.from_path(REPO_ROOT / "SKILL.md")
         assert data["version"] == doc.subfield("metadata", "version"), rel

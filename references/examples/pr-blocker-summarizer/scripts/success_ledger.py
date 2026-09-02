@@ -51,10 +51,10 @@ def default_ledger_path() -> Path | None:
         return Path(configured).expanduser()
     state_root = os.environ.get("XDG_STATE_HOME")
     if state_root:
-        return Path(state_root) / "agent-skill-creator" / "success-events.jsonl"
+        return Path(state_root) / "agent-skills-platform" / "success-events.jsonl"
     if os.name == "nt" and os.environ.get("LOCALAPPDATA"):
-        return Path(os.environ["LOCALAPPDATA"]) / "agent-skill-creator" / "success-events.jsonl"
-    return Path.home() / ".local" / "state" / "agent-skill-creator" / "success-events.jsonl"
+        return Path(os.environ["LOCALAPPDATA"]) / "agent-skills-platform" / "success-events.jsonl"
+    return Path.home() / ".local" / "state" / "agent-skills-platform" / "success-events.jsonl"
 
 
 def _salt(ledger_path: Path) -> bytes:

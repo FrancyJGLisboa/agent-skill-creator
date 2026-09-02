@@ -14,7 +14,7 @@ to semantic versioning where practical.
 
 ### Changed
 - **Question-first product and marketplace positioning**: README, GitHub Pages, social
-  preview, repository description, and topics now present Agent Skill Creator as both
+  preview, repository description, and topics now present Agent Skills Platform as both
   a skill factory and the operating system for a user-defined skill marketplace.
   Public documentation leads with the full create-to-retire lifecycle, intended users,
   decision quality, and the unattended consumer proof standard.
@@ -188,8 +188,8 @@ to semantic versioning where practical.
   promoted baseline set and one holdout case.
 - **Claude Code plugin install path** (ponytail-style): `.claude-plugin/plugin.json`
   + `marketplace.json` at the repo root make the factory installable with
-  `/plugin marketplace add FrancyJGLisboa/agent-skill-creator` +
-  `/plugin install agent-skill-creator@agent-skill-creator` — no `curl | sh`
+  `/plugin marketplace add FrancyJGLisboa/agent-skills-platform` +
+  `/plugin install agent-skills-platform@agent-skills-platform` — no `curl | sh`
   needed on Claude Code. Generated skills get the same treatment: Phase 5
   Step 6.5 emits manifests from `scripts/claude-plugin-template/` (placeholders
   filled from SKILL.md frontmatter), so every generated skill is installable via

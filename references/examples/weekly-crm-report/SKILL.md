@@ -3,7 +3,7 @@ name: weekly-crm-report
 description: Cleans a weekly CRM export and produces a regional sales summary. Activates when the user asks to clean a CRM export, deduplicate sales rows, calculate regional totals, or generate a weekly sales report from a CSV.
 license: MIT
 metadata:
-  author: agent-skill-creator
+  author: agent-skills-platform
   version: 1.0.0
   created: 2026-06-27
   last_reviewed: 2026-07-20

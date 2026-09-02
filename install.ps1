@@ -1,4 +1,4 @@
-# install.ps1 — Link agent-skill-creator to all detected global platforms (Windows)
+# install.ps1 — Link agent-skills-platform to all detected global platforms (Windows)
 #
 # For users who already cloned the repo. Creates directory junctions so
 # `git pull` in the cloned directory updates all tools automatically.
@@ -19,7 +19,7 @@ $ErrorActionPreference = "Stop"
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
-$SkillName = "agent-skill-creator"
+$SkillName = "agent-skills-platform"
 $RepoDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $HomeDir = $env:USERPROFILE
 
@@ -36,7 +36,7 @@ function Write-Err     { param($msg) Write-Host "[ERROR] $msg" -ForegroundColor 
 # ---------------------------------------------------------------------------
 if ($Help) {
     Write-Host @"
-install.ps1 — Link agent-skill-creator to all detected platforms
+install.ps1 — Link agent-skills-platform to all detected platforms
 
 USAGE
     .\install.ps1 [-DryRun] [-Uninstall] [-Help]
@@ -120,7 +120,7 @@ function Test-IsOurLink {
 # ---------------------------------------------------------------------------
 function Remove-AllLinks {
     Write-Host ""
-    Write-Host "Uninstalling agent-skill-creator links" -ForegroundColor White
+    Write-Host "Uninstalling agent-skills-platform links" -ForegroundColor White
     Write-Host ""
 
     # Check canonical location
@@ -162,7 +162,7 @@ function Remove-AllLinks {
 # ---------------------------------------------------------------------------
 function Install-AllLinks {
     Write-Host ""
-    Write-Host "Agent Skill Creator - Link Installer (Windows)" -ForegroundColor White
+    Write-Host "Agent Skills Platform - Link Installer (Windows)" -ForegroundColor White
     Write-Host ""
     Write-Info "Source: $RepoDir"
 
@@ -210,7 +210,7 @@ function Install-AllLinks {
 
     Write-Host "How to use:" -ForegroundColor White
     Write-Host "  Open your AI agent and type:"
-    Write-Host "    /agent-skill-creator <describe your workflow>"
+    Write-Host "    /agent-skills-platform <describe your workflow>"
     Write-Host ""
 }
 

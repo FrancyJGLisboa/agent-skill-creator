@@ -1,13 +1,13 @@
 @echo off
-REM bootstrap.bat — One-liner bootstrap for agent-skill-creator (Windows CMD)
+REM bootstrap.bat — One-liner bootstrap for agent-skills-platform (Windows CMD)
 REM
 REM Usage (paste into Command Prompt):
-REM   curl -fsSL https://raw.githubusercontent.com/FrancyJGLisboa/agent-skill-creator/main/scripts/bootstrap.bat -o %TEMP%\bootstrap.bat && %TEMP%\bootstrap.bat
+REM   curl -fsSL https://raw.githubusercontent.com/FrancyJGLisboa/agent-skills-platform/main/scripts/bootstrap.bat -o %TEMP%\bootstrap.bat && %TEMP%\bootstrap.bat
 REM
 REM This is a thin wrapper that launches the PowerShell bootstrap script.
 
 echo.
-echo Agent Skill Creator - Bootstrap Installer
+echo Agent Skills Platform - Bootstrap Installer
 echo.
 
 REM Check if PowerShell is available
@@ -20,7 +20,7 @@ if %ERRORLEVEL% neq 0 (
 )
 
 REM Run the PowerShell bootstrap directly from GitHub
-powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/FrancyJGLisboa/agent-skill-creator/main/scripts/bootstrap.ps1 | iex"
+powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/FrancyJGLisboa/agent-skills-platform/main/scripts/bootstrap.ps1 | iex"
 
 if %ERRORLEVEL% neq 0 (
     echo.

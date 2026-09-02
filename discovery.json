@@ -21,7 +21,7 @@
   "use_cases": ["skill creation", "skill validation", "skill evolution", "governed distribution"],
   "examples": [
     {
-      "invocation": "/agent-skill-creator Create a skill for reviewing monthly revenue variance",
+      "invocation": "/agent-skills-platform Create a skill for reviewing monthly revenue variance",
       "description": "Turn a recurring finance review into an installable capability"
     }
   ],

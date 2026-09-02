@@ -245,7 +245,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  - {name} (exit {rc})")
         print(
             "next: fix the findings (or hand EVOLUTION.md back to "
-            "/agent-skill-creator to regenerate), then re-run scripts/evolve.py "
+            "/agent-skills-platform to regenerate), then re-run scripts/evolve.py "
             "until clean"
         )
         return 1

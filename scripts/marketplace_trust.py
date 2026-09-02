@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from pathlib import PurePosixPath
 from typing import Any, Mapping
 
-ATTESTATION_SCHEMA = "agent-skill-creator.marketplace-attestation"
+ATTESTATION_SCHEMA = "agent-skills-platform.marketplace-attestation"
 ATTESTATION_SCHEMA_VERSION = 1
 LIFECYCLE_STATES = {
     "draft", "in-review", "approved", "published", "quarantined",

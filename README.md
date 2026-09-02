@@ -1,22 +1,22 @@
-# Agent Skill Creator
+# Agent Skills Platform
 
 **The governed platform for building, verifying, and distributing agent skills.**
 
-![Agent Skill Creator: question to tested skill to governed marketplace](docs/assets/agent-skill-creator-social-preview.png)
+![Agent Skills Platform: question to tested skill to governed marketplace](docs/assets/agent-skills-platform-social-preview.png)
 
-[![CI](https://github.com/FrancyJGLisboa/agent-skill-creator/actions/workflows/ci.yml/badge.svg)](https://github.com/FrancyJGLisboa/agent-skill-creator/actions/workflows/ci.yml)
+[![CI](https://github.com/FrancyJGLisboa/agent-skills-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/FrancyJGLisboa/agent-skills-platform/actions/workflows/ci.yml)
 [![Agent Skills Open Standard](https://img.shields.io/badge/Agent%20Skills-Open%20Standard-blue)](https://github.com/agentskills/agentskills/blob/main/docs/specification.mdx)
 [![Platforms](https://img.shields.io/badge/installs%20on-17%20platforms-7c3aed)](docs/INSTALL.md)
 [![Version](https://img.shields.io/badge/version-6.1.0-brightgreen)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)]()
 
-[Website](https://francyjglisboa.github.io/agent-skill-creator/) ·
+[Website](https://francyjglisboa.github.io/agent-skills-platform/) ·
 [Installation](docs/INSTALL.md) ·
 [Worker runbook](docs/WORKER_RUNBOOK.md) ·
 [Team marketplace](docs/TEAM_MARKETPLACE.md) ·
 [Product scope](docs/PRODUCT_SCOPE.md)
 
-Agent Skill Creator turns the way people already work into tested, installable agent
+Agent Skills Platform turns the way people already work into tested, installable agent
 skills. Give it a prompt plus the evidence behind the work—spreadsheets, reports,
 emails, screenshots, transcripts, links, or scripts—and it builds a reusable workflow
 that an organization can review, publish, and improve.
@@ -34,7 +34,7 @@ record, not autonomous self-modification.
 Open the AI agent you already use, attach examples of the work, and paste this:
 
 ```text
-/agent-skill-creator
+/agent-skills-platform
 
 Turn my monthly revenue-variance review into a reusable internal skill.
 I attached past reports and the source spreadsheets. The decision is whether to

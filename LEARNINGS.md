@@ -1,4 +1,4 @@
-# Project learnings — agent-skill-creator
+# Project learnings — agent-skills-platform
 
 ## When adding a new Phase-5 gate, also touch the AGENTS.md Files block and the Step-10 report template
 

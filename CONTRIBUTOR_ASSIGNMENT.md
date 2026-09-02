@@ -1,7 +1,7 @@
 # Contributor Copyright Assignment
 
 This agreement is required before a code or documentation contribution can be
-accepted into Agent Skill Creator. It is a project template, not jurisdiction-specific
+accepted into Agent Skills Platform. It is a project template, not jurisdiction-specific
 legal advice. The project owner should have counsel review it before accepting the
 first outside contribution.
 

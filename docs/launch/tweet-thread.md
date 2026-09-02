@@ -37,7 +37,7 @@ What it won't do: auto-grade subjective quality (those checks print as a checkli
 MIT-licensed. Runnable examples you can try in one command. CI's green.
 
 If you live in Claude Code / Cursor / Copilot, I'd love your feedback:
-https://github.com/FrancyJGLisboa/agent-skill-creator
+https://github.com/FrancyJGLisboa/agent-skills-platform
 
 ⭐ if it's useful — it genuinely helps.
 

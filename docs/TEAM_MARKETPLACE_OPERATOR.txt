@@ -6,7 +6,7 @@ Purpose
 
 This file is the practical command guide for the developer responsible for:
 
-1. Maintaining agent-skill-creator.
+1. Maintaining agent-skills-platform.
 2. Creating and validating individual skills.
 3. Maintaining the governed ACME marketplace.
 4. Releasing and distributing approved skills to VS Code Copilot users.
@@ -18,10 +18,10 @@ REPOSITORIES
 Keep the factory and marketplace in separate repositories:
 
 ~/work/
-├── agent-skill-creator/   Factory source and marketplace tooling
+├── agent-skills-platform/   Factory source and marketplace tooling
 └── acme-skills/           ACME skills, bundles, approvals, and releases
 
-agent-skill-creator creates and validates individual skills.
+agent-skills-platform creates and validates individual skills.
 
 acme-skills catalogs, reviews, bundles, versions, and releases approved skills.
 
@@ -61,14 +61,14 @@ GitLab.com, nested-group, and self-managed-host command in chronological order.
 PHASE A — ONE-TIME PLATFORM SETUP
 =================================
 
-A1. Clone and verify agent-skill-creator
+A1. Clone and verify agent-skills-platform
 ----------------------------------------
 
 mkdir -p ~/work
 cd ~/work
 
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git
-cd agent-skill-creator
+git clone https://github.com/FrancyJGLisboa/agent-skills-platform.git
+cd agent-skills-platform
 
 python3 -m pytest scripts/tests -q
 gh auth status
@@ -85,7 +85,7 @@ Required state:
 A2. Initialize the marketplace
 ------------------------------
 
-cd ~/work/agent-skill-creator
+cd ~/work/agent-skills-platform
 
 python3 scripts/team_marketplace.py init \
   --name "ACME Skills" \
@@ -157,7 +157,7 @@ B1. Create one skill
 
 In an installed agent environment, invoke the factory with real workflow evidence:
 
-/agent-skill-creator Create a skill from the attached ACME monthly reporting workflow.
+/agent-skills-platform Create a skill from the attached ACME monthly reporting workflow.
 
 Expected source package:
 
@@ -198,7 +198,7 @@ Copilot must request runtime permission when an approved script needs execution.
 B3. Run the individual skill gates
 ----------------------------------
 
-cd ~/work/agent-skill-creator
+cd ~/work/agent-skills-platform
 
 python3 scripts/validate.py ~/work/report-skill
 python3 scripts/security_scan.py ~/work/report-skill
@@ -220,7 +220,7 @@ git pull --ff-only
 B5. Add the skill to a department and bundle
 --------------------------------------------
 
-cd ~/work/agent-skill-creator
+cd ~/work/agent-skills-platform
 
 python3 scripts/team_marketplace.py add ~/work/report-skill \
   --department finance \
@@ -406,7 +406,7 @@ Retire a skill through a governed pull request:
 D5. Update the factory
 ----------------------
 
-cd ~/work/agent-skill-creator
+cd ~/work/agent-skills-platform
 
 git switch main
 git pull --ff-only
@@ -420,19 +420,19 @@ D6. Update marketplace tooling
 
 Copy the reviewed marketplace dependencies from the updated factory:
 
-cp ~/work/agent-skill-creator/scripts/team_marketplace.py \
+cp ~/work/agent-skills-platform/scripts/team_marketplace.py \
   ~/work/acme-skills/scripts/
 
-cp ~/work/agent-skill-creator/scripts/check_pipeline.py \
+cp ~/work/agent-skills-platform/scripts/check_pipeline.py \
   ~/work/acme-skills/scripts/
 
-cp ~/work/agent-skill-creator/scripts/security_scan.py \
+cp ~/work/agent-skills-platform/scripts/security_scan.py \
   ~/work/acme-skills/scripts/
 
-cp ~/work/agent-skill-creator/scripts/skill_document.py \
+cp ~/work/agent-skills-platform/scripts/skill_document.py \
   ~/work/acme-skills/scripts/
 
-cp ~/work/agent-skill-creator/scripts/validate.py \
+cp ~/work/agent-skills-platform/scripts/validate.py \
   ~/work/acme-skills/scripts/
 
 Verify and submit the tooling update:
@@ -459,7 +459,7 @@ team_marketplace.py init
 
 FOR EACH INDIVIDUAL SKILL:
 
-/agent-skill-creator
+/agent-skills-platform
 → validate
 → security scan
 → pipeline check

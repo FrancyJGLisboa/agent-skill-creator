@@ -1,6 +1,6 @@
 # Installation Guide
 
-Every way to install `agent-skill-creator` (and the skills it generates) beyond
+Every way to install `agent-skills-platform` (and the skills it generates) beyond
 the chooser in [Create your first skill](../README.md#create-your-first-skill): per-tool
 native plugins, per-project clones, all 17 platform paths, and the universal
 skill installer.
@@ -38,33 +38,33 @@ universal installer below always works as the fallback.
 *Claude Code* — send as two separate prompts:
 
 ```
-/plugin marketplace add FrancyJGLisboa/agent-skill-creator
-/plugin install agent-skill-creator@agent-skill-creator
+/plugin marketplace add FrancyJGLisboa/agent-skills-platform
+/plugin install agent-skills-platform@agent-skills-platform
 ```
 
 *OpenAI Codex CLI* (plugins since v0.117):
 
 ```bash
-codex plugin marketplace add FrancyJGLisboa/agent-skill-creator
-codex plugin add agent-skill-creator@agent-skill-creator
+codex plugin marketplace add FrancyJGLisboa/agent-skills-platform
+codex plugin add agent-skills-platform@agent-skills-platform
 ```
 
 *GitHub Copilot CLI* — shell or the in-TUI slash equivalents:
 
 ```bash
-copilot plugin marketplace add FrancyJGLisboa/agent-skill-creator
-copilot plugin install agent-skill-creator@agent-skill-creator
+copilot plugin marketplace add FrancyJGLisboa/agent-skills-platform
+copilot plugin install agent-skills-platform@agent-skills-platform
 ```
 
 ```
-/plugin marketplace add FrancyJGLisboa/agent-skill-creator
-/plugin install agent-skill-creator@agent-skill-creator
+/plugin marketplace add FrancyJGLisboa/agent-skills-platform
+/plugin install agent-skills-platform@agent-skills-platform
 ```
 
 *Gemini CLI* (also Antigravity CLI via `agy plugin install`):
 
 ```bash
-gemini extensions install https://github.com/FrancyJGLisboa/agent-skill-creator
+gemini extensions install https://github.com/FrancyJGLisboa/agent-skills-platform
 ```
 
 *Cursor* — in-editor only (no CLI install): command palette → `/add-plugin`,
@@ -119,7 +119,7 @@ GitLab setup, release, install, update, and rollback commands are in the
 
 macOS / Linux:
 ```bash
-cd agent-skill-creator
+cd agent-skills-platform
 ./install.sh              # Link to all detected platforms
 ./install.sh              # Also installs pinned Semantic Recon by default
 ./install.sh --without-semantic-recon  # Explicit opt-out for source-free environments
@@ -129,7 +129,7 @@ cd agent-skill-creator
 
 Windows (PowerShell):
 ```powershell
-cd agent-skill-creator
+cd agent-skills-platform
 .\install.ps1              # Link to all detected platforms
 .\install.ps1 -DryRun     # Preview without changes
 .\install.ps1 -Uninstall  # Remove all links
@@ -157,37 +157,37 @@ Every generated skill outputs both **SKILL.md** (~15 tools read it natively) and
 
 ```bash
 # Claude Code
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.claude/skills/agent-skill-creator
+git clone https://github.com/FrancyJGLisboa/agent-skills-platform.git ~/.claude/skills/agent-skills-platform
 
 # GitHub Copilot
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.copilot/skills/agent-skill-creator
+git clone https://github.com/FrancyJGLisboa/agent-skills-platform.git ~/.copilot/skills/agent-skills-platform
 
 # Gemini CLI
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.gemini/skills/agent-skill-creator
+git clone https://github.com/FrancyJGLisboa/agent-skills-platform.git ~/.gemini/skills/agent-skills-platform
 
 # Kiro
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.kiro/skills/agent-skill-creator
+git clone https://github.com/FrancyJGLisboa/agent-skills-platform.git ~/.kiro/skills/agent-skills-platform
 
 # Cline
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.cline/skills/agent-skill-creator
+git clone https://github.com/FrancyJGLisboa/agent-skills-platform.git ~/.cline/skills/agent-skills-platform
 
 # Roo Code
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.roo/skills/agent-skill-creator
+git clone https://github.com/FrancyJGLisboa/agent-skills-platform.git ~/.roo/skills/agent-skills-platform
 
 # Kilo Code
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.kilocode/skills/agent-skill-creator
+git clone https://github.com/FrancyJGLisboa/agent-skills-platform.git ~/.kilocode/skills/agent-skills-platform
 
 # Factory Droid
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.factory/skills/agent-skill-creator
+git clone https://github.com/FrancyJGLisboa/agent-skills-platform.git ~/.factory/skills/agent-skills-platform
 
 # Goose
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.config/goose/skills/agent-skill-creator
+git clone https://github.com/FrancyJGLisboa/agent-skills-platform.git ~/.config/goose/skills/agent-skills-platform
 
 # OpenCode
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.config/opencode/skills/agent-skill-creator
+git clone https://github.com/FrancyJGLisboa/agent-skills-platform.git ~/.config/opencode/skills/agent-skills-platform
 
 # Codex CLI / universal path (read by 7+ tools as fallback)
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/.agents/skills/agent-skill-creator
+git clone https://github.com/FrancyJGLisboa/agent-skills-platform.git ~/.agents/skills/agent-skills-platform
 ```
 
 Use each tool's own native path. The universal `~/.agents/skills/` path works as a fallback for Codex CLI, Gemini CLI, OpenCode, Goose, Cline, Roo Code, and Kilo Code.
@@ -196,34 +196,34 @@ Use each tool's own native path. The universal `~/.agents/skills/` path works as
 
 ```bash
 # GitHub Copilot
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .github/skills/agent-skill-creator
+git clone https://github.com/FrancyJGLisboa/agent-skills-platform.git .github/skills/agent-skills-platform
 
 # Cursor (project only — no global path exists)
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .cursor/skills/agent-skill-creator
+git clone https://github.com/FrancyJGLisboa/agent-skills-platform.git .cursor/skills/agent-skills-platform
 
 # Windsurf
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .windsurf/rules/agent-skill-creator
+git clone https://github.com/FrancyJGLisboa/agent-skills-platform.git .windsurf/rules/agent-skills-platform
 
 # Cline
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .clinerules/skills/agent-skill-creator
+git clone https://github.com/FrancyJGLisboa/agent-skills-platform.git .clinerules/skills/agent-skills-platform
 
 # Kiro
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .kiro/skills/agent-skill-creator
+git clone https://github.com/FrancyJGLisboa/agent-skills-platform.git .kiro/skills/agent-skills-platform
 
 # Trae
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .trae/rules/agent-skill-creator
+git clone https://github.com/FrancyJGLisboa/agent-skills-platform.git .trae/rules/agent-skills-platform
 
 # Roo Code
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .roo/skills/agent-skill-creator
+git clone https://github.com/FrancyJGLisboa/agent-skills-platform.git .roo/skills/agent-skills-platform
 
 # Kilo Code
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .kilocode/skills/agent-skill-creator
+git clone https://github.com/FrancyJGLisboa/agent-skills-platform.git .kilocode/skills/agent-skills-platform
 
 # Junie (JetBrains)
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .junie/skills/agent-skill-creator
+git clone https://github.com/FrancyJGLisboa/agent-skills-platform.git .junie/skills/agent-skills-platform
 
 # Antigravity (note: .agent/ singular, NOT .agents/)
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git .agent/skills/agent-skill-creator
+git clone https://github.com/FrancyJGLisboa/agent-skills-platform.git .agent/skills/agent-skills-platform
 ```
 
 ### Cursor — global workaround
@@ -232,23 +232,23 @@ Cursor has no global skills directory. Clone once and symlink per project:
 
 ```bash
 # 1. Clone once
-git clone https://github.com/FrancyJGLisboa/agent-skill-creator.git ~/agent-skills/agent-skill-creator
+git clone https://github.com/FrancyJGLisboa/agent-skills-platform.git ~/agent-skills/agent-skills-platform
 
 # 2. In any project, symlink
-mkdir -p .cursor/rules && ln -s ~/agent-skills/agent-skill-creator .cursor/rules/agent-skill-creator
+mkdir -p .cursor/rules && ln -s ~/agent-skills/agent-skills-platform .cursor/rules/agent-skills-platform
 ```
 
 Add a shell alias to automate this (`~/.zshrc` or `~/.bashrc`):
 
 ```bash
-alias install-skills='mkdir -p .cursor/rules && ln -s ~/agent-skills/agent-skill-creator .cursor/rules/agent-skill-creator'
+alias install-skills='mkdir -p .cursor/rules && ln -s ~/agent-skills/agent-skills-platform .cursor/rules/agent-skills-platform'
 ```
 
 Then in any project: `install-skills`. Updates propagate automatically via the symlink.
 
 ### Using the installer (for generated skills)
 
-Every skill generated by agent-skill-creator includes a cross-platform installer — both `install.sh` (macOS/Linux) and `install.ps1` (Windows):
+Every skill generated by agent-skills-platform includes a cross-platform installer — both `install.sh` (macOS/Linux) and `install.ps1` (Windows):
 
 **macOS / Linux:**
 
@@ -273,14 +273,14 @@ Both installers handle all 17 platforms and create a universal `~/.agents/skills
 ### Claude Desktop / claude.ai
 
 ```bash
-python3 scripts/export_utils.py ./agent-skill-creator/ --variant desktop
+python3 scripts/export_utils.py ./agent-skills-platform/ --variant desktop
 # Then: Settings > Skills > Upload the generated .zip
 ```
 
 ### Update
 
 ```bash
-cd ~/.agents/skills/agent-skill-creator && git pull
+cd ~/.agents/skills/agent-skills-platform && git pull
 ```
 
 If you used the bootstrap one-liner or `./install.sh`, all symlinks update automatically — just `git pull` once from the canonical location. The skill also performs a silent git-based version check when loaded and will mention if a newer version is available.

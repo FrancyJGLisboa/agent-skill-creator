@@ -5,7 +5,7 @@ images ready (hero diagram, demo GIF, an example skill's output, the comparison
 table). Reply to every comment.
 
 ## Name
-Agent Skill Creator
+Agent Skills Platform
 
 ## Tagline (≤60 chars)
 Pick one:

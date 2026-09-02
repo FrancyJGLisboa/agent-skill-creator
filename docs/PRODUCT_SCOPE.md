@@ -7,7 +7,7 @@ vendor features.
 
 ## Product definition
 
-Agent Skill Creator turns a human workflow into a portable, evidence-backed Agent
+Agent Skills Platform turns a human workflow into a portable, evidence-backed Agent
 Skill and governs that artifact from proposal through retirement across the agent
 platforms an organization already uses.
 

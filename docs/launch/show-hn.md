@@ -6,7 +6,7 @@ what's interesting/hard about it. Be in the thread to answer every comment fast.
 ## Title options (pick one; keep it factual)
 
 1. `Show HN: Turn any workflow into an agent skill that installs on 17 AI tools`
-2. `Show HN: Agent Skill Creator – describe a workflow, get a validated cross-platform skill`
+2. `Show HN: Agent Skills Platform – describe a workflow, get a validated cross-platform skill`
 3. `Show HN: Generate Claude/Cursor/Copilot agent skills from a plain-English workflow`
 
 > HN strips emoji and punctuation games. Avoid "magic", "AI-powered", exclamation
@@ -40,7 +40,7 @@ what's interesting/hard about it. Be in the thread to answer every comment fast.
 > requirements but it's not magic.
 >
 > Repo (MIT), runnable examples you can try in one command, CI green:
-> https://github.com/FrancyJGLisboa/agent-skill-creator
+> https://github.com/FrancyJGLisboa/agent-skills-platform
 >
 > Happy to answer anything about the pipeline, the cross-platform install, or how the
 > evals work.

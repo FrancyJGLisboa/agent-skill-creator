@@ -1,11 +1,11 @@
 cff-version: 1.2.0
-title: Agent Skill Creator
+title: Agent Skills Platform
 message: "If you use this project, please cite it."
 type: software
 authors:
   - given-names: Francy J G
     family-names: Lisboa
-repository-code: "https://github.com/FrancyJGLisboa/agent-skill-creator"
+repository-code: "https://github.com/FrancyJGLisboa/agent-skills-platform"
 abstract: >-
   Turn any workflow description into a validated, security-scanned agent skill
   that installs across 17 AI coding platforms — with functional code, a bundled

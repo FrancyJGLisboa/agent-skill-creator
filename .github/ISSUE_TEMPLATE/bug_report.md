@@ -9,7 +9,7 @@ labels: bug
 A clear description of the bug.
 
 **What you ran**
-The exact `/agent-skill-creator …` prompt or command, and the tool you ran it in
+The exact `/agent-skills-platform …` prompt or command, and the tool you ran it in
 (Claude Code, Cursor, Gemini CLI, …).
 
 **Expected vs. actual**
@@ -19,7 +19,7 @@ What you expected to happen, and what actually happened (paste output / errors).
 - OS:
 - Tool + version:
 - Python version (`python3 --version`):
-- agent-skill-creator version / commit:
+- agent-skills-platform version / commit:
 
 **If a generated skill is involved**
 - Output of `python3 scripts/validate.py <skill>/`

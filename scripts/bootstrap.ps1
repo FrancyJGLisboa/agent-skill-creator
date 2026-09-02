@@ -1,12 +1,12 @@
-# bootstrap.ps1 — One-liner bootstrap for agent-skill-creator (Windows)
+# bootstrap.ps1 — One-liner bootstrap for agent-skills-platform (Windows)
 #
 # Usage (PowerShell):
-#   irm https://raw.githubusercontent.com/FrancyJGLisboa/agent-skill-creator/main/scripts/bootstrap.ps1 | iex
+#   irm https://raw.githubusercontent.com/FrancyJGLisboa/agent-skills-platform/main/scripts/bootstrap.ps1 | iex
 #
 # Usage (Command Prompt):
-#   powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/FrancyJGLisboa/agent-skill-creator/main/scripts/bootstrap.ps1 | iex"
+#   powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/FrancyJGLisboa/agent-skills-platform/main/scripts/bootstrap.ps1 | iex"
 #
-# Clones agent-skill-creator to ~/.agents/skills/ and creates junctions/symlinks
+# Clones agent-skills-platform to ~/.agents/skills/ and creates junctions/symlinks
 # to all detected global platforms. Works on PowerShell 5.1+ and PowerShell Core 7+.
 
 $ErrorActionPreference = "Stop"
@@ -14,8 +14,8 @@ $ErrorActionPreference = "Stop"
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
-$RepoUrl    = "https://github.com/FrancyJGLisboa/agent-skill-creator.git"
-$SkillName  = "agent-skill-creator"
+$RepoUrl    = "https://github.com/FrancyJGLisboa/agent-skills-platform.git"
+$SkillName  = "agent-skills-platform"
 $HomeDir    = $env:USERPROFILE
 $CanonicalDir = Join-Path $HomeDir ".agents" "skills" $SkillName
 
@@ -155,7 +155,7 @@ function Get-PlatformPath {
 # ---------------------------------------------------------------------------
 function Main {
     Write-Host ""
-    Write-Host "Agent Skill Creator - Bootstrap Installer (Windows)" -ForegroundColor White -NoNewline
+    Write-Host "Agent Skills Platform - Bootstrap Installer (Windows)" -ForegroundColor White -NoNewline
     Write-Host ""
     Write-Host ""
 
@@ -222,7 +222,7 @@ function Main {
     Write-Host ""
     Write-Host "How to use:" -ForegroundColor White
     Write-Host "  Open your AI agent and type:"
-    Write-Host "    /agent-skill-creator <describe your workflow>"
+    Write-Host "    /agent-skills-platform <describe your workflow>"
     Write-Host ""
     Write-Host "  To update later:"
     Write-Host "    cd $CanonicalDir; git pull"

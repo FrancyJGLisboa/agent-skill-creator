@@ -32,7 +32,7 @@ def test_rejects_factory_identity_as_generated_skill(tmp_path: Path) -> None:
     skill = tmp_path / "bad"
     skill.mkdir()
     (skill / "SKILL.md").write_text(
-        "---\nname: agent-skill-creator\nversion: 1.0.0\n---\nbody\n", encoding="utf-8"
+        "---\nname: agent-skills-platform\nversion: 1.0.0\n---\nbody\n", encoding="utf-8"
     )
     with pytest.raises(ValueError, match=r"\*-skill"):
         render(skill)

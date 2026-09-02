@@ -51,7 +51,7 @@ Scope: Exercise technical build, run, governance, correction, and maintenance pa
 - [x] E2: A second, distinct technical workflow runs successfully against a live public API with its own evaluation suite and verification artifact.
   CHECK: python3 references/examples/github-release-briefing-skill/scripts/run_pipeline.py --repository openai/openai-python --output /tmp/asc-release-emulation.md && python3 scripts/generate_verification.py references/examples/github-release-briefing-skill --run-kind live --environment codex && rg '^# Latest release:' /tmp/asc-release-emulation.md
   EXPECT: /Latest release/
-  EVIDENCE: /Users/francylisboacharuto/agent-skill-creator/references/examples/github-release-briefing-skill/VERIFICATION.md | # Latest release: openai/openai-python
+  EVIDENCE: /Users/francylisboacharuto/agent-skills-platform/references/examples/github-release-briefing-skill/VERIFICATION.md | # Latest release: openai/openai-python
 
 - [x] E3: A governed marketplace admits independently version-bound, verified skills and exposes their reliability evidence.
   CHECK: python3 scripts/team_marketplace.py check --release --marketplace /tmp/asc-marketplace-emulation
@@ -61,7 +61,7 @@ Scope: Exercise technical build, run, governance, correction, and maintenance pa
 - [x] E4: A simulated correction becomes a proposed edit, a regression record, a versioned reason, and fresh verification evidence.
   CHECK: python3 references/examples/live-weather-briefing-skill/scripts/evolve.py --correct "Treat a trailing two-letter country code as a geographic qualifier, not part of the city name." && python3 scripts/generate_verification.py references/examples/live-weather-briefing-skill --run-kind live --environment codex
   EXPECT: /correction recorded/
-  EVIDENCE: next: run scripts/evolve.py to verify the proposed edit and correction regression | /Users/francylisboacharuto/agent-skill-creator/references/examples/live-weather-briefing-skill/VERIFICATION.md
+  EVIDENCE: next: run scripts/evolve.py to verify the proposed edit and correction regression | /Users/francylisboacharuto/agent-skills-platform/references/examples/live-weather-briefing-skill/VERIFICATION.md
 
 - [x] E5: The changed-skill CI gate and focused regression suite accept current evidence and reject stale evidence.
   CHECK: python3 -m pytest scripts/tests/test_generate_verification.py scripts/tests/test_check_verification.py scripts/tests/test_team_marketplace.py -q

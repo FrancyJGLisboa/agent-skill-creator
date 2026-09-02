@@ -1,5 +1,5 @@
 ---
-name: agent-skill-creator
+name: agent-skills-platform
 description: >-
   Create cross-platform agent skills from workflow descriptions. Activates when
   users ask to create an agent, automate a repetitive workflow, create a custom
@@ -12,7 +12,8 @@ description: >-
   template-based creation, interactive configuration, cross-platform export,
   spec validation, and security auditing of third-party skills before install.
 license: MIT
-activation: /agent-skill-creator
+activation: /agent-skills-platform
+# Compatibility alias: /agent-skill-creator
 metadata:
   author: Francy J G Lisboa
   version: 6.1.0
@@ -21,24 +22,24 @@ metadata:
   review_interval_days: 180
   dependencies:
     - name: GitHub repository transport
-      url: https://github.com/FrancyJGLisboa/agent-skill-creator
+      url: https://github.com/FrancyJGLisboa/agent-skills-platform
       type: service
     - name: GitHub raw bootstrap transport
-      url: https://raw.githubusercontent.com/FrancyJGLisboa/agent-skill-creator/main/scripts/bootstrap.sh
+      url: https://raw.githubusercontent.com/FrancyJGLisboa/agent-skills-platform/main/scripts/bootstrap.sh
       type: service
 provenance:
   maintainer: Francy J G Lisboa
   version: 6.1.0
   created: 2025-10-18
   source_references:
-    - https://github.com/FrancyJGLisboa/agent-skill-creator
+    - https://github.com/FrancyJGLisboa/agent-skills-platform
     - https://agentskills.io
 compatibility: >-
   Works on all platforms supporting the Agent Skills Open Standard (SKILL.md):
   Claude Code, GitHub Copilot CLI, VS Code Copilot, Cursor, Windsurf, Cline,
   OpenAI Codex CLI, Gemini CLI, and more — 17 platforms total.
 ---
-# /agent-skill-creator — Turn Existing Work Into a Reusable Skill
+# /agent-skills-platform — Turn Existing Work Into a Reusable Skill
 
 The user provides whatever already represents their work — a description, document,
 link, script, screenshot, transcript, or partial example. Turn that evidence into a
@@ -79,37 +80,37 @@ block creation; respect `ASC_SUCCESS_LEDGER=off`.
 
 ## Trigger
 
-User invokes `/agent-skill-creator` followed by their input:
+User invokes `/agent-skills-platform` followed by their input:
 
 ```
-/agent-skill-creator Every week I pull sales data, clean it, and generate a report
-/agent-skill-creator https://wiki.internal/deploy-runbook
-/agent-skill-creator See src/invoice_processor.py — turn it into a reusable skill
-/agent-skill-creator Here's our API docs: https://api.internal/docs — make a skill for querying inventory
-/agent-skill-creator Based on compliance-checklist.pdf, create a skill for SOX audits
-/agent-skill-creator --mcp-audit https://github.com/vendor/mcp-server — we pay for this data, what skills can we build on it?
-/agent-skill-creator --audit ./downloaded-skill/ — someone sent me this, is it safe to install?
+/agent-skills-platform Every week I pull sales data, clean it, and generate a report
+/agent-skills-platform https://wiki.internal/deploy-runbook
+/agent-skills-platform See src/invoice_processor.py — turn it into a reusable skill
+/agent-skills-platform Here's our API docs: https://api.internal/docs — make a skill for querying inventory
+/agent-skills-platform Based on compliance-checklist.pdf, create a skill for SOX audits
+/agent-skills-platform --mcp-audit https://github.com/vendor/mcp-server — we pay for this data, what skills can we build on it?
+/agent-skills-platform --audit ./downloaded-skill/ — someone sent me this, is it safe to install?
 ```
 
 The user can also drop artifacts, paste URLs, share screenshots, or provide minimal context:
 
 ```
-/agent-skill-creator here
+/agent-skills-platform here
   [+ drops 5 files into chat: spreadsheet, PDF output, screenshot, email, half-working script]
 
-/agent-skill-creator [pastes 2 URLs and a half-sentence]
+/agent-skills-platform [pastes 2 URLs and a half-sentence]
   https://apps.fas.usda.gov/psdonline/app/index.html
   same thing as the wasde extractor but for this
 
-/agent-skill-creator [screenshot of Bloomberg terminal + Excel side by side]
+/agent-skills-platform [screenshot of Bloomberg terminal + Excel side by side]
   this is ridiculous. there has to be a better way
 
-/agent-skill-creator freight
+/agent-skills-platform freight
 
-/agent-skill-creator [pastes a forwarded email chain with 6 replies and legal disclaimers]
+/agent-skills-platform [pastes a forwarded email chain with 6 replies and legal disclaimers]
   my colleague in London built something for this. can we do the same?
 
-/agent-skill-creator [pastes 3 corporate documents: brand voice guidelines, editorial style guide, visual design system]
+/agent-skills-platform [pastes 3 corporate documents: brand voice guidelines, editorial style guide, visual design system]
   we need everyone writing and designing to follow these
 ```
 
@@ -659,7 +660,7 @@ The `-skill` suffix also serves as a signal to the agent: when it sees a repo or
 ## Gotchas
 
 - Generated skills end with `-skill`; this factory retains the historical
-  `agent-skill-creator` name for invocation and installation compatibility.
+  `agent-skills-platform` name for invocation and installation compatibility.
 - A representative verification run must use dry-run, sandbox, or local fixtures when
   the real workflow has consequential external effects.
 

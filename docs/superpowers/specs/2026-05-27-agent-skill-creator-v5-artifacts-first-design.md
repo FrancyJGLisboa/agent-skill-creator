@@ -1,4 +1,4 @@
-# agent-skill-creator v6.0 — Artifacts-First Design
+# agent-skills-platform v6.0 — Artifacts-First Design
 
 **Status:** Draft for review
 **Date:** 2026-05-27
@@ -32,7 +32,7 @@ into the generated skill.**
 
 ### Headline
 
-"v6 — agent-skill-creator now generates skills that render dashboards in
+"v6 — agent-skills-platform now generates skills that render dashboards in
 Claude. Other hosts receive formatted markdown."
 
 Specific. Verifiable. Defensible against Anthropic Skills (markdown-only),
@@ -45,7 +45,7 @@ code required from the user).
 
 These cannot break, or v6.0 does not ship.
 
-- **Same command, same UX as v4.** `/agent-skill-creator <description>`
+- **Same command, same UX as v4.** `/agent-skills-platform <description>`
   produces an installed skill, with no JSON manifest editing, no axis prefix,
   no exposed composability concept.
 - **Cross-platform install path unchanged.** `install.sh` and `install.ps1`
@@ -172,7 +172,7 @@ instructions.
 ### 4.1 Skill creation flow
 
 ```
-1. User invokes: /agent-skill-creator weekly sales report
+1. User invokes: /agent-skills-platform weekly sales report
 2. Triage Engine: classifies input (existing v4 logic)
 3. Phase 1 Discovery: identifies domain = sales reporting
 4. Phase 2 Design:
@@ -341,7 +341,7 @@ Two manual checks required before tagging v6.0:
 
 All seven must be yes, or v6.0 does not ship.
 
-1. **UX preserved.** Time from `/agent-skill-creator <input>` to installed
+1. **UX preserved.** Time from `/agent-skills-platform <input>` to installed
    skill is ≤110% of v4 on 20 sample inputs. ✓/✗
 2. **v4 forks not broken.** Suite of 10 popular v4 skills installs and
    produces the same output under v6. ✓/✗

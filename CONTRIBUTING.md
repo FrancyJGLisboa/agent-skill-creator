@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for your interest in improving **agent-skill-creator**. This skill
+Thanks for your interest in improving **agent-skills-platform**. This skill
 generates cross-platform agent skills, so changes need to keep the generator
 correct and its tests green.
 

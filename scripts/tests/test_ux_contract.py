@@ -92,7 +92,7 @@ def test_homepage_markets_reproducible_reliability_evidence() -> None:
 
 def test_worker_runbook_is_linked_from_readme_and_homepage() -> None:
     runbook = read("docs/WORKER_RUNBOOK.md")
-    assert "/agent-skill-creator Every Friday" in runbook
+    assert "/agent-skills-platform Every Friday" in runbook
     assert "verification-blocked" in runbook
     assert "docs/WORKER_RUNBOOK.md" in read("README.md")
     assert 'href="WORKER_RUNBOOK.html"' in read("docs/index.html")

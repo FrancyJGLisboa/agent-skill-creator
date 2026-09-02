@@ -2,7 +2,7 @@
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "live-weather-briefing-skill",
   "owner": {
-    "name": "agent-skill-creator"
+    "name": "agent-skills-platform"
   },
   "plugins": [
     {

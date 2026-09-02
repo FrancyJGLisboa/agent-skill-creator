@@ -12,19 +12,19 @@ approves and publishes skills for wider use.
 On macOS or Linux, run this in Terminal:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/FrancyJGLisboa/agent-skill-creator/main/scripts/bootstrap.sh | sh
+curl -fsSL https://raw.githubusercontent.com/FrancyJGLisboa/agent-skills-platform/main/scripts/bootstrap.sh | sh
 ```
 
 On Windows, run this in PowerShell:
 
 ```powershell
-irm https://raw.githubusercontent.com/FrancyJGLisboa/agent-skill-creator/main/scripts/bootstrap.ps1 | iex
+irm https://raw.githubusercontent.com/FrancyJGLisboa/agent-skills-platform/main/scripts/bootstrap.ps1 | iex
 ```
 
 Reopen your AI tool and ask:
 
 ```text
-What can agent-skill-creator do?
+What can agent-skills-platform do?
 ```
 
 Expected: it describes creating reusable agent skills from workflows and source
@@ -35,7 +35,7 @@ material. If it does not, stop and use the [installation guide](INSTALL.md).
 Paste this into your AI tool, not into Terminal:
 
 ```text
-/agent-skill-creator Every Friday I export Salesforce opportunities, exclude
+/agent-skills-platform Every Friday I export Salesforce opportunities, exclude
 test accounts, group revenue by region, and prepare a one-page PDF for the sales VP.
 ```
 
@@ -46,11 +46,11 @@ first version.
 Other useful prompts:
 
 ```text
-/agent-skill-creator Turn this monthly-close spreadsheet and the attached SOP into a reusable skill.
+/agent-skills-platform Turn this monthly-close spreadsheet and the attached SOP into a reusable skill.
 
-/agent-skill-creator Every morning I check our public GitHub dependencies for new releases and summarize what needs human review.
+/agent-skills-platform Every morning I check our public GitHub dependencies for new releases and summarize what needs human review.
 
-/agent-skill-creator --audit ./downloaded-skill/
+/agent-skills-platform --audit ./downloaded-skill/
 ```
 
 ## 3. Confirm the one thing only a human can decide

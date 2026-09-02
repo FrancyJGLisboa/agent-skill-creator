@@ -95,8 +95,8 @@ artifact renders only in Claude environments. The exact wording:
 
 The user can force or suppress artifact inlining:
 
-- `/agent-skill-creator --no-artifact <description>` — never inline
-- `/agent-skill-creator --artifact <template-name> <description>` — force
+- `/agent-skills-platform --no-artifact <description>` — never inline
+- `/agent-skills-platform --artifact <template-name> <description>` — force
   the named template
 
 When forced, the detector is not called and the named template is used

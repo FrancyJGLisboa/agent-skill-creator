@@ -1,6 +1,6 @@
 # Launch playbook
 
-A practical, honest guide to launching agent-skill-creator. Copy for each channel
+A practical, honest guide to launching agent-skills-platform. Copy for each channel
 is in [`docs/launch/`](docs/launch/).
 
 ## The honest part first
@@ -43,7 +43,7 @@ launch good enough that *if* it gets seen, it converts — then maximize shots o
 - Pin the repo on your profile; enable Discussions.
 
 Live repository check on 2026-08-24: GitHub Pages is enabled and points to
-`https://francyjglisboa.github.io/agent-skill-creator/`; the repository has no
+`https://francyjglisboa.github.io/agent-skills-platform/`; the repository has no
 topics and Discussions is disabled. Treat those two settings as open actions, not
 completed launch work. GitHub Pages updates after the documentation changes reach
 `main`; editing `docs/index.html` locally does not publish the page.

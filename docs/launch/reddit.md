@@ -21,7 +21,7 @@ the same day from one account).
 > SKILL.md spec, getting activation right, writing the code, and testing it — a few
 > hours each time.
 >
-> So I built **Agent Skill Creator** (MIT, open source). You describe what you do in
+> So I built **Agent Skills Platform** (MIT, open source). You describe what you do in
 > plain English — or hand it a PDF / URL / script / transcript — and it runs a
 > deterministic 5-phase pipeline and writes the whole skill: functional code, docs, a
 > cross-platform installer for 17 tools, and its own **eval spec** (binary checks +
@@ -33,7 +33,7 @@ the same day from one account).
 > and it's not magic — a skill is only as good as the workflow you describe.
 >
 > Repo + runnable examples (try one in a single command):
-> https://github.com/FrancyJGLisboa/agent-skill-creator
+> https://github.com/FrancyJGLisboa/agent-skills-platform
 >
 > I'm the author — happy to answer questions or take feature requests. What workflow
 > would you want to turn into a skill first?

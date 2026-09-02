@@ -1,4 +1,4 @@
-# agent-skill-creator
+# agent-skills-platform
 
 Turn any workflow into a reusable, cross-platform agent skill. The user
 describes what they do — in plain English, or by handing over a PDF, a link, a
@@ -8,7 +8,7 @@ cross-platform installer.
 
 ## Activation
 
-Invoke with `/agent-skill-creator <description or material>`, or naturally:
+Invoke with `/agent-skills-platform <description or material>`, or naturally:
 
 - "Create a skill for analyzing CSV files"
 - "Every day I process invoices manually, automate this"

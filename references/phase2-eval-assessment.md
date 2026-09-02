@@ -207,7 +207,7 @@ contract plus a documented one-liner**, not an automated trainer.
 
 ## Bypassing
 
-- `/agent-skill-creator --no-eval <description>` — skip this step entirely; the
+- `/agent-skills-platform --no-eval <description>` — skip this step entirely; the
   generated skill carries no `evals/` directory and no `run_evals.py`. Strip the
   token from the prompt before passing it to Phase 1.
 

@@ -17,7 +17,7 @@ def latest_release(repository: str) -> tuple[dict, str]:
     if not REPOSITORY.fullmatch(repository):
         raise ValueError("repository must use OWNER/REPOSITORY")
     source = f"https://api.github.com/repos/{repository}/releases/latest"
-    request = Request(source, headers={"Accept": "application/vnd.github+json", "User-Agent": "agent-skill-creator-release-briefing"})
+    request = Request(source, headers={"Accept": "application/vnd.github+json", "User-Agent": "agent-skills-platform-release-briefing"})
     try:
         with urlopen(request, timeout=20) as response:
             return json.load(response), source

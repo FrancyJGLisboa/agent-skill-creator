@@ -24,7 +24,7 @@ Plus:
 
 ## Until then
 
-Phase 2 of agent-skill-creator MUST NOT inline artifact emission
+Phase 2 of agent-skills-platform MUST NOT inline artifact emission
 instructions into generated skills, because the protocol is unverified.
 The four bundled React templates under
 `references/artifact-templates/` can be assembled correctly — they are
@@ -33,11 +33,11 @@ using "Claude's artifact protocol" has no concrete syntax to point at
 until this file is populated.
 
 If you are following the plan in
-`docs/superpowers/plans/2026-05-27-agent-skill-creator-v5-artifacts-first.md`,
+`docs/superpowers/plans/2026-05-27-agent-skills-platform-v5-artifacts-first.md`,
 Task 1 produces the content for this file. Do not skip it.
 
 ## References
 
-- Spec: `docs/superpowers/specs/2026-05-27-agent-skill-creator-v5-artifacts-first-design.md`, §3.3 and §11 Q1-Q3
-- Plan: `docs/superpowers/plans/2026-05-27-agent-skill-creator-v5-artifacts-first.md`, Task 1
+- Spec: `docs/superpowers/specs/2026-05-27-agent-skills-platform-v5-artifacts-first-design.md`, §3.3 and §11 Q1-Q3
+- Plan: `docs/superpowers/plans/2026-05-27-agent-skills-platform-v5-artifacts-first.md`, Task 1
 - Phase 2 reference: `references/phase2-artifact-assessment.md`, Step 4

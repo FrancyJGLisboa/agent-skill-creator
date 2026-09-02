@@ -1,14 +1,14 @@
 {
-  "name": "agent-skill-creator",
+  "name": "agent-skills-platform",
   "interface": {
-    "displayName": "Agent Skill Creator"
+    "displayName": "Agent Skills Platform"
   },
   "plugins": [
     {
-      "name": "agent-skill-creator",
+      "name": "agent-skills-platform",
       "source": {
         "source": "url",
-        "url": "https://github.com/FrancyJGLisboa/agent-skill-creator.git",
+        "url": "https://github.com/FrancyJGLisboa/agent-skills-platform.git",
         "ref": "main"
       },
       "policy": {
