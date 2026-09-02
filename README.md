@@ -1,6 +1,6 @@
 # Agent Skill Creator
 
-**Turn lived expertise into trusted, reusable agent skills.**
+**The governed platform for building, verifying, and distributing agent skills.**
 
 ![Agent Skill Creator: question to tested skill to governed marketplace](docs/assets/agent-skill-creator-social-preview.png)
 
