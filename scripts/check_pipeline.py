@@ -32,7 +32,6 @@ from __future__ import annotations
 import argparse
 import ast
 import json
-import json
 import sys
 from pathlib import Path
 
@@ -48,8 +47,7 @@ def python_files(skill_dir: Path) -> list[Path]:
         root = skill_dir / sub
         if root.is_dir():
             out += [
-                p for p in root.rglob("*.py")
-                if not (_SKIP_DIR_PARTS & set(p.parts))
+                p for p in root.rglob("*.py") if not (_SKIP_DIR_PARTS & set(p.parts))
             ]
     return sorted(out)
 
@@ -143,8 +141,16 @@ def check(skill_dir: Path) -> dict:
     discovery = skill_dir / "discovery.json"
     if discovery.is_file():
         try:
-            sources = json.loads(discovery.read_text()).get("semantic_recon", {}).get("sources", [])
-            allowed = {f"data_contract_{item.get('contract_id')}" for item in sources if item.get("contract_id")}
+            sources = (
+                json.loads(discovery.read_text())
+                .get("semantic_recon", {})
+                .get("sources", [])
+            )
+            allowed = {
+                f"data_contract_{item.get('contract_id')}"
+                for item in sources
+                if item.get("contract_id")
+            }
             third = [module for module in third if module not in allowed]
         except (OSError, ValueError, TypeError, json.JSONDecodeError):
             pass
@@ -165,15 +171,22 @@ def check(skill_dir: Path) -> dict:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Verify a generated skill's pipeline wiring.")
+    parser = argparse.ArgumentParser(
+        description="Verify a generated skill's pipeline wiring."
+    )
     parser.add_argument("skill_dir", help="Path to the skill directory.")
-    parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON.")
+    parser.add_argument(
+        "--json", action="store_true", help="Emit machine-readable JSON."
+    )
     args = parser.parse_args(argv)
 
     skill_dir = Path(args.skill_dir).resolve()
     if not skill_dir.is_dir():
         msg = f"not a directory: {skill_dir}"
-        print(json.dumps({"error": msg}) if args.json else f"ERROR: {msg}", file=sys.stderr)
+        print(
+            json.dumps({"error": msg}) if args.json else f"ERROR: {msg}",
+            file=sys.stderr,
+        )
         return 2
 
     result = check(skill_dir)

@@ -494,19 +494,6 @@ def create_marketplace_interactive(args: argparse.Namespace) -> Path:
     print(f"Marketplace initialized at {marketplace}")
     print(f"Next: add a skill with `python3 scripts/team_marketplace.py add ./skill --department {department} --bundle {bundle} --marketplace {marketplace}`")
     return marketplace
-    (root / ".gitignore").write_text(
-        ".marketplace-state/\n.marketplace-mutation.lock/\n__pycache__/\n*.py[cod]\n",
-        encoding="utf-8",
-    )
-    generate_repository_files(root, data)
-    scaffold_scripts = root / "scripts"
-    scaffold_scripts.mkdir(exist_ok=True)
-    for filename in SCAFFOLD_SCRIPTS:
-        source_script = _SCRIPTS_DIR / filename
-        destination_script = scaffold_scripts / filename
-        if source_script.resolve() != destination_script.resolve():
-            shutil.copy2(source_script, destination_script)
-    return data
 
 
 def _metadata(skill: Path) -> dict[str, Any]:

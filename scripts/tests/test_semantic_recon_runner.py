@@ -2,7 +2,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[2]
 def test_runner_uses_codex_exec_with_workspace_safeguards():
  text=(ROOT/'scripts/semantic_recon_runner.py').read_text()
- assert "'codex','exec'" in text
+ assert '"codex",\n                "exec",' in text
  assert '"SEMANTIC_RECON_SANDBOX", "workspace-write"' in text
  assert "'--ask-for-approval'" not in text
  assert "--result-json" in text
