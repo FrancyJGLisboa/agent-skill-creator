@@ -45,6 +45,11 @@ The creator asks for the business decisions only you can authorize, builds and t
 the skill, and shows a representative result. When it is correct, say: **“Publish
 this to the Finance marketplace.”**
 
+When the workflow uses an API, database, MCP, codebase, or structured file, Semantic
+Recon runs automatically before implementation and creates a pinned data contract.
+Use `./install.sh --without-semantic-recon` only for a deliberately local,
+source-free installation.
+
 Do not use Git, edit registry files, or run marketplace commands. If the creator is
 not installed in your agent, send this section to your marketplace operator.
 
