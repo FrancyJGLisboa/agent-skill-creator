@@ -1,6 +1,6 @@
 # Agent Skills Platform
 
-**The governed platform for building, verifying, and distributing agent skills.**
+**Turn a real workflow into a tested, installable agent skill—then publish it safely to your team.**
 
 ![Agent Skills Platform: question to tested skill to governed marketplace](docs/assets/agent-skills-platform-social-preview.png)
 
@@ -19,7 +19,19 @@
 Agent Skills Platform turns the way people already work into tested, installable agent
 skills. Give it a prompt plus the evidence behind the work—spreadsheets, reports,
 emails, screenshots, transcripts, links, or scripts—and it builds a reusable workflow
-that an organization can review, publish, and improve.
+that a person can inspect, an organization can review, and a team can safely reuse.
+
+```text
+/agent-skills-platform
+
+Turn my monthly revenue-variance review into a reusable internal skill.
+I attached past reports and the source spreadsheets. The decision is whether to
+escalate a material variance. It must not modify source data.
+```
+
+The result is not just a prompt: it is an installable skill package with instructions,
+functional scripts when needed, evals, security checks, a representative-run record,
+and a correction path for real-world learning.
 
 After release, a skill can retain maintenance evidence without turning every log
 into runtime prompt context: classified run evidence is captured in `raw/`, recurring
@@ -29,7 +41,9 @@ record, not autonomous self-modification.
 
 ## Create your first skill
 
-### I have expertise to turn into a skill — no code required
+Choose the path that matches what you need today.
+
+### I have a workflow — no code required
 
 Open the AI agent you already use, attach examples of the work, and paste this:
 
@@ -90,6 +104,13 @@ Colleagues install an approved version and use it
 The SME owns business meaning. The marketplace operator owns distribution and policy.
 See [roles and handoffs](docs/TEAM_MARKETPLACE.md#roles-and-handoffs).
 
+## See a verified result
+
+The repository includes a live, read-only weather briefing example with a source-linked
+result and verification evidence. Start with the
+[verification record](docs/verification/2026-08-27-live-weather-briefing.md), then
+inspect the [skill package](references/examples/live-weather-briefing-skill).
+
 ## Read more when needed
 
 | Need | Read |
@@ -100,8 +121,6 @@ See [roles and handoffs](docs/TEAM_MARKETPLACE.md#roles-and-handoffs).
 | Understand scope and product boundaries | [Product scope](docs/PRODUCT_SCOPE.md) |
 | Review architecture, validation, and technical controls | [Technical overview](docs/TECHNICAL_OVERVIEW.md) |
 | Contribute | [Contributing](CONTRIBUTING.md) |
-
-## Contributing
 
 ## What happens behind the scenes
 
