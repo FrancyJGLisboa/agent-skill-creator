@@ -30,7 +30,27 @@ What can agent-skills-platform do?
 Expected: it describes creating reusable agent skills from workflows and source
 material. If it does not, stop and use the [installation guide](INSTALL.md).
 
-## 2. Give it one recurring workflow
+## 2. Say where the skill will live
+
+Answer one question before describing the work:
+
+```text
+This is just for me.
+```
+
+or:
+
+```text
+My team will install or reuse this skill. It belongs in the Finance marketplace.
+```
+
+For a private skill, the creator builds, verifies, and installs it for you. Teammates
+receiving a report or queue does not make it a team skill. Use the team route only
+when teammates will install or reuse the skill; then the marketplace must exist first
+so the finished skill carries real ownership and approval rules. You do not run
+marketplace commands unless you are the marketplace operator.
+
+## 3. Give it one recurring workflow
 
 Paste this into your AI tool, not into Terminal:
 
@@ -53,7 +73,7 @@ Other useful prompts:
 /agent-skills-platform --audit ./downloaded-skill/
 ```
 
-## 3. Confirm the one thing only a human can decide
+## 4. Confirm the one thing only a human can decide
 
 The creator should first summarize the workflow, input, output, evidence, and
 success condition. It may ask one bounded question when a business definition,
@@ -71,7 +91,7 @@ Expected: the agent records that decision and continues building. If no authoriz
 person can decide the meaning, `BLOCKED` is the correct result. Do not guess or
 ask the agent to invent an approval.
 
-## 4. Inspect the first result
+## 5. Inspect the first result
 
 The creator should report these stages:
 
@@ -95,7 +115,7 @@ prove production safety, other agent runtimes, or future user outcomes. A missin
 credential, permission, or safe representative input should produce a
 `verification-blocked` instruction with one specific next action.
 
-## 5. Correct it after first use
+## 6. Correct it after first use
 
 Describe the mistake in the words you would use with a colleague:
 

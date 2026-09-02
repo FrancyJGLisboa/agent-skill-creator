@@ -43,6 +43,16 @@ record, not autonomous self-modification.
 
 Choose the path that matches what you need today.
 
+**First question:** is this skill just for you, or will teammates install or reuse the
+skill itself?
+
+- **Just for you** — create, verify, and install it privately. No marketplace setup.
+- **My team** — create or select a governed GitHub/GitLab marketplace first, so the
+  skill inherits real ownership and approval rules.
+
+Teammates receiving a report or queue does not require a marketplace. Use the team
+path only when teammates will install or reuse the skill.
+
 ### I have a workflow — no code required
 
 Open the AI agent you already use, attach examples of the work, and paste this:

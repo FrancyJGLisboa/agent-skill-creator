@@ -78,6 +78,30 @@ through verification, and record the local lifecycle events described in
 `references/product-success.md`. Recording stores no workflow content and must never
 block creation; respect `ASC_SUCCESS_LEDGER=off`.
 
+### First-run destination routing
+
+Before the structured interview, ask exactly one routing question when the user has
+not already made the destination clear:
+
+> Is this skill just for you, or will teammates install or reuse the skill itself?
+
+- **Just for me** — create, verify, and install a private skill. Do not ask the user
+  to create a marketplace or invent owners and approval state.
+- **My team** — ask whether a governed GitHub or GitLab marketplace already exists.
+  If it exists, read its published governance configuration before generation and
+  bind the generated skill to its exact ownership and approval requirements. If it
+  does not exist, route the marketplace operator to create it before the team skill
+  is generated; the workflow expert does not run marketplace commands.
+
+Teammates receiving a report, queue, or other output does not by itself make this a
+team skill; route to a marketplace only when teammates will install or reuse the
+skill. This is destination routing, not a technical interview. Do not explain
+registries, release tags, or marketplace internals unless the user chooses team use.
+
+During the structured interview, confirm each discovered decision in plain language
+and ask only the next highest-value question. Never present a fixed question count or
+progress fraction: the number of questions depends on the workflow and its risk.
+
 ## Trigger
 
 User invokes `/agent-skills-platform` followed by their input:
