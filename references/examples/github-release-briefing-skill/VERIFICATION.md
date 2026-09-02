@@ -1,15 +1,15 @@
 # Verification: github-release-briefing-skill
 
-<!-- agent-skill-verification: {"clean": true, "commit": "2af66a45e97164eaee12d13692a4b68ef4fb4b28", "fingerprint": "14be8f7f94d39a6ca5fbf0ffa17c5fa2ca1f0acc340c9eb01f5804ae48517197", "version": "1.0.0"} -->
+<!-- agent-skill-verification: {"clean": true, "commit": "dad6d4b73bf767b606fcbfec31fd328ab9de794e", "fingerprint": "8c6aeb1fe530f0f5dadd6fb245413fdda2b8488943b91a04cbb948afc7fd30bb", "version": "1.0.0"} -->
 
-Generated: 2026-08-27T16:21:31Z
+Generated: 2026-09-02T22:09:09Z
 
 ## Release evidence
 
 - Run type: live
 - Recorded execution environments: codex
 - Cross-environment compatibility: not established by this report
-- Eval rollout: 2 passed, 0 failed, 0 errored, 0 regressed
+- Eval rollout: 6 passed, 0 failed, 0 errored, 0 regressed
 
 ## Gates
 
