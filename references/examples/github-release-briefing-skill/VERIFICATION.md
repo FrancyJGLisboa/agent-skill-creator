@@ -1,13 +1,13 @@
 # Verification: github-release-briefing-skill
 
-<!-- agent-skill-verification: {"clean": true, "commit": "dad6d4b73bf767b606fcbfec31fd328ab9de794e", "fingerprint": "8c6aeb1fe530f0f5dadd6fb245413fdda2b8488943b91a04cbb948afc7fd30bb", "version": "1.0.0"} -->
+<!-- agent-skill-verification: {"clean": true, "commit": "873c713ca919f50228ed23f6630dce2f0821d76a", "fingerprint": "11a11772a95434b5b0938ff4c1999135ba31b828c62907307333d0cbada8c983", "version": "1.0.0"} -->
 
-Generated: 2026-09-02T22:09:09Z
+Generated: 2026-09-03T11:50:25Z
 
 ## Release evidence
 
 - Run type: live
-- Recorded execution environments: codex
+- Recorded execution environments: claude-code
 - Cross-environment compatibility: not established by this report
 - Eval rollout: 6 passed, 0 failed, 0 errored, 0 regressed
 
