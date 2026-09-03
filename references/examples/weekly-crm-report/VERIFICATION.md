@@ -1,15 +1,15 @@
-# Verification: live-weather-briefing-skill
+# Verification: weekly-crm-report
 
-<!-- agent-skill-verification: {"clean": true, "commit": "0d0caf79751d9d7979edb8a7e70b70d04a4ffed3", "fingerprint": "a7a4a384999979bc32e2ea64993f793c15c17ccaaf471924892d9a1ed5b5074e", "version": "1.0.0"} -->
+<!-- agent-skill-verification: {"clean": true, "commit": "0d0caf79751d9d7979edb8a7e70b70d04a4ffed3", "fingerprint": "f8e7370e57ecd490bfd4325125879fc0d5c656b0cef0e1b155a35a067640cf30", "version": "1.0.0"} -->
 
-Generated: 2026-09-03T11:47:34Z
+Generated: 2026-09-03T11:47:38Z
 
 ## Release evidence
 
-- Run type: live
+- Run type: representative
 - Recorded execution environments: claude-code
 - Cross-environment compatibility: not established by this report
-- Eval rollout: 9 passed, 0 failed, 0 errored, 0 regressed
+- Eval rollout: 6 passed, 0 failed, 0 errored, 0 regressed
 
 ## Gates
 
