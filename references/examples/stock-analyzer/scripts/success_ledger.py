@@ -136,7 +136,9 @@ def _append_line(destination: Path, line: str) -> None:
             descriptor = os.open(
                 lock_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600
             )
-        except FileExistsError:
+        except (FileExistsError, PermissionError):
+            # Windows can report a sharing violation as PermissionError while
+            # another thread owns an O_EXCL-created lock file.
             if time.monotonic() >= deadline:
                 raise TimeoutError(f"timed out appending to success ledger: {destination}")
             time.sleep(0.01)

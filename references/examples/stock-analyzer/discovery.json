@@ -15,6 +15,16 @@
   "software_mutation": {"applies": false},
   "data_interfaces": {"applies": true, "interface_types": ["api"], "authoritative_sources": ["Public market-data API documentation"], "entities": ["Security", "Price observation"], "identifiers": ["Security ticker", "Observation timestamp"], "relationships": ["Each price observation belongs to one security"], "field_semantics": ["Price values use the currency declared by the source"], "invariants": ["Observation timestamps are ordered within a series"], "freshness_and_pagination": ["Historical series freshness and pagination follow the provider documentation"], "nullability": ["Missing observations are distinguished from zero prices"], "readiness_checks": ["One safe response matches the documented market-data schema"]},
   "semantic_contract": {"applies": false},
+  "semantic_recon": {
+    "sources": [{
+      "id": "market-data-api",
+      "type": "api",
+      "reuse": "recurring",
+      "impact": "moderate",
+      "contract_id": "market_data",
+      "contract_path": "contracts/data_contract_market_data"
+    }]
+  },
   "routing_tests": {
     "should_trigger": ["Analyze AAPL technical indicators", "Does this stock warrant more research?", "Review price and volume for MSFT"],
     "should_not_trigger": ["Buy AAPL", "Rebalance my portfolio", "Prepare a CRM report"]

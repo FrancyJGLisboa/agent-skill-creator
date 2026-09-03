@@ -15,6 +15,16 @@
   "software_mutation": {"applies": false},
   "data_interfaces": {"applies": true, "interface_types": ["structured-file"], "authoritative_sources": ["Approved CRM export schema"], "entities": ["CRM opportunity", "Sales region"], "identifiers": ["Opportunity ID", "Region code"], "relationships": ["Each opportunity belongs to one sales region"], "field_semantics": ["Opportunity amount is decimal currency in the export currency"], "invariants": ["Each opportunity ID is unique within the export"], "freshness_and_pagination": ["The supplied file is one complete weekly snapshot with no pagination"], "nullability": ["Opportunity ID, region, and amount are required"], "readiness_checks": ["One safe export sample matches the approved CRM schema"]},
   "semantic_contract": {"applies": false},
+  "semantic_recon": {
+    "sources": [{
+      "id": "crm-weekly-export",
+      "type": "structured-file",
+      "reuse": "recurring",
+      "impact": "moderate",
+      "contract_id": "crm_export",
+      "contract_path": "contracts/data_contract_crm_export"
+    }]
+  },
   "routing_tests": {
     "should_trigger": ["Prepare this week's CRM report", "Which sales regions missed plan?", "Reconcile the weekly regional totals"],
     "should_not_trigger": ["Update CRM opportunities", "Analyze a public stock", "Merge a pull request"]

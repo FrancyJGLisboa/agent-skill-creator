@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 import tempfile
 import unittest
+import unittest.mock
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
@@ -14,6 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 
+import success_ledger  # noqa: E402
 from success_ledger import ALLOWED_EVENTS, record_event, summarize  # noqa: E402
 
 
@@ -96,6 +99,33 @@ class SuccessLedgerPrivacyTest(unittest.TestCase):
         self.assertEqual(len(set(skill_ids)), 1)
         events = [json.loads(line) for line in self.ledger.read_text(encoding="utf-8").splitlines()]
         self.assertEqual(len(events), 20)
+
+    def test_append_retries_when_the_lock_open_reports_a_windows_sharing_violation(self) -> None:
+        # Windows surfaces a contended O_EXCL lock file as PermissionError, not
+        # FileExistsError; the append loop must retry instead of propagating it.
+        lock_path = self.ledger.with_name(f"{self.ledger.name}.lock")
+        real_open = os.open
+        refusals = {"count": 0}
+
+        def flaky_open(path, flags, mode=0o777, **kwargs):
+            if str(path) == str(lock_path) and refusals["count"] < 2:
+                refusals["count"] += 1
+                raise PermissionError(13, "Permission denied", str(path))
+            return real_open(path, flags, mode, **kwargs)
+
+        with unittest.mock.patch.object(success_ledger.os, "open", flaky_open):
+            item = record_event(
+                "skill_run",
+                skill="windows-lock-skill",
+                ledger_path=self.ledger,
+                run_id=run_id("windows-lock"),
+            )
+
+        self.assertIsNotNone(item)
+        self.assertEqual(refusals["count"], 2)
+        self.assertFalse(lock_path.exists())
+        events = [json.loads(line) for line in self.ledger.read_text(encoding="utf-8").splitlines()]
+        self.assertEqual(len(events), 1)
 
     def test_event_vocabulary_is_fixed(self) -> None:
         self.assertEqual(

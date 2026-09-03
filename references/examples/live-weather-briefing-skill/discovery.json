@@ -15,5 +15,15 @@
   "software_mutation": {"applies": false},
   "data_interfaces": {"applies": true, "interface_types": ["api"], "authoritative_sources": ["Open-Meteo official API documentation"], "entities": ["Geocoded location", "Current weather observation"], "identifiers": ["Location coordinates"], "relationships": ["One resolved location is used for one current forecast request"], "field_semantics": ["temperature_2m and apparent_temperature are degrees Celsius", "wind_speed_10m is kilometres per hour"], "invariants": ["A briefing must name the resolved location and observation time"], "freshness_and_pagination": ["Current conditions are returned by the forecast endpoint; geocoding requests one result"], "nullability": ["Missing location or current fields block output"], "readiness_checks": ["Geocoding returns one result", "Forecast returns required current fields"]},
   "semantic_contract": {"applies": false},
+  "semantic_recon": {
+    "sources": [{
+      "id": "open-meteo-api",
+      "type": "api",
+      "reuse": "recurring",
+      "impact": "low",
+      "contract_id": "open_meteo",
+      "contract_path": "contracts/data_contract_open_meteo"
+    }]
+  },
   "routing_tests": {"should_trigger": ["Weather in Sao Paulo now", "Current conditions in Tokyo", "Prepare a weather briefing for New York"], "should_not_trigger": ["Book a hotel", "Issue a storm alert", "Analyze weather history"]}
 }

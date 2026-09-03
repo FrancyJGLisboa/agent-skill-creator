@@ -15,6 +15,16 @@
   "software_mutation": {"applies": false},
   "data_interfaces": {"applies": true, "interface_types": ["api"], "authoritative_sources": ["Pull-request provider API documentation"], "entities": ["Pull request", "Review", "CI check"], "identifiers": ["Pull-request number", "Review ID", "CI check ID"], "relationships": ["Reviews and CI checks belong to one pull request"], "field_semantics": ["Provider status values retain their documented merge semantics"], "invariants": ["Every reported blocker references its source review or CI check"], "freshness_and_pagination": ["All pages are read and status is refreshed before the summary"], "nullability": ["Optional reviewer and completion timestamps remain distinct from missing records"], "readiness_checks": ["One safe pull-request response matches the documented provider schema"]},
   "semantic_contract": {"applies": false},
+  "semantic_recon": {
+    "sources": [{
+      "id": "pull-request-api",
+      "type": "api",
+      "reuse": "recurring",
+      "impact": "low",
+      "contract_id": "pull_request_reviews",
+      "contract_path": "contracts/data_contract_pull_request_reviews"
+    }]
+  },
   "routing_tests": {
     "should_trigger": ["What blocks PR 42?", "Summarize unresolved pull-request checks", "Is this pull request ready to merge?"],
     "should_not_trigger": ["Merge PR 42", "Write release notes", "Review this issue backlog"]

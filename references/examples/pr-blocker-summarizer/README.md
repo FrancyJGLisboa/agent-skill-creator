@@ -48,3 +48,7 @@ pr-blocker-summarizer/
 ├── scripts/success_ledger.py # private local lifecycle metrics
 └── evals/                    # eval spec + golden cases
 ```
+
+## Verification
+
+[VERIFICATION.md](VERIFICATION.md) records the latest generation-time gate and eval evidence.
